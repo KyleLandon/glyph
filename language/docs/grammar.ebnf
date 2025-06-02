@@ -1,0 +1,114 @@
+# Glyph Language Grammar (EBNF)
+
+This file contains the formal EBNF grammar for the Glyph language.
+
+# Glyph Language EBNF Grammar
+# This grammar covers the core syntax of the Glyph language as described in the comprehensive spec.
+# Comments use # for single-line and ### ... ### for multi-line (not shown in EBNF itself).
+
+Program         = { Declaration } ;
+
+# --- Declarations ---
+Declaration     = EntityDecl | ComponentDecl | SystemDecl | EventDecl | TraitDecl | EnumDecl | FuncDecl | MacroDecl | TestDecl | ImportDecl | RouteDecl | AttributeDecl ;
+
+EntityDecl      = [ AttributeDecl ] "entity" Identifier [ EntityInheritance ] ":" INDENT { EntityField } DEDENT ;
+EntityInheritance = "inherits" Identifier ;
+EntityField     = Identifier [ ":" Type ] [ "=" Expression ] ;
+
+ComponentDecl   = [ AttributeDecl ] "component" Identifier [ ComponentInheritance ] ":" INDENT { ComponentField } DEDENT ;
+ComponentInheritance = "inherits" Identifier ;
+ComponentField  = Identifier ":" Type [ "=" Expression ] ;
+
+SystemDecl      = [ AttributeDecl ] "system" Identifier SystemTrigger ":" INDENT { Statement } DEDENT ;
+SystemTrigger   = "when" TriggerList [ "priority" Integer ] ;
+TriggerList     = Trigger { "or" Trigger } ;
+Trigger         = "tick" | InputTrigger | EventTrigger | StringLiteral ;
+InputTrigger    = "input" "(" StringLiteral ")" ;
+EventTrigger    = Identifier ;
+
+EventDecl       = "event" Identifier ":" INDENT { EventField } DEDENT ;
+EventField      = Identifier ":" Type ;
+
+TraitDecl       = "trait" Identifier ":" INDENT { TraitFuncDecl } DEDENT ;
+TraitFuncDecl   = FuncDecl ;
+
+EnumDecl        = "enum" Identifier ":" INDENT { EnumVariant } DEDENT ;
+EnumVariant     = Identifier [ "(" { EnumField [ "," ] } ")" ] ;
+EnumField       = Identifier ":" Type ;
+
+FuncDecl        = [ "async" ] "func" Identifier "(" [ ParamList ] ")" [ ":" Type ] ":" INDENT { Statement } DEDENT ;
+ParamList       = Param { "," Param } ;
+Param           = Identifier [ ":" Type ] ;
+
+MacroDecl       = "macro" Identifier "(" [ ParamList ] ")" ":" INDENT { Statement } DEDENT ;
+
+TestDecl        = "test" StringLiteral ":" INDENT { Statement } DEDENT ;
+
+ImportDecl      = "import" StringLiteral | "from" Identifier "import" Identifier ;
+
+RouteDecl       = "route" StringLiteral ":" INDENT { Statement } DEDENT ;
+
+AttributeDecl   = "@" Identifier ;
+
+# --- Statements ---
+Statement       = VarDecl | ConstDecl | Assignment | IfStmt | ForStmt | MatchStmt | OnStmt | EmitStmt | ReturnStmt | TryCatchStmt | ExprStmt ;
+
+VarDecl         = ("let" | "var") Identifier [ ":" Type ] [ "=" Expression ] ;
+ConstDecl       = "const" Identifier ":" Type "=" Expression ;
+Assignment      = Identifier "=" Expression ;
+IfStmt          = "if" Expression ":" INDENT { Statement } DEDENT [ "else:" INDENT { Statement } DEDENT ] ;
+ForStmt         = "for" (Identifier | Destructuring) "in" Expression [ WhereClause ] ":" INDENT { Statement } DEDENT ;
+WhereClause     = "where" Expression ;
+MatchStmt       = "match" Expression ":" INDENT { MatchCase }+ [ "else:" INDENT { Statement } DEDENT ] DEDENT ;
+MatchCase       = "case" Pattern ":" INDENT { Statement } DEDENT ;
+OnStmt          = "on" (Identifier | StringLiteral) [ "as" Identifier ] ":" INDENT { Statement } DEDENT ;
+EmitStmt        = "emit" (Identifier | StringLiteral) [ "(" [ ArgList ] ")" | ArgStruct ] ;
+ArgList         = Expression { "," Expression } ;
+ArgStruct       = "(" { Identifier "=" Expression [ "," ] } ")" ;
+ReturnStmt      = "return" [ Expression ] ;
+TryCatchStmt    = "try:" INDENT { Statement } DEDENT "catch" Identifier ":" INDENT { Statement } DEDENT ;
+ExprStmt        = Expression ;
+
+# --- Expressions ---
+Expression      = OrExpr ;
+OrExpr          = AndExpr { "or" AndExpr } ;
+AndExpr         = NotExpr { "and" NotExpr } ;
+NotExpr         = [ "not" ] CompareExpr ;
+CompareExpr     = AddExpr [ ("=="|"!="|"<"|">"|"<="|">=") AddExpr ] ;
+AddExpr         = MulExpr { ("+"|"-") MulExpr } ;
+MulExpr         = UnaryExpr { ("*"|"/"|"%") UnaryExpr } ;
+UnaryExpr       = [ ("-"|"+") ] PrimaryExpr ;
+PrimaryExpr     = Literal | Identifier | CallExpr | IndexExpr | AttrExpr | ParenExpr | ListExpr | DictExpr | Destructuring ;
+CallExpr        = Identifier "(" [ ArgList ] ")" ;
+IndexExpr       = PrimaryExpr "[" Expression [ ":" Expression ] "]" ;
+AttrExpr        = PrimaryExpr "." Identifier ;
+ParenExpr       = "(" Expression ")" ;
+ListExpr        = "[" [ ArgList ] "]" ;
+DictExpr        = "{" [ DictEntry { "," DictEntry } ] "}" ;
+DictEntry       = (StringLiteral | Identifier) ":" Expression ;
+Destructuring   = "(" Identifier { "," Identifier } ")" | "{" Identifier { "," Identifier } "}" ;
+
+# --- Patterns ---
+Pattern         = Identifier [ "(" { Pattern [ "," ] } ")" ] | Literal | "_" ;
+
+# --- Types ---
+Type            = SimpleType | GenericType ;
+SimpleType      = Identifier ;
+GenericType     = Identifier "<" Type { "," Type } ">" ;
+
+# --- Literals ---
+Literal         = Integer | Float | StringLiteral | Boolean | ListExpr | DictExpr ;
+Integer         = Digit { Digit } ;
+Float           = Integer "." Digit { Digit } ;
+Boolean         = "true" | "false" ;
+StringLiteral   = '"' { Char } '"' | "'" { Char } "'" ;
+Digit           = '0'..'9' ;
+Char            = /* any character except quote */ ;
+Identifier      = Letter { Letter | Digit | '_' } ;
+Letter          = 'a'..'z' | 'A'..'Z' ;
+
+# --- Indentation (pseudo-tokens for block structure) ---
+INDENT          = /* increase in indentation */ ;
+DEDENT          = /* decrease in indentation */ ;
+
+// --- End Glyph_Grammar.ebnf --- 
