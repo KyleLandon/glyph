@@ -38,50 +38,49 @@ Glyph is a modern, Python-inspired programming language and modular development 
 ## Directory Structure
 ```
 /glyph
-  /language
-    /docs         # All documentation and language specs
-    /examples     # Sample Glyph programs (see hello_world.glyph, ecs_basics.glyph)
-    /src          # (Planned) Source code for parser, runtime, stdlib, etc.
-    /tests        # (Planned) Automated test cases
-    LICENSE       # Open source license
-    CHANGELOG.md  # Release notes
-README.md         # Project overview (this file)
+  /docs         # All documentation and language specs
+  /examples     # Sample Glyph programs (see hello_world.glyph, ecs_basics.glyph)
+  /src          # (Planned) Source code for parser, runtime, stdlib, etc.
+  /tests        # (Planned) Automated test cases
+  LICENSE       # Open source license
+  CHANGELOG.md  # Release notes
+  README.md     # Project overview (this file)
 ```
 
 ---
 
 ## Documentation
-All major documentation is in the `language/docs/` directory:
+All major documentation is in the `docs/` directory:
 
 | Document                | Description                                      |
 |------------------------ |--------------------------------------------------|
-| [Getting Started](language/docs/getting_started.md)         | Install, setup, and Hello World                |
-| [Language Tour](language/docs/language_tour.md)             | Syntax, variables, functions, control flow      |
-| [Core Concepts](language/docs/core_concepts.md)             | ECS, events, async, traits, pattern matching    |
-| [Standard Library](language/docs/stdlib_reference.md)       | Built-in types, functions, and modules          |
-| [Tooling](language/docs/tooling.md)                         | Editor, CLI, formatter, debugger, visual scripting |
-| [Tutorials](language/docs/tutorials.md)                     | Beginner to advanced guides, sample projects    |
-| [FAQ](language/docs/faq.md)                                 | Common errors, debugging, best practices        |
-| [Contribution Guide](language/docs/contribution_guide.md)   | How to contribute, code style, community        |
-| [Roadmap](language/docs/roadmap.md)                         | Release plan, milestones, long-term vision      |
-| [Architecture](language/docs/architecture.md)               | Language, parser, runtime, and system design    |
-| [Grammar (EBNF)](language/docs/grammar.ebnf)                | Formal language grammar                         |
-| [Semantics](language/docs/semantics.md)                     | Type system, scoping, runtime rules             |
-| [LSP & Editor](language/docs/lsp_and_editor.md)             | Language server and editor integration          |
-| [Test Suite & Build](language/docs/test_suite_and_build.md) | Testing, CI/CD, build system                    |
-| [Sample Programs](language/docs/sample_programs.md)         | Example Glyph code for all major features       |
+| [Getting Started](docs/getting_started.md)         | Install, setup, and Hello World                |
+| [Language Tour](docs/language_tour.md)             | Syntax, variables, functions, control flow      |
+| [Core Concepts](docs/core_concepts.md)             | ECS, events, async, traits, pattern matching    |
+| [Standard Library](docs/stdlib_reference.md)       | Built-in types, functions, and modules          |
+| [Tooling](docs/tooling.md)                         | Editor, CLI, formatter, debugger, visual scripting |
+| [Tutorials](docs/tutorials.md)                     | Beginner to advanced guides, sample projects    |
+| [FAQ](docs/faq.md)                                 | Common errors, debugging, best practices        |
+| [Contribution Guide](docs/contribution_guide.md)   | How to contribute, code style, community        |
+| [Roadmap](docs/roadmap.md)                         | Release plan, milestones, long-term vision      |
+| [Architecture](docs/architecture.md)               | Language, parser, runtime, and system design    |
+| [Grammar (EBNF)](docs/grammar.ebnf)                | Formal language grammar                         |
+| [Semantics](docs/semantics.md)                     | Type system, scoping, runtime rules             |
+| [LSP & Editor](docs/lsp_and_editor.md)             | Language server and editor integration          |
+| [Test Suite & Build](docs/test_suite_and_build.md) | Testing, CI/CD, build system                    |
+| [Sample Programs](docs/sample_programs.md)         | Example Glyph code for all major features       |
 
 ---
 
 ## Examples
-See `language/examples/` for sample Glyph programs:
+See `examples/` for sample Glyph programs:
 - `hello_world.glyph`: Hello World
 - `ecs_basics.glyph`: Basic ECS usage
 
 ---
 
 ## Contributing
-We welcome contributions! Please see the [Contribution Guide](language/docs/contribution_guide.md) for:
+We welcome contributions! Please see the [Contribution Guide](docs/contribution_guide.md) for:
 - How to report issues and request features
 - Coding standards and pull request process
 - Extending the language and standard library
@@ -98,7 +97,7 @@ We welcome contributions! Please see the [Contribution Guide](language/docs/cont
 ---
 
 ## License
-Glyph is open source, released under the [MIT License](language/LICENSE).
+Glyph is open source, released under the [MIT License](LICENSE).
 
 ---
 
