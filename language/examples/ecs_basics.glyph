@@ -1,0 +1,11 @@
+/// Basic ECS Example
+component Position:
+    x: float
+    y: float
+
+entity Player:
+    Position(x=0, y=0)
+
+system Move:
+    for e in entities.with(Position):
+        e.Position.x += 1 

@@ -1,0 +1,3 @@
+/// Hello World in Glyph
+system Main:
+    print("Hello, world!") 
