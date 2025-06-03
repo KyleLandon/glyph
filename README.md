@@ -1,7 +1,16 @@
+<picture>
+  <source srcset="docs/assets/logo_white.png" media="(prefers-color-scheme: dark)">
+  <img src="docs/assets/logo.png" alt="Glyph Logo" style="width:200px;">
+</picture>
+
+<picture>
+  <source srcset="docs/assets/glyph_icon.png" media="(prefers-color-scheme: dark)">
+  <img src="docs/assets/glyph_icon.png" alt="Glyph Icon" style="width:64px; margin-top: 1em;">
+</picture>
+
 # Glyph Language & Engine
 
-## Overview
-Glyph is a modern, Python-inspired programming language and modular development engine purpose-built for game development, simulations, and real-time systems. It features a human-readable, ECS-native syntax, hybrid interpreted/compiled runtime, and seamless code ↔ visual scripting integration.
+Welcome to Glyph—a modern, Python-inspired programming language and modular development engine for games, simulations, and real-time systems.
 
 ---
 
@@ -16,75 +25,10 @@ Glyph is a modern, Python-inspired programming language and modular development 
 
 ---
 
-## Quickstart
-1. **Install Glyph (CLI & Editor):**
-   ```sh
-   pip install glyphlang  # or use the installer for your platform
-   ```
-2. **Create a new project:**
-   ```sh
-   glyph new mygame
-   cd mygame
-   ```
-3. **Run your first program:**
-   ```sh
-   glyph run main.glyph
-   ```
-4. **Open in the editor:**
-   - Use Glyph Studio or the VSCode extension for full IDE features.
-
----
-
-## Directory Structure
-```
-/glyph
-  /docs         # All documentation and language specs
-  /examples     # Sample Glyph programs (see hello_world.glyph, ecs_basics.glyph)
-  /src          # (Planned) Source code for parser, runtime, stdlib, etc.
-  /tests        # (Planned) Automated test cases
-  LICENSE       # Open source license
-  CHANGELOG.md  # Release notes
-  README.md     # Project overview (this file)
-```
-
----
-
 ## Documentation
-All major documentation is in the `docs/` directory:
+Full documentation is available at: [Glyph Docs Site](https://kyles-personal-organization.gitbook.io/glyph)
 
-| Document                | Description                                      |
-|------------------------ |--------------------------------------------------|
-| [Getting Started](docs/getting_started.md)         | Install, setup, and Hello World                |
-| [Language Tour](docs/language_tour.md)             | Syntax, variables, functions, control flow      |
-| [Core Concepts](docs/core_concepts.md)             | ECS, events, async, traits, pattern matching    |
-| [Standard Library](docs/stdlib_reference.md)       | Built-in types, functions, and modules          |
-| [Tooling](docs/tooling.md)                         | Editor, CLI, formatter, debugger, visual scripting |
-| [Tutorials](docs/tutorials.md)                     | Beginner to advanced guides, sample projects    |
-| [FAQ](docs/faq.md)                                 | Common errors, debugging, best practices        |
-| [Contribution Guide](docs/contribution_guide.md)   | How to contribute, code style, community        |
-| [Roadmap](docs/roadmap.md)                         | Release plan, milestones, long-term vision      |
-| [Architecture](docs/architecture.md)               | Language, parser, runtime, and system design    |
-| [Grammar (EBNF)](docs/grammar.ebnf)                | Formal language grammar                         |
-| [Semantics](docs/semantics.md)                     | Type system, scoping, runtime rules             |
-| [LSP & Editor](docs/lsp_and_editor.md)             | Language server and editor integration          |
-| [Test Suite & Build](docs/test_suite_and_build.md) | Testing, CI/CD, build system                    |
-| [Sample Programs](docs/sample_programs.md)         | Example Glyph code for all major features       |
-
----
-
-## Examples
-See `examples/` for sample Glyph programs:
-- `hello_world.glyph`: Hello World
-- `ecs_basics.glyph`: Basic ECS usage
-
----
-
-## Contributing
-We welcome contributions! Please see the [Contribution Guide](docs/contribution_guide.md) for:
-- How to report issues and request features
-- Coding standards and pull request process
-- Extending the language and standard library
-- Writing tests and improving documentation
+Or see the `/docs` folder for Markdown source files.
 
 ---
 
@@ -96,10 +40,8 @@ We welcome contributions! Please see the [Contribution Guide](docs/contribution_
 
 ---
 
-## License
-Glyph is open source, released under the [MIT License](LICENSE).
+Glyph is open source, released under the MIT License.
 
 ---
 
-## About
-Glyph is designed to empower developers to build games, simulations, and interactive apps with minimal boilerplate and maximum control. Join us as we build the next generation of creative tools! 
+*Logo and icon assets are in `/docs/assets/`.* 
