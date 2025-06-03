@@ -1,3 +1,8 @@
+<picture>
+  <source srcset="assets/logo_white.png" media="(prefers-color-scheme: dark)">
+  <img src="assets/logo.png" alt="Glyph Logo" style="width:200px;">
+</picture>
+
 # Glyph Language & Engine
 
 Welcome to the official documentation for Glyph—a modern, Python-inspired programming language and modular development engine for games, simulations, and real-time systems.
