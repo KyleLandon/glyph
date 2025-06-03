@@ -1,6 +1,6 @@
 <picture>
   <source srcset="docs/assets/logo_white.png" media="(prefers-color-scheme: dark)">
-  <img src="docs/assets/logo.png" alt="Glyph Logo" style="width:200px;">
+  <img src="docs/assets/logo.png" alt="Glyph Logo" style="width:100px;">
 </picture>
 
 # Glyph Language & Engine
