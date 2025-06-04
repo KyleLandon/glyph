@@ -1,0 +1,10 @@
+# Minimal Glyph main
+def main():
+    source = "x = 42\ny"
+    from lexer import tokenize
+    from parser import parse
+    tokens = tokenize(source)
+    ast = parse(tokens)
+    print(ast)
+
+main() 

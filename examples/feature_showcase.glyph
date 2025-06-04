@@ -1,0 +1,33 @@
+/// Feature Showcase Example
+component Position:
+    x: float
+    y: float
+
+entity Player:
+    Position(x=0, y=0)
+
+trait Movable:
+    fn move(dx: float, dy: float) {
+        // Move logic
+        print("Moving by", dx, dy)
+    }
+
+system Main:
+    print("Starting main system")
+    await do_async()
+    dispatch EventHappened()
+
+fn do_async() -> None {
+    print("Doing async work...")
+    await something()
+}
+
+fn something() -> None {
+    print("Something async!")
+}
+
+event EventHappened:
+    msg: str
+
+on EventHappened:
+    print("Event happened!") 

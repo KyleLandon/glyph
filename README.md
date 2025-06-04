@@ -39,4 +39,20 @@ Glyph is open source, released under the MIT License.
 
 ---
 
-*Logo and icon assets are in `/docs/assets/`.* 
+*Logo and icon assets are in `/docs/assets/`.*
+
+## Running Tests with Rich Output
+
+To run all tests with a beautiful, real-time progress bar and colorized output, install the dev requirements:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Then run:
+
+```bash
+pytest --rich
+```
+
+This will automatically discover and run all tests, showing a live progress bar and detailed logs in your terminal. 

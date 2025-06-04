@@ -1,0 +1,54 @@
+# Comprehensive test for Glyph pipeline
+x = 10
+y = 5
+print(x + y)
+if x > y:
+    print("x is greater")
+else:
+    print("y is greater or equal")
+
+z = 0
+while z < 3:
+    print(z)
+    z = z + 1
+
+def add(a, b):
+    return a + b
+print(add(2, 3))
+
+# --- New features and stubs ---
+entity Player {
+    Health
+    Position
+}
+component Health {
+    hp
+}
+system Main {
+    print("System running")
+}
+async def do_async() {
+    await something()
+}
+async def something() {
+    print("Async work!")
+}
+match x {
+    case 1 {
+        print("one")
+    }
+    case 2 {
+        print("two")
+    }
+}
+trait Mover {
+    def move(dx, dy) {
+        print("move", dx, dy)
+    }
+}
+interface Drawable {
+    def draw() {
+        print("draw")
+    }
+}
+print("done") 
