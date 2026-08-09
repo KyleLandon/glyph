@@ -17,7 +17,8 @@ deviations from the GDD are recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md)
 | `glyph-proxy` | Velocity plugin: proxy-side platform foundation                       |
 
 Supporting directories: `database/` (schema docs), `docker/` (production
-images, later phase), `scripts/` (dev helpers), `docs/` (GDD + decisions).
+images + compose stack, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)),
+`scripts/` (dev helpers + backups), `docs/` (GDD + decisions).
 
 Players: the optional client modpack (voice chat, maps, performance) lives at
 [KyleLandon/glyph-clientmods](https://github.com/KyleLandon/glyph-clientmods)

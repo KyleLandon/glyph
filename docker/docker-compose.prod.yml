@@ -1,0 +1,99 @@
+# Glyph production stack (GDD Phase 7, section 105).
+#
+# Usage (from the docker/ directory):
+#   cp .env.example .env       # then set real passwords
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Topology: internet -> velocity:25565 -> folia (internal) -> postgres/redis.
+# Voice chat (Simple Voice Chat) is UDP straight to the backend on 24454.
+#
+# Volumes hold everything stateful; the images are disposable. Deploy plugin
+# jars into the folia-data/velocity-data volumes (mounted at /data/plugins),
+# not into the images. Back up with backup.sh (same directory).
+
+name: glyph
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: glyph-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${GLYPH_DB_DATABASE:-glyph}
+      POSTGRES_USER: ${GLYPH_DB_USERNAME:-glyph_app}
+      POSTGRES_PASSWORD: ${GLYPH_DB_PASSWORD:?set GLYPH_DB_PASSWORD in .env}
+    volumes:
+      - glyph-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GLYPH_DB_USERNAME:-glyph_app} -d ${GLYPH_DB_DATABASE:-glyph}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Not published to the host: only the backend talks to it.
+
+  redis:
+    image: redis:7-alpine
+    container_name: glyph-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${GLYPH_REDIS_PASSWORD:?set GLYPH_REDIS_PASSWORD in .env}"]
+    volumes:
+      - glyph-redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      REDIS_PASSWORD: ${GLYPH_REDIS_PASSWORD}
+
+  folia:
+    build:
+      context: ./folia
+    image: glyph/folia:26.1.2-8
+    container_name: glyph-folia
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      EULA: "${EULA:?set EULA=true in .env to accept the Minecraft EULA}"
+      MEMORY: ${FOLIA_MEMORY:-4G}
+      GLYPH_SERVER_ID: ${GLYPH_SERVER_ID:-glyph-01}
+      GLYPH_DB_HOST: postgres
+      GLYPH_DB_PORT: "5432"
+      GLYPH_DB_DATABASE: ${GLYPH_DB_DATABASE:-glyph}
+      GLYPH_DB_USERNAME: ${GLYPH_DB_USERNAME:-glyph_app}
+      GLYPH_DB_PASSWORD: ${GLYPH_DB_PASSWORD}
+      GLYPH_REDIS_HOST: redis
+      GLYPH_REDIS_PORT: "6379"
+      GLYPH_REDIS_PASSWORD: ${GLYPH_REDIS_PASSWORD}
+    volumes:
+      - glyph-folia-data:/data
+    ports:
+      # Voice chat is proxied at the protocol level but transported as UDP
+      # directly between client and backend.
+      - "24454:24454/udp"
+    # The Minecraft port stays internal; players connect through velocity.
+
+  velocity:
+    build:
+      context: ./velocity
+    image: glyph/velocity:4.1.0-16
+    container_name: glyph-velocity
+    restart: unless-stopped
+    depends_on:
+      - folia
+    environment:
+      MEMORY: ${VELOCITY_MEMORY:-512M}
+    volumes:
+      - glyph-velocity-data:/data
+    ports:
+      - "25565:25565/tcp"
+
+volumes:
+  glyph-postgres-data:
+  glyph-redis-data:
+  glyph-folia-data:
+  glyph-velocity-data:
