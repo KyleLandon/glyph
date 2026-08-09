@@ -91,24 +91,18 @@ one database; using its clock makes cross-server timestamps consistent and
 monotonic per transaction. Only session *durations* (playtime) are measured
 on the game server.
 
-## ADR-008: Money is fixed at two decimal places; HUD uses the scoreboard sidebar
+## ADR-008: Money HUD placement (sidebar → action bar)
 
-**Status:** superseded by ADR-010 for the decimal-places part (2026-08-09);
-HUD decision still stands
+**Status:** HUD placement updated 2026-08-09; decimal-places part superseded
+by ADR-010
 
-The GDD's sample config exposes `decimal-places`. We hardcode two decimals
-(minor units are cents) because making `Money` parse/format variable-precision
-buys nothing until a design need exists, and the database comment ("BIGINT
-minor units (cents)") already assumes it. Only the currency symbol is
-configurable.
-
-The requested FiveM-style money display is a per-player scoreboard sidebar
-(the Minecraft equivalent of GTA RP's top-right cash HUD): title + one green
-cash line, score numbers hidden via Paper's blank NumberFormat. It updates
-event-driven from EconomyService balance notifications — no polling, no
-periodic database reads. Known trade-off: GlyphCore owns the player's
-scoreboard; if a future feature needs sidebar lines, it extends MoneyHud
-rather than registering its own scoreboard.
+The requested FiveM-style cash display originally used a per-player
+scoreboard sidebar. That sits under Xaero's Minimap (shipped in the client
+modpack) and most other minimap mods, so players could not see their
+balance. MoneyHud now uses the action bar (bottom-center, above the
+hotbar) and refreshes every 2s so it does not fade. Updates are still
+event-driven from EconomyService balance notifications — no extra
+database reads.
 
 ## ADR-009: Vault bridge runs blocking SQL on the calling thread
 

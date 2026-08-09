@@ -127,7 +127,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
         }
 
         MoneyHud moneyHud = new MoneyHud(
-                schedulerAdapter, settings.economy(), economyService, getSLF4JLogger());
+                this, schedulerAdapter, settings.economy(), economyService, getSLF4JLogger());
         economyService.addBalanceListener(moneyHud::updateBalance);
         getServer().getPluginManager().registerEvents(moneyHud, this);
 

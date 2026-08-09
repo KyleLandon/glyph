@@ -14,7 +14,8 @@ economy:
   starting-balance: 100
   # Prefix used when formatting amounts.
   currency-symbol: "$"
-  # Sidebar HUD showing the player's cash (FiveM-style).
+  # Cash HUD on the action bar (above the hotbar). Sidebar was abandoned
+  # because client minimaps (Xaero, etc.) cover the right-side scoreboard.
   hud:
     enabled: true
     title: "GLYPH"

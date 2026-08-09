@@ -4,7 +4,7 @@ import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.scheduler.SchedulerAdapter;
-import io.papermc.paper.scoreboard.numbers.NumberFormat;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,39 +18,47 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scoreboard.Criteria;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
 import org.slf4j.Logger;
 
 /**
- * FiveM-style money HUD: a scoreboard sidebar showing the player's cash,
- * updated the moment a balance changes (via
- * {@link com.glyph.core.economy.EconomyService#addBalanceListener}) — no
- * polling, no database reads beyond the initial join fetch.
+ * Cash HUD shown on the action bar (above the hotbar).
  *
- * <p>Folia safety: scoreboards are only touched on the owning player's entity
- * scheduler. Balance change notifications arrive on async I/O threads and are
- * bounced to the right thread here.</p>
+ * <p>The earlier scoreboard-sidebar approach sat under Xaero's Minimap (and
+ * most other minimap mods), so players never saw their balance. The action
+ * bar is bottom-center and stays clear. It fades after a couple of seconds
+ * unless resent, so each player gets a light entity-scheduler refresh.</p>
+ *
+ * <p>Folia safety: action bars and entity tasks only run on the owning
+ * player's entity scheduler. Balance notifications arrive on async I/O
+ * threads and are bounced here.</p>
  */
 public final class MoneyHud implements Listener {
 
-    private static final String OBJECTIVE_NAME = "glyph_money";
+    /** Legacy sidebar objective — cleared on join so old boards disappear. */
+    private static final String LEGACY_OBJECTIVE = "glyph_money";
 
+    /** Re-send interval so the action bar does not fade away. */
+    private static final long REFRESH_TICKS = 40L;
+
+    private final Plugin plugin;
     private final SchedulerAdapter scheduler;
     private final EconomySettings settings;
     private final EconomyApi economy;
     private final Logger logger;
 
-    /** Current sidebar line per player; needed to reset the old score entry. */
-    private final Map<UUID, String> currentLines = new ConcurrentHashMap<>();
+    private final Map<UUID, Money> balances = new ConcurrentHashMap<>();
+    private final Map<UUID, ScheduledTask> refreshTasks = new ConcurrentHashMap<>();
 
     public MoneyHud(
+            Plugin plugin,
             SchedulerAdapter scheduler,
             EconomySettings settings,
             EconomyApi economy,
             Logger logger) {
+        this.plugin = plugin;
         this.scheduler = scheduler;
         this.settings = settings;
         this.economy = economy;
@@ -64,10 +72,10 @@ public final class MoneyHud implements Listener {
         }
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
+        clearLegacySidebar(player);
+        show(player, null);
+        startRefresh(player);
 
-        // Placeholder immediately (join events run on the player's region
-        // thread), real value once the async balance fetch completes.
-        render(player, null);
         economy.balance(uuid).whenComplete((balance, error) -> {
             if (error != null) {
                 logger.debug("Money HUD: initial balance fetch failed for {}", uuid, error);
@@ -79,7 +87,12 @@ public final class MoneyHud implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        currentLines.remove(event.getPlayer().getUniqueId());
+        UUID uuid = event.getPlayer().getUniqueId();
+        balances.remove(uuid);
+        ScheduledTask task = refreshTasks.remove(uuid);
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     /** Called from any thread; also registered as an EconomyService balance listener. */
@@ -87,37 +100,47 @@ public final class MoneyHud implements Listener {
         if (!settings.hudEnabled()) {
             return;
         }
+        balances.put(uuid, balance);
         Player player = Bukkit.getPlayer(uuid);
         if (player == null) {
             return;
         }
-        scheduler.runForEntity(player, () -> render(player, balance), null);
+        scheduler.runForEntity(player, () -> show(player, balance), null);
+    }
+
+    private void startRefresh(Player player) {
+        UUID uuid = player.getUniqueId();
+        ScheduledTask previous = refreshTasks.remove(uuid);
+        if (previous != null) {
+            previous.cancel();
+        }
+        ScheduledTask task = player.getScheduler().runAtFixedRate(
+                plugin,
+                scheduled -> show(player, balances.get(uuid)),
+                () -> refreshTasks.remove(uuid),
+                REFRESH_TICKS,
+                REFRESH_TICKS);
+        if (task != null) {
+            refreshTasks.put(uuid, task);
+        }
     }
 
     /** Must run on the player's entity scheduler. */
-    private void render(Player player, Money balance) {
-        Scoreboard board = player.getScoreboard();
-        Objective objective = board.getObjective(OBJECTIVE_NAME);
-        if (objective == null) {
-            board = Bukkit.getScoreboardManager().getNewScoreboard();
-            objective = board.registerNewObjective(OBJECTIVE_NAME, Criteria.DUMMY,
-                    Component.text(settings.hudTitle(), NamedTextColor.GOLD, TextDecoration.BOLD));
-            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-            objective.numberFormat(NumberFormat.blank());
-            player.setScoreboard(board);
-        }
-
-        String line = "§a§l" + (balance == null
+    private void show(Player player, Money balance) {
+        String text = balance == null
                 ? settings.currencySymbol() + "—"
-                : balance.format(settings.currencySymbol()));
+                : balance.format(settings.currencySymbol());
+        player.sendActionBar(Component.text(text, NamedTextColor.GREEN, TextDecoration.BOLD));
+    }
 
-        String previous = currentLines.put(player.getUniqueId(), line);
-        if (line.equals(previous)) {
-            return;
+    /** Drop the old sidebar HUD if a previous build left one on this player. */
+    private static void clearLegacySidebar(Player player) {
+        Objective objective = player.getScoreboard().getObjective(LEGACY_OBJECTIVE);
+        if (objective != null) {
+            if (objective.getDisplaySlot() == DisplaySlot.SIDEBAR) {
+                objective.setDisplaySlot(null);
+            }
+            objective.unregister();
         }
-        if (previous != null) {
-            board.resetScores(previous);
-        }
-        objective.getScore(line).setScore(0);
     }
 }
