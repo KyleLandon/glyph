@@ -95,6 +95,10 @@ server stopped before anything risky (migrations, version bumps).
 Only two ports face the internet: **25565/tcp** (velocity) and
 **24454/udp** (voice). The database and redis are never published.
 
+Do **not** enable RCON on a public host. The desktop staging server uses
+localhost-only RCON (`scripts/rcon.ps1`) for automation; production images
+leave RCON off.
+
 - Windows host: `scripts/setup-firewall.ps1` (run as admin).
 - Linux host: `ufw allow 25565/tcp && ufw allow 24454/udp`.
 - DNS/DDNS, router, and CGNAT notes: `docs/PUBLIC_ACCESS.md`.

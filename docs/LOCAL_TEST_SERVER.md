@@ -81,14 +81,21 @@ Kept defaults worth knowing: `white-list=false`, `gamemode=survival`.
 
 ## One-time console commands (per world)
 
-World borders (GDD section 9 — border radius: overworld ±50,000,
-nether ±6,250, end ±50,000; `worldborder set` takes the *diameter*):
+World borders (GDD section 9) — prefer the script (uses RCON):
+
+```powershell
+scripts\apply-world-settings.ps1
+```
+
+Or by hand (`worldborder set` takes the *diameter*):
 
 ```
 worldborder set 100000
 execute in minecraft:the_nether run worldborder set 12500
 execute in minecraft:the_end run worldborder set 100000
 ```
+
+See `docs/WORLD.md` for seed, Chunky pregen, and storage notes.
 
 Gamerules — since MC 26.1 these replaced old `server.properties` keys and are
 per-world. Defaults are already correct for anarchy (`minecraft:pvp` = true),
@@ -113,6 +120,12 @@ op <your-name>
 | VaultUnlocked | ✔ | — | Economy API bridge. GlyphCore registers `GlyphEconomy` as the Vault provider, so third-party plugins read/write Glyph balances (ledgered as SYSTEM_REWARD/SYSTEM_SINK). |
 | ViaVersion + ViaBackwards | — | ✔ | Newer/older clients can join through the proxy. |
 | spark | ✔ | — | Profiling (GDD section 74). |
+| Chunky | ✔ | — | World pregeneration (GDD Phase 9). Folia-safe Bukkit jar. |
+
+RCON is enabled on the Folia backend for local automation only
+(`enable-rcon=true`, password `glyph-dev-rcon`, port `25575`, bound via
+`server-ip=127.0.0.1`). Use `scripts\rcon.ps1 "<command>"`. Never expose
+RCON on a public host — leave it off in production (`docs/DEPLOYMENT.md`).
 
 Both LuckPerms instances are configured for **shared storage on the dev
 PostgreSQL** (`storage-method: postgresql`, database `glyph`, tables

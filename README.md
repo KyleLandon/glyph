@@ -18,7 +18,8 @@ deviations from the GDD are recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md)
 
 Supporting directories: `database/` (schema docs), `docker/` (production
 images + compose stack, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)),
-`scripts/` (dev helpers + backups), `docs/` (GDD + decisions).
+`scripts/` (dev helpers + backups + staging smoke), `docs/` (GDD,
+[staging](docs/STAGING.md), [world](docs/WORLD.md), decisions).
 
 Players: the optional client modpack (voice chat, maps, performance) lives at
 [KyleLandon/glyph-clientmods](https://github.com/KyleLandon/glyph-clientmods)
