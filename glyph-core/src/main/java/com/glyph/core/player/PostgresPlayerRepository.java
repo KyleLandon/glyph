@@ -37,10 +37,20 @@ public final class PostgresPlayerRepository implements PlayerRepository {
                       (xmax = 0) AS inserted
             """;
 
+    /* RETURNING only yields a row when the insert actually happened, which
+       tells us whether to ledger the starting balance. */
     private static final String ENSURE_ACCOUNT = """
-            INSERT INTO accounts (id, owner_type, owner_uuid)
-            VALUES (?, 'PLAYER', ?)
+            INSERT INTO accounts (id, owner_type, owner_uuid, balance, lifetime_earned)
+            VALUES (?, 'PLAYER', ?, ?, ?)
             ON CONFLICT (owner_type, owner_uuid) DO NOTHING
+            RETURNING id
+            """;
+
+    /* GDD section 122: every balance change corresponds to a transaction.
+       A configured starting balance is a mint (null source). */
+    private static final String LEDGER_STARTING_BALANCE = """
+            INSERT INTO transactions (id, source_account, destination_account, amount, type, reason)
+            VALUES (?, NULL, ?, ?, 'SYSTEM_REWARD', 'starting balance')
             """;
 
     private static final String RECORD_QUIT = """
@@ -60,9 +70,11 @@ public final class PostgresPlayerRepository implements PlayerRepository {
      * database readiness, so the supplier only resolves once a pool exists.
      */
     private final Supplier<DataSource> dataSource;
+    private final long startingBalanceMinor;
 
-    public PostgresPlayerRepository(Supplier<DataSource> dataSource) {
+    public PostgresPlayerRepository(Supplier<DataSource> dataSource, long startingBalanceMinor) {
         this.dataSource = dataSource;
+        this.startingBalanceMinor = Math.max(0, startingBalanceMinor);
     }
 
     @Override
@@ -82,10 +94,26 @@ public final class PostgresPlayerRepository implements PlayerRepository {
                     }
                 }
                 // Idempotent: also heals a missing account for existing players.
+                UUID createdAccountId = null;
                 try (PreparedStatement statement = connection.prepareStatement(ENSURE_ACCOUNT)) {
                     statement.setObject(1, UUID.randomUUID());
                     statement.setObject(2, uuid);
-                    statement.executeUpdate();
+                    statement.setLong(3, startingBalanceMinor);
+                    statement.setLong(4, startingBalanceMinor);
+                    try (ResultSet created = statement.executeQuery()) {
+                        if (created.next()) {
+                            createdAccountId = created.getObject(1, UUID.class);
+                        }
+                    }
+                }
+                if (createdAccountId != null && startingBalanceMinor > 0) {
+                    try (PreparedStatement statement =
+                                 connection.prepareStatement(LEDGER_STARTING_BALANCE)) {
+                        statement.setObject(1, UUID.randomUUID());
+                        statement.setObject(2, createdAccountId);
+                        statement.setLong(3, startingBalanceMinor);
+                        statement.executeUpdate();
+                    }
                 }
                 connection.commit();
                 return new JoinResult(profile, firstJoin);

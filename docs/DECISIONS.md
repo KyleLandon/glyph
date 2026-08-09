@@ -90,3 +90,21 @@ PostgreSQL `now()`, never with JVM time. Multiple backend servers will share
 one database; using its clock makes cross-server timestamps consistent and
 monotonic per transaction. Only session *durations* (playtime) are measured
 on the game server.
+
+## ADR-008: Money is fixed at two decimal places; HUD uses the scoreboard sidebar
+
+**Status:** accepted (2026-08-09)
+
+The GDD's sample config exposes `decimal-places`. We hardcode two decimals
+(minor units are cents) because making `Money` parse/format variable-precision
+buys nothing until a design need exists, and the database comment ("BIGINT
+minor units (cents)") already assumes it. Only the currency symbol is
+configurable.
+
+The requested FiveM-style money display is a per-player scoreboard sidebar
+(the Minecraft equivalent of GTA RP's top-right cash HUD): title + one green
+cash line, score numbers hidden via Paper's blank NumberFormat. It updates
+event-driven from EconomyService balance notifications — no polling, no
+periodic database reads. Known trade-off: GlyphCore owns the player's
+scoreboard; if a future feature needs sidebar lines, it extends MoneyHud
+rather than registering its own scoreboard.

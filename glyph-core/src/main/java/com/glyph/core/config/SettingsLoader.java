@@ -44,7 +44,13 @@ public final class SettingsLoader {
                 intVal(redis, "redis.port", "GLYPH_REDIS_PORT", 6379),
                 str(redis, "redis.password", "GLYPH_REDIS_PASSWORD", ""));
 
-        return new GlyphSettings(serverId, databaseSettings, redisSettings);
+        EconomySettings economySettings = new EconomySettings(
+                longVal(config, "economy.starting-balance-minor", null, 0L),
+                str(config, "economy.currency-symbol", null, "$"),
+                boolVal(config, "economy.hud.enabled", true),
+                str(config, "economy.hud.title", null, "GLYPH"));
+
+        return new GlyphSettings(serverId, databaseSettings, redisSettings, economySettings);
     }
 
     private String str(ConfigurationSection section, String path, String envKey, String def) {
@@ -79,6 +85,10 @@ public final class SettingsLoader {
             }
         }
         return section != null ? section.getLong(path, def) : def;
+    }
+
+    private boolean boolVal(ConfigurationSection section, String path, boolean def) {
+        return section != null ? section.getBoolean(path, def) : def;
     }
 
     private String envValue(String key) {

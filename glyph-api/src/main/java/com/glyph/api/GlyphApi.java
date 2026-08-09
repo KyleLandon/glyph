@@ -1,5 +1,6 @@
 package com.glyph.api;
 
+import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.health.HealthApi;
 import com.glyph.api.player.PlayerApi;
 
@@ -29,4 +30,9 @@ public interface GlyphApi {
      * @return access to player identity data (Phase 2)
      */
     PlayerApi players();
+
+    /**
+     * @return access to the atomic economy (Phase 3)
+     */
+    EconomyApi economy();
 }

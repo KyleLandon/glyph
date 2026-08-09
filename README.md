@@ -104,6 +104,14 @@ first join; quits persist `last_seen` and accumulated playtime. All writes are
 asynchronous, and a database outage degrades gracefully (events are logged and
 skipped, gameplay continues).
 
+Economy (Phase 3): `/balance` (`/bal`), `/pay <player> <amount>`, `/baltop`,
+`/money history`, and `/eco get|set|add|remove` for admins (permission
+`glyph.economy.admin`, every adjustment ledgered and logged). Transfers are
+atomic PostgreSQL transactions with row locks and idempotency keys; amounts
+are BIGINT minor units, never floats. A scoreboard sidebar HUD shows each
+player's cash and updates live on any balance change (configure under
+`economy.hud` in `config.yml`).
+
 ## Development rules (short version)
 
 1. This repo follows `docs/GDD.md`; correctness → stability → exploit

@@ -49,7 +49,7 @@ class PostgresPlayerRepositoryIT {
                         1, 4, 5_000, 60_000, 300_000),
                 LoggerFactory.getLogger("test"), EXECUTOR);
         manager.initAsync().join();
-        repository = new PostgresPlayerRepository(manager::dataSource);
+        repository = new PostgresPlayerRepository(manager::dataSource, 0);
     }
 
     @AfterAll

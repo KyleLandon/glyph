@@ -20,8 +20,35 @@ commands:
     description: Glyph platform administration.
     usage: /glyph <status|version>
     permission: glyph.admin
+  balance:
+    description: Show your balance.
+    usage: /balance [player]
+    aliases: [bal]
+    permission: glyph.economy
+  pay:
+    description: Pay another player.
+    usage: /pay <player> <amount>
+    permission: glyph.economy
+  baltop:
+    description: Show the largest balances.
+    usage: /baltop
+    permission: glyph.economy
+  money:
+    description: Money utilities.
+    usage: /money history
+    permission: glyph.economy
+  eco:
+    description: Administrative balance control.
+    usage: /eco <get|set|add|remove> <player> [amount]
+    permission: glyph.economy.admin
 
 permissions:
   glyph.admin:
     description: Access to Glyph platform administration commands.
+    default: op
+  glyph.economy:
+    description: Access to player economy commands (/balance, /pay, /baltop, /money).
+    default: true
+  glyph.economy.admin:
+    description: Access to /eco and other players' balances.
     default: op

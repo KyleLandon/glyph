@@ -8,7 +8,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 /**
  * All GlyphCore settings, loaded once during plugin enable.
  */
-public record GlyphSettings(String serverId, DatabaseSettings database, RedisSettings redis) {
+public record GlyphSettings(
+        String serverId,
+        DatabaseSettings database,
+        RedisSettings redis,
+        EconomySettings economy) {
 
     /**
      * Saves default config files if missing, then loads them applying

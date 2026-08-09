@@ -4,3 +4,14 @@
 server:
   # Unique identifier of this backend server. Override: GLYPH_SERVER_ID
   id: glyph-01
+
+economy:
+  # Balance granted when a player's account is created, in MINOR units
+  # (cents): 500 means $5.00. Anarchy default is 0 (GDD section 55).
+  starting-balance-minor: 0
+  # Prefix used when formatting amounts.
+  currency-symbol: "$"
+  # Sidebar HUD showing the player's cash (FiveM-style).
+  hud:
+    enabled: true
+    title: "GLYPH"

@@ -22,6 +22,12 @@ class SettingsLoaderTest {
     private static final String CONFIG_YML = """
             server:
               id: test-01
+            economy:
+              starting-balance-minor: 2500
+              currency-symbol: "€"
+              hud:
+                enabled: false
+                title: "TEST"
             """;
 
     private static final String DATABASE_YML = """
@@ -71,6 +77,12 @@ class SettingsLoaderTest {
         assertThat(redis.port()).isEqualTo(6380);
         assertThat(redis.password()).isEqualTo("redispw");
         assertThat(redis.hasPassword()).isTrue();
+
+        EconomySettings economy = settings.economy();
+        assertThat(economy.startingBalanceMinor()).isEqualTo(2500);
+        assertThat(economy.currencySymbol()).isEqualTo("€");
+        assertThat(economy.hudEnabled()).isFalse();
+        assertThat(economy.hudTitle()).isEqualTo("TEST");
     }
 
     @Test
@@ -113,6 +125,10 @@ class SettingsLoaderTest {
         assertThat(settings.database().port()).isEqualTo(5432);
         assertThat(settings.redis().port()).isEqualTo(6379);
         assertThat(settings.redis().hasPassword()).isFalse();
+        assertThat(settings.economy().startingBalanceMinor()).isZero();
+        assertThat(settings.economy().currencySymbol()).isEqualTo("$");
+        assertThat(settings.economy().hudEnabled()).isTrue();
+        assertThat(settings.economy().hudTitle()).isEqualTo("GLYPH");
     }
 
     @Test
