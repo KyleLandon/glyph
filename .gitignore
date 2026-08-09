@@ -3,6 +3,9 @@
 build/
 !gradle/wrapper/gradle-wrapper.jar
 
+# IDE compiler output
+bin/
+
 # Secrets / environment
 .env
 *.env.local
