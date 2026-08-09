@@ -2,7 +2,9 @@
 # Aikar's G1GC flags, sized for local development (raise -Xms/-Xmx for load tests).
 $mem = "4G"
 
-& java `
+# Prefer JAVA_HOME: the PATH java may be an old JDK (e.g. 11 on the desktop).
+$java = if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME "bin\java.exe" } else { "java" }
+& $java `
     "-Xms$mem" "-Xmx$mem" `
     "-XX:+UseG1GC" `
     "-XX:+ParallelRefProcEnabled" `

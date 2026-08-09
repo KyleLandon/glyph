@@ -92,8 +92,10 @@ ISP uses CGNAT too — then we tunnel instead (playit.gg or a $5 VPS).
 - Folia backend: binds `127.0.0.1:25566`, refuses connections without the
   Velocity forwarding secret. Never port-forward 25566.
 - Dev PostgreSQL/Redis bind `127.0.0.1` only (docker-compose).
-- Keep the Windows account password-protected; consider auto-start via
-  Task Scheduler at boot for the Docker stack + both servers later.
+- Keep the Windows account password-protected.
+- Auto-start: the "Glyph Servers" scheduled task runs `scripts/start-all.ps1`
+  at logon — Docker engine, PostgreSQL + Redis, backend, proxy (2026-08-09).
+  Server start scripts prefer `JAVA_HOME` (User env, JDK 25 on the desktop).
 
 ## Status
 
