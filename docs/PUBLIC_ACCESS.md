@@ -1,92 +1,88 @@
-# Public Access — Domain, DNS and Port Forwarding
+# Public Access — glyphmc.net
 
-How players outside the LAN connect to the dev network. Status of each step
-is tracked at the bottom.
+How players connect to the network. The **desktop PC** (9900X3D, 96 GB,
+2.5 Gbps symmetric fiber) is the host. The laptop is a dev machine only —
+it sits on Starlink, which is CGNAT and cannot accept inbound connections;
+do not try to host from it.
+
+Domain: **glyphmc.net**, registered at Cloudflare (nameservers
+kyrie/daisy.ns.cloudflare.com). Players connect to `play.glyphmc.net`
+(bare `glyphmc.net` also works).
 
 ```
-player  --DNS-->  play.<domain>  =  <home public IP>
+player  --DNS-->  play.glyphmc.net  =  <desktop public IP, kept fresh by DDNS>
    |
    v  TCP 25565
-home router  --port forward-->  this PC (Velocity 0.0.0.0:25565)
+fiber router  --port forward-->  desktop (Velocity 0.0.0.0:25565)
                                      |
                                      v  127.0.0.1:25566 (never exposed)
                                   Folia backend
 Voice chat: UDP 24454, same path.
 ```
 
-## 1. Domain (manual, one time)
+## Desktop setup checklist (run ON THE DESKTOP)
 
-Buy at [Cloudflare Registrar](https://dash.cloudflare.com/?to=/:account/domains/register)
-(at-cost, DNS included) — any registrar works if its DNS supports low TTLs.
+### 1. Repo + servers
 
-## 2. DNS record
+Clone the repo and follow `README.md` + `docs/LOCAL_TEST_SERVER.md`
+(Docker stack, Folia + Velocity runtimes, plugins).
 
-One **A record**, e.g. `play.<domain>` → current public IP, TTL 60,
-**DNS only** (grey cloud — Cloudflare's orange-cloud proxy does not carry
-Minecraft traffic on normal plans; do not enable it).
+### 2. Cloudflare API token (one time)
 
-The record is created and kept current automatically by the dynamic DNS
-updater (next section) — no need to create it by hand.
+Cloudflare dashboard → My Profile → API Tokens → Create Token →
+template **"Edit zone DNS"** → scope: zone `glyphmc.net`.
 
-## 3. Dynamic DNS (`scripts/cloudflare-ddns.ps1`)
+### 3. DNS records via the DDNS updater
 
-Home IPs change; this script checks the current public IP and updates the
-A record when needed.
+```powershell
+[Environment]::SetEnvironmentVariable("CLOUDFLARE_API_TOKEN", "<token>", "User")
+[Environment]::SetEnvironmentVariable("GLYPH_DNS_ZONE", "glyphmc.net", "User")
+[Environment]::SetEnvironmentVariable("GLYPH_DNS_RECORD", "play.glyphmc.net,glyphmc.net", "User")
+# restart the terminal so the variables load, then:
+scripts\cloudflare-ddns.ps1
+```
 
-One-time setup on the hosting PC:
+First run creates both A records pointing at the desktop's current public
+IP (TTL 60, DNS-only/grey cloud — never enable Cloudflare's orange-cloud
+proxy on these; it does not carry Minecraft traffic).
 
-1. Cloudflare dashboard → My Profile → API Tokens → Create Token →
-   template "Edit zone DNS", scoped to the zone.
-2. Set user environment variables (PowerShell):
+Then schedule it every 5 minutes so IP changes heal automatically
+(elevated PowerShell, adjust the repo path):
 
-   ```powershell
-   [Environment]::SetEnvironmentVariable("CLOUDFLARE_API_TOKEN", "<token>", "User")
-   [Environment]::SetEnvironmentVariable("GLYPH_DNS_ZONE", "<domain>", "User")
-   [Environment]::SetEnvironmentVariable("GLYPH_DNS_RECORD", "play.<domain>", "User")
-   ```
+```powershell
+$action = New-ScheduledTaskAction -Execute "powershell.exe" `
+    -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File <repo>\scripts\cloudflare-ddns.ps1"
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
+    -RepetitionInterval (New-TimeSpan -Minutes 5)
+Register-ScheduledTask -TaskName "Glyph DDNS" -Action $action -Trigger $trigger
+```
 
-3. Run once to create the record: `scripts\cloudflare-ddns.ps1`
-4. Schedule every 5 minutes (elevated PowerShell):
+### 4. Windows Firewall
 
-   ```powershell
-   $action = New-ScheduledTaskAction -Execute "powershell.exe" `
-       -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File d:\Glyph\Glyph-Server\scripts\cloudflare-ddns.ps1"
-   $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
-       -RepetitionInterval (New-TimeSpan -Minutes 5)
-   Register-ScheduledTask -TaskName "Glyph DDNS" -Action $action -Trigger $trigger
-   ```
+Run `scripts\setup-firewall.ps1` **as Administrator** on the desktop.
+Opens TCP 25565 (Velocity) and UDP 24454 (voice). Backend port 25566 stays
+closed on purpose (localhost bind only, GDD section 38).
 
-## 4. Windows Firewall (done — `scripts/setup-firewall.ps1`)
+### 5. Router port forwarding
 
-Inbound allow rules, added 2026-08-09:
+In the fiber router's admin page, forward to the desktop's LAN address
+(set a DHCP reservation for it first so it cannot change):
 
-- `Glyph Minecraft (Velocity TCP 25565)`
-- `Glyph Voice Chat (UDP 24454)`
+| External port | Protocol | Internal              | For        |
+|---------------|----------|-----------------------|------------|
+| 25565         | TCP      | <desktop LAN IP>:25565 | Minecraft  |
+| 24454         | UDP      | <desktop LAN IP>:24454 | Voice chat |
 
-Backend port 25566 is intentionally **not** opened (localhost bind only,
-GDD section 38).
+Sanity check: the router's WAN address should match
+`https://api.ipify.org`. If it does not (or is `100.64.x.x`), the fiber
+ISP uses CGNAT too — then we tunnel instead (playit.gg or a $5 VPS).
 
-## 5. Router port forwarding (manual)
+### 6. Verify
 
-At `http://192.168.1.1` (router admin) forward to this PC
-(`192.168.1.108` — reserve this address via DHCP reservation so it cannot
-change):
-
-| External port | Protocol | Internal address     | For        |
-|---------------|----------|----------------------|------------|
-| 25565         | TCP      | 192.168.1.108:25565  | Minecraft  |
-| 24454         | UDP      | 192.168.1.108:24454  | Voice chat |
-
-If the router's WAN address is **not** the public IP shown by
-`https://api.ipify.org` (e.g. it is in `100.64.x.x`), the ISP uses CGNAT and
-port forwarding will not work — options then are asking the ISP for a public
-IP, or a tunnel (playit.gg / Cloudflare Tunnel with Spectrum).
-
-## 6. Verify
-
-1. `Test-NetConnection localhost -Port 25565` on this PC (Velocity running).
-2. From outside the LAN (phone hotspot): add `play.<domain>` in Minecraft.
-3. https://mcsrvstat.us/server/play.<domain> shows the MOTD when reachable.
+1. On the desktop: `Test-NetConnection localhost -Port 25565`
+   (Velocity must be running).
+2. From outside the LAN (phone hotspot): connect to `play.glyphmc.net`.
+3. https://mcsrvstat.us/server/play.glyphmc.net shows the MOTD when live.
 
 ## Security posture (already in place)
 
@@ -94,13 +90,17 @@ IP, or a tunnel (playit.gg / Cloudflare Tunnel with Spectrum).
   command + tab-complete rate limits, query protocol disabled.
 - Folia backend: binds `127.0.0.1:25566`, refuses connections without the
   Velocity forwarding secret. Never port-forward 25566.
-- The dev PostgreSQL/Redis bind `127.0.0.1` only (docker-compose).
+- Dev PostgreSQL/Redis bind `127.0.0.1` only (docker-compose).
+- Keep the Windows account password-protected; consider auto-start via
+  Task Scheduler at boot for the Docker stack + both servers later.
 
 ## Status
 
-- [x] Firewall rules (2026-08-09)
-- [x] DDNS updater script ready
-- [ ] Domain purchased — pending
-- [ ] DDNS environment variables + scheduled task
-- [ ] Router port forwarding
+- [x] Domain purchased: glyphmc.net (Cloudflare, 2026-08-09)
+- [x] DDNS updater script (multi-record: play + bare domain)
+- [x] Firewall script ready (`scripts/setup-firewall.ps1`)
+- [ ] Desktop: repo cloned + servers running
+- [ ] Desktop: API token + DDNS env vars + first run + scheduled task
+- [ ] Desktop: firewall script run as admin
+- [ ] Router: DHCP reservation + port forwards (TCP 25565, UDP 24454)
 - [ ] Outside-LAN connection verified

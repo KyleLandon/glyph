@@ -7,8 +7,9 @@
 #
 # Requires three environment variables (user-level is fine):
 #   CLOUDFLARE_API_TOKEN  API token with Zone:DNS:Edit on the zone
-#   GLYPH_DNS_ZONE        the registered domain, e.g. glyphmc.com
-#   GLYPH_DNS_RECORD      the full record name, e.g. play.glyphmc.com
+#   GLYPH_DNS_ZONE        the registered domain, e.g. glyphmc.net
+#   GLYPH_DNS_RECORD      record name(s), comma separated, e.g.
+#                         "play.glyphmc.net,glyphmc.net"
 
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -32,18 +33,20 @@ if (-not $zoneId) {
     exit 1
 }
 
-$existing = (Invoke-RestMethod "$api/zones/$zoneId/dns_records?type=A&name=$record" -Headers $headers).result
+foreach ($name in ($record -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })) {
+    $existing = (Invoke-RestMethod "$api/zones/$zoneId/dns_records?type=A&name=$name" -Headers $headers).result
 
-if (-not $existing) {
-    # First run: create the record. proxied=false is required — Cloudflare's
-    # proxy does not carry Minecraft traffic on normal plans.
-    $body = @{ type = "A"; name = $record; content = $publicIp; ttl = 60; proxied = $false } | ConvertTo-Json
-    Invoke-RestMethod "$api/zones/$zoneId/dns_records" -Method Post -Headers $headers -Body $body | Out-Null
-    Write-Output "$(Get-Date -Format s) created $record -> $publicIp"
-} elseif ($existing[0].content -ne $publicIp) {
-    $body = @{ type = "A"; name = $record; content = $publicIp; ttl = 60; proxied = $false } | ConvertTo-Json
-    Invoke-RestMethod "$api/zones/$zoneId/dns_records/$($existing[0].id)" -Method Put -Headers $headers -Body $body | Out-Null
-    Write-Output "$(Get-Date -Format s) updated $record : $($existing[0].content) -> $publicIp"
-} else {
-    Write-Output "$(Get-Date -Format s) unchanged ($publicIp)"
+    if (-not $existing) {
+        # First run: create the record. proxied=false is required — Cloudflare's
+        # proxy does not carry Minecraft traffic on normal plans.
+        $body = @{ type = "A"; name = $name; content = $publicIp; ttl = 60; proxied = $false } | ConvertTo-Json
+        Invoke-RestMethod "$api/zones/$zoneId/dns_records" -Method Post -Headers $headers -Body $body | Out-Null
+        Write-Output "$(Get-Date -Format s) created $name -> $publicIp"
+    } elseif ($existing[0].content -ne $publicIp) {
+        $body = @{ type = "A"; name = $name; content = $publicIp; ttl = 60; proxied = $false } | ConvertTo-Json
+        Invoke-RestMethod "$api/zones/$zoneId/dns_records/$($existing[0].id)" -Method Put -Headers $headers -Body $body | Out-Null
+        Write-Output "$(Get-Date -Format s) updated $name : $($existing[0].content) -> $publicIp"
+    } else {
+        Write-Output "$(Get-Date -Format s) unchanged $name ($publicIp)"
+    }
 }
