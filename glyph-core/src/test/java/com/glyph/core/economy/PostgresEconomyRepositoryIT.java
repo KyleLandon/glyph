@@ -255,6 +255,31 @@ class PostgresEconomyRepositoryIT {
     }
 
     @Test
+    void externalAdjustmentsLedgerAsSystemTypes() {
+        UUID alice = playerWithBalance(0);
+
+        repository.externalAdjust(alice, AdminOperation.ADD, 10_00,
+                TransactionType.SYSTEM_REWARD, "vault bridge");
+        repository.externalAdjust(alice, AdminOperation.REMOVE, 3_00,
+                TransactionType.SYSTEM_SINK, "vault bridge");
+
+        assertThat(repository.balanceMinor(alice)).contains(7_00L);
+        List<LedgerEntry> history = repository.history(alice, 10);
+        assertThat(history).extracting(LedgerEntry::type)
+                .contains(TransactionType.SYSTEM_REWARD, TransactionType.SYSTEM_SINK);
+        assertThat(history).extracting(LedgerEntry::reason).contains("vault bridge");
+    }
+
+    @Test
+    void ensureAccountCreatesOnceWithZeroBalance() {
+        UUID ghost = UUID.randomUUID(); // never joined
+
+        assertThat(repository.ensureAccount(ghost)).isTrue();
+        assertThat(repository.ensureAccount(ghost)).isTrue();
+        assertThat(repository.balanceMinor(ghost)).contains(0L);
+    }
+
+    @Test
     void topBalancesOrderedDescending() {
         UUID rich = playerWithBalance(1_000_00);
         UUID richer = playerWithBalance(2_000_00);

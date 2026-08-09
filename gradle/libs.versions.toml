@@ -5,6 +5,7 @@ hikaricp = "6.3.0"
 flyway = "11.8.2"
 postgresql = "42.7.7"
 lettuce = "6.7.1.RELEASE"
+vault-api = "1.7.1"
 junit = "5.12.2"
 testcontainers = "1.21.4"
 assertj = "3.27.3"
@@ -18,6 +19,7 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+vault-api = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vault-api" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 

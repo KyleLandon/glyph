@@ -112,6 +112,11 @@ are BIGINT minor units, never floats. A scoreboard sidebar HUD shows each
 player's cash and updates live on any balance change (configure under
 `economy.hud` in `config.yml`).
 
+When VaultUnlocked is installed, GlyphCore registers a classic Vault economy
+provider (`GlyphEconomy`) so third-party plugins can use Glyph balances;
+their deposits/withdrawals are ledgered as SYSTEM_REWARD/SYSTEM_SINK
+(see `docs/DECISIONS.md` ADR-009).
+
 ## Development rules (short version)
 
 1. This repo follows `docs/GDD.md`; correctness → stability → exploit

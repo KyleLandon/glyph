@@ -64,9 +64,10 @@ public final class GlyphCorePlugin extends JavaPlugin {
         this.healthService = new HealthService(List.of(databaseManager, redisManager));
 
         this.playerSessionService = new PlayerSessionService();
+        PostgresPlayerRepository playerRepository = new PostgresPlayerRepository(
+                databaseManager::dataSource, settings.economy().startingBalanceMinor());
         this.playerService = new PlayerService(
-                new PostgresPlayerRepository(databaseManager::dataSource,
-                        settings.economy().startingBalanceMinor()),
+                playerRepository,
                 playerSessionService,
                 databaseManager::isReady,
                 ioExecutor,
@@ -76,11 +77,20 @@ public final class GlyphCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new PlayerQuitListener(playerService, getSLF4JLogger()), this);
 
+        PostgresEconomyRepository economyRepository =
+                new PostgresEconomyRepository(databaseManager::dataSource);
         this.economyService = new EconomyService(
-                new PostgresEconomyRepository(databaseManager::dataSource),
+                economyRepository,
                 databaseManager::isReady,
                 ioExecutor,
                 getSLF4JLogger());
+
+        // Vault bridge: only touch Vault classes when VaultUnlocked (plugin
+        // name "Vault") is actually installed.
+        if (getServer().getPluginManager().getPlugin("Vault") != null) {
+            com.glyph.core.economy.vault.VaultBridgeRegistrar.register(
+                    this, economyRepository, playerRepository);
+        }
 
         MoneyHud moneyHud = new MoneyHud(
                 schedulerAdapter, settings.economy(), economyService, getSLF4JLogger());
@@ -132,6 +142,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         GlyphApiProvider.unregister();
+        getServer().getServicesManager().unregisterAll(this);
 
         if (redisManager != null) {
             redisManager.close();

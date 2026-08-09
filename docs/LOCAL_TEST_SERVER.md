@@ -98,7 +98,7 @@ op <your-name>
 |--------|-------|----------|---------|
 | LuckPerms 5.5.x | `LuckPerms-Bukkit` | `LuckPerms-Velocity` | Permissions. **Use the Bukkit jar on Folia — the Fabric jar is a different mod loader and silently never loads.** |
 | Simple Voice Chat | `voicechat-bukkit` | `voicechat-velocity` | Proximity voice (GDD section 2). Version numbers differ per platform — that is normal. |
-| VaultUnlocked | ✔ | — | Economy/permissions API bridge for third-party plugins. GlyphCore does not register a Vault economy provider yet. |
+| VaultUnlocked | ✔ | — | Economy API bridge. GlyphCore registers `GlyphEconomy` as the Vault provider, so third-party plugins read/write Glyph balances (ledgered as SYSTEM_REWARD/SYSTEM_SINK). |
 | ViaVersion + ViaBackwards | — | ✔ | Newer/older clients can join through the proxy. |
 | spark | ✔ | — | Profiling (GDD section 74). |
 

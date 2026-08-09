@@ -48,6 +48,15 @@ public final class EconomyService implements EconomyApi {
         balanceListeners.add(listener);
     }
 
+    /**
+     * Publishes a balance change made outside this service (the Vault bridge
+     * writes through the repository directly) so HUDs and other listeners
+     * stay in sync.
+     */
+    public void publishBalanceChange(UUID playerUuid, Money newBalance) {
+        notifyBalance(playerUuid, newBalance.minorUnits());
+    }
+
     @Override
     public CompletableFuture<Optional<Money>> balance(UUID playerUuid) {
         if (!databaseReady.getAsBoolean()) {

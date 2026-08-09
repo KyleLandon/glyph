@@ -3,6 +3,7 @@ package com.glyph.core.economy;
 import com.glyph.api.economy.EconomyApi.AdminOperation;
 import com.glyph.api.economy.LedgerEntry;
 import com.glyph.api.economy.TopBalance;
+import com.glyph.api.economy.TransactionType;
 import com.glyph.api.economy.TransferResult;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +47,22 @@ public interface EconomyRepository {
      * the acting admin in {@code actor_uuid}.
      */
     MutationOutcome adminAdjust(UUID playerUuid, AdminOperation operation, long amountMinor, UUID actor);
+
+    /**
+     * Balance mutation on behalf of a third-party plugin (Vault bridge).
+     * ADD mints as {@code SYSTEM_REWARD}, REMOVE burns as {@code SYSTEM_SINK};
+     * both are ledgered with the given reason.
+     */
+    MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
+                                   long amountMinor, TransactionType type, String reason);
+
+    /**
+     * Creates an empty account if none exists (Vault
+     * {@code createPlayerAccount}). Idempotent.
+     *
+     * @return true if the account exists after the call
+     */
+    boolean ensureAccount(UUID playerUuid);
 
     List<TopBalance> topBalances(int limit);
 

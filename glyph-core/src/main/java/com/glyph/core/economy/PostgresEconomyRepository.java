@@ -203,6 +203,23 @@ public final class PostgresEconomyRepository implements EconomyRepository {
     @Override
     public MutationOutcome adminAdjust(
             UUID playerUuid, AdminOperation operation, long amountMinor, UUID actor) {
+        return adjust(playerUuid, operation, amountMinor, TransactionType.ADMIN_ADJUSTMENT,
+                "eco " + operation.name().toLowerCase()
+                        + " by " + (actor == null ? "console" : actor),
+                actor);
+    }
+
+    @Override
+    public MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
+                                          long amountMinor, TransactionType type, String reason) {
+        if (amountMinor < 0) {
+            return MutationOutcome.failure(TransferResult.Status.INVALID_AMOUNT);
+        }
+        return adjust(playerUuid, operation, amountMinor, type, reason, null);
+    }
+
+    private MutationOutcome adjust(UUID playerUuid, AdminOperation operation, long amountMinor,
+                                   TransactionType type, String reason, UUID actor) {
         try (Connection connection = dataSource.get().getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -262,9 +279,8 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                     statement.setObject(2, delta > 0 ? null : account.accountId());
                     statement.setObject(3, delta > 0 ? account.accountId() : null);
                     statement.setLong(4, Math.abs(delta));
-                    statement.setString(5, TransactionType.ADMIN_ADJUSTMENT.name());
-                    statement.setString(6, "eco " + operation.name().toLowerCase()
-                            + " by " + (actor == null ? "console" : actor));
+                    statement.setString(5, type.name());
+                    statement.setString(6, reason);
                     statement.setObject(7, actor);
                     statement.setString(8, null);
                     statement.executeUpdate();
@@ -281,7 +297,25 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                 connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            throw new EconomyPersistenceException("adminAdjust failed for " + playerUuid, e);
+            throw new EconomyPersistenceException(
+                    type + " adjustment failed for " + playerUuid, e);
+        }
+    }
+
+    @Override
+    public boolean ensureAccount(UUID playerUuid) {
+        try (Connection connection = dataSource.get().getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     INSERT INTO accounts (id, owner_type, owner_uuid)
+                     VALUES (?, 'PLAYER', ?)
+                     ON CONFLICT (owner_type, owner_uuid) DO NOTHING
+                     """)) {
+            statement.setObject(1, UUID.randomUUID());
+            statement.setObject(2, playerUuid);
+            statement.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            throw new EconomyPersistenceException("ensureAccount failed for " + playerUuid, e);
         }
     }
 

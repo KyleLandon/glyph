@@ -9,6 +9,11 @@ subprojects {
         maven("https://repo.papermc.io/repository/maven-public/") {
             name = "papermc"
         }
+        // VaultAPI (classic Vault interfaces, provided at runtime by VaultUnlocked)
+        maven("https://jitpack.io") {
+            name = "jitpack"
+            content { includeGroup("com.github.MilkBowl") }
+        }
     }
 
     extensions.configure<JavaPluginExtension> {

@@ -5,6 +5,9 @@ api-version: "26.1.2"
 folia-supported: true
 description: Core platform plugin for the Glyph anarchy-economy network.
 authors: [Glyph]
+# VaultUnlocked registers under the plugin name "Vault"; load after it so the
+# economy bridge can register (GlyphCore works fine without it).
+softdepend: [Vault]
 
 # Downloaded by the server from Maven Central at startup; keep versions in
 # sync with gradle/libs.versions.toml (they are injected at build time).

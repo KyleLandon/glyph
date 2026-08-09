@@ -12,6 +12,10 @@ dependencies {
     compileOnly(libs.postgresql)
     compileOnly(libs.lettuce)
 
+    // Classic Vault economy interfaces; VaultUnlocked ships them at runtime.
+    compileOnly(libs.vault.api) { isTransitive = false }
+    testImplementation(libs.vault.api) { isTransitive = false }
+
     testImplementation(libs.folia.api)
     testImplementation(libs.hikaricp)
     testImplementation(libs.flyway.core)

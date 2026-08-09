@@ -48,22 +48,24 @@ The priority order is:
 
 ---
 
+
+
 # 2. PRODUCT VISION
 
 Build a persistent public Minecraft survival server centered around:
 
-* anarchy-style gameplay
-* meaningful risk
-* player conflict
-* raiding
-* exploration
-* emergent alliances
-* player-created wealth
-* player-driven markets
-* proximity voice communication
-* persistent reputation
-* long-term progression
-* extremely high server performance
+- anarchy-style gameplay
+- meaningful risk
+- player conflict
+- raiding
+- exploration
+- emergent alliances
+- player-created wealth
+- player-driven markets
+- proximity voice communication
+- persistent reputation
+- long-term progression
+- extremely high server performance
 
 The server should feel dangerous.
 
@@ -75,6 +77,8 @@ It does NOT mean players may intentionally attack server infrastructure or compr
 
 ---
 
+
+
 # 3. CORE PRODUCT PITCH
 
 > A persistent Minecraft world with no land claims, no grief protection, no free teleportation, and no staff replacing lost items — combined with a deep player-driven economy, proximity voice chat, auctions, contracts, bounties, businesses and statistics.
@@ -85,25 +89,31 @@ Players can also destroy it.
 
 ---
 
+
+
 # 4. CORE DESIGN PILLARS
+
+
 
 ## 4.1 Freedom
 
 Players determine:
 
-* where they live
-* who they trust
-* who they attack
-* what they sell
-* what items are valuable
-* where settlements emerge
-* what factions form
-* what territory matters
-* what businesses succeed
+- where they live
+- who they trust
+- who they attack
+- what they sell
+- what items are valuable
+- where settlements emerge
+- what factions form
+- what territory matters
+- what businesses succeed
 
 Avoid excessive artificial restrictions.
 
 ---
+
+
 
 ## 4.2 Consequences
 
@@ -111,23 +121,25 @@ Actions matter.
 
 Death may result in:
 
-* item loss
-* XP loss
-* bounty consequences
-* economic loss
-* location exposure
-* tactical disadvantages
+- item loss
+- XP loss
+- bounty consequences
+- economic loss
+- location exposure
+- tactical disadvantages
 
 Bases can be:
 
-* discovered
-* infiltrated
-* robbed
-* destroyed
+- discovered
+- infiltrated
+- robbed
+- destroyed
 
 Players should think before revealing locations.
 
 ---
+
+
 
 ## 4.3 Player-Driven Economy
 
@@ -145,6 +157,8 @@ The economy should emerge naturally.
 
 ---
 
+
+
 ## 4.4 Persistent World
 
 The world should feel permanent.
@@ -157,21 +171,25 @@ Players should be able to return months later and find the history of the server
 
 ---
 
+
+
 ## 4.5 Performance
 
 Server performance is itself a product feature.
 
 Target:
 
-* stable 20 TPS
-* responsive combat
-* responsive inventories
-* minimal rubber-banding
-* minimal chunk-loading stalls
-* predictable database behavior
-* graceful degradation under heavy load
+- stable 20 TPS
+- responsive combat
+- responsive inventories
+- minimal rubber-banding
+- minimal chunk-loading stalls
+- predictable database behavior
+- graceful degradation under heavy load
 
 ---
+
+
 
 ## 4.6 Minimal Client Requirements
 
@@ -187,6 +205,8 @@ Additional client-side performance or visual mods may be allowed.
 
 ---
 
+
+
 # 5. DEFINITION OF ANARCHY
 
 The server is **gameplay anarchy**, not infrastructure anarchy.
@@ -195,43 +215,47 @@ The server is **gameplay anarchy**, not infrastructure anarchy.
 
 Subject to future balance changes:
 
-* griefing
-* stealing
-* raiding
-* betrayal
-* traps
-* PvP
-* scams involving in-game assets
-* base hunting
-* espionage
-* factions
-* alliances
-* mercenary work
-* monopolies
-* price manipulation
-* economic warfare
+- griefing
+- stealing
+- raiding
+- betrayal
+- traps
+- PvP
+- scams involving in-game assets
+- base hunting
+- espionage
+- factions
+- alliances
+- mercenary work
+- monopolies
+- price manipulation
+- economic warfare
+
+
 
 ## Not Allowed
 
-* server crashing
-* network attacks
-* DDoS
-* packet exploits
-* intentional corruption exploits
-* duplication exploits
-* unauthorized botnets
-* authentication attacks
-* compromised accounts
-* doxxing
-* real-world threats
-* malicious code distribution
-* exploiting software vulnerabilities to damage infrastructure
-* attempts to gain administrative permissions
-* attacks against other players outside the game
+- server crashing
+- network attacks
+- DDoS
+- packet exploits
+- intentional corruption exploits
+- duplication exploits
+- unauthorized botnets
+- authentication attacks
+- compromised accounts
+- doxxing
+- real-world threats
+- malicious code distribution
+- exploiting software vulnerabilities to damage infrastructure
+- attempts to gain administrative permissions
+- attacks against other players outside the game
 
 Cheating policy should be separately configurable.
 
 ---
+
+
 
 # 6. CHEAT POLICY
 
@@ -239,41 +263,47 @@ Recommended launch policy:
 
 ## Allowed client enhancements
 
-* shaders
-* Sodium-style performance mods
-* Iris
-* inventory HUDs
-* accessibility modifications
-* resource packs
-* cosmetic modifications
+- shaders
+- Sodium-style performance mods
+- Iris
+- inventory HUDs
+- accessibility modifications
+- resource packs
+- cosmetic modifications
+
+
 
 ## Conditionally allowed
 
-* minimaps
-* waypoint systems
+- minimaps
+- waypoint systems
 
 These should be intentionally decided before launch.
 
 ## Prohibited
 
-* KillAura
-* reach
-* fly
-* speed
-* movement modification
-* automatic combat
-* packet manipulation
-* inventory exploits
-* crash clients
-* duplication clients
-* impossible mining automation
-* unattended farming bots
+- KillAura
+- reach
+- fly
+- speed
+- movement modification
+- automatic combat
+- packet manipulation
+- inventory exploits
+- crash clients
+- duplication clients
+- impossible mining automation
+- unattended farming bots
 
 Freecam and similar tools should receive an explicit policy decision before launch.
 
 ---
 
+
+
 # 7. PLAYER EXPERIENCE
+
+
 
 ## 7.1 First Join
 
@@ -310,6 +340,8 @@ Use /help to begin.
 
 ---
 
+
+
 # 8. SPAWN DESIGN
 
 Spawn should provide orientation without creating a protected civilization.
@@ -322,21 +354,23 @@ Protection should prevent permanent spawn destruction while allowing danger imme
 
 Inside spawn protection:
 
-* no block breaking
-* no block placing
-* no lava dumping
-* no fire spread exploitation
-* no portal traps
-* no destructive entity exploits
+- no block breaking
+- no block placing
+- no lava dumping
+- no fire spread exploitation
+- no portal traps
+- no destructive entity exploits
 
 Optional:
 
-* disable PvP within the innermost spawn radius
-* allow PvP immediately outside it
+- disable PvP within the innermost spawn radius
+- allow PvP immediately outside it
 
 Avoid huge protected zones.
 
 ---
+
+
 
 # 9. WORLD DESIGN
 
@@ -362,17 +396,19 @@ Exact values should be configurable.
 
 ---
 
+
+
 # 10. WORLD EXPANSION SYSTEM
 
 Borders may expand based on milestones.
 
 Examples:
 
-* population
-* exploration
-* major updates
-* community events
-* economic growth
+- population
+- exploration
+- major updates
+- community events
+- economic growth
 
 Expansion must NEVER require resetting previously generated areas.
 
@@ -389,6 +425,8 @@ Do not promise a specific expansion schedule publicly until established.
 
 ---
 
+
+
 # 11. WORLD PREGENERATION
 
 All initially accessible terrain should be pregenerated before public launch.
@@ -399,20 +437,22 @@ Reduce runtime generation load.
 
 World generation should happen:
 
-* before launch
-* during maintenance
-* during planned expansions
+- before launch
+- during maintenance
+- during planned expansions
 
 Do not generate massive border expansions during peak periods.
 
 Pregeneration process must support:
 
-* progress tracking
-* restartability
-* graceful cancellation
-* storage monitoring
+- progress tracking
+- restartability
+- graceful cancellation
+- storage monitoring
 
 ---
+
+
 
 # 12. CORE GAME LOOP
 
@@ -442,27 +482,31 @@ REPEAT
 
 ---
 
+
+
 # 13. ECONOMY PHILOSOPHY
 
 The economy is one of the defining systems.
 
 It should create:
 
-* specialization
-* scarcity
-* markets
-* trade routes
-* wealthy players
-* merchants
-* mercenaries
-* industrial players
-* resource suppliers
-* competition
-* economic conflict
+- specialization
+- scarcity
+- markets
+- trade routes
+- wealthy players
+- merchants
+- mercenaries
+- industrial players
+- resource suppliers
+- competition
+- economic conflict
 
 Players should be able to become economically powerful without necessarily being the strongest PvP player.
 
 ---
+
+
 
 # 14. CURRENCY
 
@@ -484,13 +528,13 @@ $1.00 = 100 cents
 
 Never store balances as:
 
-* float
-* double
+- float
+- double
 
 Use:
 
-* BIGINT
-* long
+- BIGINT
+- long
 
 Example:
 
@@ -500,27 +544,31 @@ Example:
 
 ---
 
+
+
 # 15. ECONOMY ACCOUNT MODEL
 
 Each player has:
 
-* account UUID
-* Minecraft UUID
-* balance
-* lifetime earned
-* lifetime spent
-* created timestamp
-* updated timestamp
-* account status
+- account UUID
+- Minecraft UUID
+- balance
+- lifetime earned
+- lifetime spent
+- created timestamp
+- updated timestamp
+- account status
 
 Future account types:
 
-* player
-* company
-* system
-* escrow
+- player
+- company
+- system
+- escrow
 
 ---
+
+
 
 # 16. MONEY CREATION
 
@@ -528,12 +576,12 @@ Currency must enter circulation through controlled systems.
 
 Potential faucets:
 
-* contracts
-* bounties
-* server events
-* voting rewards
-* rare treasure
-* future jobs
+- contracts
+- bounties
+- server events
+- voting rewards
+- rare treasure
+- future jobs
 
 Avoid massive passive daily payments.
 
@@ -541,26 +589,30 @@ Money creation should be measurable.
 
 ---
 
+
+
 # 17. MONEY SINKS
 
 Required to manage inflation.
 
 Potential sinks:
 
-* auction listing fees
-* auction transaction fees
-* business registration
-* cosmetic purchases
-* bounty fees
-* contract posting fees
-* name customization
-* premium market listings
-* transportation systems
-* optional convenience systems
+- auction listing fees
+- auction transaction fees
+- business registration
+- cosmetic purchases
+- bounty fees
+- contract posting fees
+- name customization
+- premium market listings
+- transportation systems
+- optional convenience systems
 
 Never rely on arbitrary item deletion as the primary economic sink.
 
 ---
+
+
 
 # 18. ECONOMY COMMANDS
 
@@ -593,23 +645,25 @@ Every administrative balance modification MUST be logged.
 
 ---
 
+
+
 # 19. TRANSACTION LEDGER
 
 Every transfer must create a ledger entry.
 
 Transaction record:
 
-* transaction UUID
-* timestamp
-* source account
-* destination account
-* amount
-* transaction type
-* reason
-* related entity
-* metadata
-* actor
-* idempotency key where applicable
+- transaction UUID
+- timestamp
+- source account
+- destination account
+- amount
+- transaction type
+- reason
+- related entity
+- metadata
+- actor
+- idempotency key where applicable
 
 Types may include:
 
@@ -629,6 +683,8 @@ SYSTEM_SINK
 Transactions should never silently disappear.
 
 ---
+
+
 
 # 20. ATOMIC TRANSACTIONS
 
@@ -662,6 +718,8 @@ Prevent double-spending.
 
 ---
 
+
+
 # 21. AUCTION HOUSE
 
 Command:
@@ -672,17 +730,17 @@ The auction house should provide a GUI.
 
 MVP functionality:
 
-* browse listings
-* search
-* item categories
-* sort
-* buy
-* list item
-* cancel own listing
-* expiration
-* transaction fees
-* listing fees
-* offline seller payout
+- browse listings
+- search
+- item categories
+- sort
+- buy
+- list item
+- cancel own listing
+- expiration
+- transaction fees
+- listing fees
+- offline seller payout
 
 Example:
 
@@ -693,6 +751,8 @@ Example:
 lists currently held item for `$5,000`.
 
 ---
+
+
 
 # 22. AUCTION SECURITY
 
@@ -722,6 +782,8 @@ Do not directly give the item before the database transaction succeeds.
 
 ---
 
+
+
 # 23. DELIVERY SYSTEM
 
 Purchased/expired items should not rely exclusively on player inventory space.
@@ -740,6 +802,8 @@ This prevents inventory-full edge cases.
 
 ---
 
+
+
 # 24. PLAYER TRADING
 
 Command:
@@ -752,8 +816,8 @@ Secure two-party GUI.
 
 Each party can add:
 
-* items
-* money
+- items
+- money
 
 Both must confirm.
 
@@ -762,6 +826,8 @@ Changing trade contents resets confirmation.
 Transaction executes atomically.
 
 ---
+
+
 
 # 25. BOUNTIES
 
@@ -779,21 +845,23 @@ Bounty money moves immediately into escrow.
 
 On valid player kill:
 
-* bounty is paid
-* ledger transaction created
-* kill recorded
-* bounty closed
+- bounty is paid
+- ledger transaction created
+- kill recorded
+- bounty closed
 
 Anti-abuse rules should include:
 
-* repeated same-player kill detection
-* shared-IP signals for moderation
-* optional cooldowns
-* suspicious bounty redemption logs
+- repeated same-player kill detection
+- shared-IP signals for moderation
+- optional cooldowns
+- suspicious bounty redemption logs
 
 Do not automatically punish based solely on IP matches.
 
 ---
+
+
 
 # 26. CONTRACT SYSTEM
 
@@ -801,18 +869,20 @@ Future major economy feature.
 
 Possible contracts:
 
-* kill player
-* deliver item
-* acquire resources
-* protect player
-* construction task
-* exploration objective
+- kill player
+- deliver item
+- acquire resources
+- protect player
+- construction task
+- exploration objective
 
 Initial supported machine-verifiable contracts should be narrow.
 
 Do not build arbitrary natural-language contract enforcement in MVP.
 
 ---
+
+
 
 # 27. COMPANIES
 
@@ -828,14 +898,14 @@ Example:
 
 Company functionality:
 
-* company account
-* owner
-* officers
-* members
-* permissions
-* treasury
-* transaction history
-* public profile
+- company account
+- owner
+- officers
+- members
+- permissions
+- treasury
+- transaction history
+- public profile
 
 Companies DO NOT grant land claims.
 
@@ -843,16 +913,18 @@ They are economic/social entities.
 
 ---
 
+
+
 # 28. PLAYER SHOPS
 
 Later feature.
 
 Potential implementations:
 
-* chest shops
-* marketplace NPC
-* GUI storefront
-* company storefronts
+- chest shops
+- marketplace NPC
+- GUI storefront
+- company storefronts
 
 Must integrate with AnarchyCore ledger.
 
@@ -860,26 +932,28 @@ Avoid separate disconnected economy systems.
 
 ---
 
+
+
 # 29. PROXIMITY VOICE
 
 Use Simple Voice Chat.
 
 Desired gameplay:
 
-* nearby players can speak naturally
-* distance attenuation
-* directional audio
-* optional whispering
-* optional voice groups
+- nearby players can speak naturally
+- distance attenuation
+- directional audio
+- optional whispering
+- optional voice groups
 
 Voice communication should enhance:
 
-* diplomacy
-* ambushes
-* negotiations
-* social encounters
-* betrayal
-* exploration
+- diplomacy
+- ambushes
+- negotiations
+- social encounters
+- betrayal
+- exploration
 
 Simple Voice Chat supports the relevant server/plugin approach, and vanilla clients can still connect if voice chat is not forced.
 
@@ -897,33 +971,37 @@ Actual values must be configurable.
 
 ---
 
+
+
 # 30. PLAYER STATISTICS
 
 Track:
 
-* first join
-* last join
-* playtime
-* kills
-* deaths
-* K/D
-* player kills
-* mob kills
-* blocks mined
-* blocks placed
-* distance traveled
-* balance
-* lifetime earned
-* lifetime spent
-* bounty kills
-* auction sales
-* auction purchases
+- first join
+- last join
+- playtime
+- kills
+- deaths
+- K/D
+- player kills
+- mob kills
+- blocks mined
+- blocks placed
+- distance traveled
+- balance
+- lifetime earned
+- lifetime spent
+- bounty kills
+- auction sales
+- auction purchases
 
 Do not synchronously update SQL for every individual block action.
 
 Use buffered counters where appropriate.
 
 ---
+
+
 
 # 31. LEADERBOARDS
 
@@ -940,6 +1018,8 @@ Initial:
 Future website leaderboards should use the same underlying data.
 
 ---
+
+
 
 # 32. CHAT
 
@@ -971,20 +1051,22 @@ Do not overload launch with excessive RPG formatting.
 
 ---
 
+
+
 # 33. DEATH SYSTEM
 
 Vanilla item dropping by default.
 
 Track:
 
-* killer UUID
-* victim UUID
-* weapon/item
-* world
-* coordinates
-* timestamp
-* bounty amount
-* cause
+- killer UUID
+- victim UUID
+- weapon/item
+- world
+- coordinates
+- timestamp
+- bounty amount
+- cause
 
 Coordinates should NOT automatically be publicly exposed.
 
@@ -1001,6 +1083,8 @@ Steve eliminated Kyle and claimed a $25,000 bounty.
 ```
 
 ---
+
+
 
 # 34. TELEPORTATION PHILOSOPHY
 
@@ -1019,16 +1103,18 @@ Travel should matter.
 
 Allowed:
 
-* vanilla portals
-* elytra
-* horses
-* boats
-* minecarts
-* future player-created infrastructure
+- vanilla portals
+- elytra
+- horses
+- boats
+- minecarts
+- future player-created infrastructure
 
 Possible admin-only teleport commands remain available for moderation.
 
 ---
+
+
 
 # 35. MAP POLICY
 
@@ -1038,12 +1124,14 @@ Base secrecy is core gameplay.
 
 Future map options:
 
-* spawn-only map
-* explored heatmap
-* delayed map
-* terrain-only map without players
+- spawn-only map
+- explored heatmap
+- delayed map
+- terrain-only map without players
 
 ---
+
+
 
 # 36. NETWORK ARCHITECTURE
 
@@ -1083,17 +1171,19 @@ Velocity is the intended scalable proxy layer, and current PaperMC documentation
 
 ---
 
+
+
 # 37. VELOCITY
 
 Responsibilities:
 
-* public Minecraft connection
-* authentication forwarding
-* backend routing
-* future lobby
-* future queue
-* maintenance routing
-* network-wide player count
+- public Minecraft connection
+- authentication forwarding
+- backend routing
+- future lobby
+- future queue
+- maintenance routing
+- network-wide player count
 
 Use Velocity modern player forwarding.
 
@@ -1102,6 +1192,8 @@ Backend server must validate Velocity forwarding.
 Modern forwarding is the preferred secure Velocity forwarding format.
 
 ---
+
+
 
 # 38. BACKEND SECURITY
 
@@ -1121,12 +1213,14 @@ Internet → Folia
 
 Backend should:
 
-* bind private interface
-* enforce forwarding
-* firewall public access
-* validate proxy secret
+- bind private interface
+- enforce forwarding
+- firewall public access
+- validate proxy secret
 
 ---
+
+
 
 # 39. FOLIA
 
@@ -1137,6 +1231,8 @@ Folia uses regionized multithreading and is particularly suited to SMP-style wor
 All custom plugin code MUST account for this architecture.
 
 ---
+
+
 
 # 40. FOLIA PROGRAMMING RULES
 
@@ -1156,9 +1252,11 @@ Use global scheduler.
 
 Examples:
 
-* global metadata
-* announcements
-* aggregate maintenance operations
+- global metadata
+- announcements
+- aggregate maintenance operations
+
+
 
 ### Region operations
 
@@ -1166,9 +1264,11 @@ Use region scheduler.
 
 Examples:
 
-* blocks
-* chunk-local operations
-* region state
+- blocks
+- chunk-local operations
+- region state
+
+
 
 ### Entity operations
 
@@ -1176,9 +1276,11 @@ Use entity scheduler.
 
 Examples:
 
-* player operations
-* mob operations
-* entity teleport preparation
+- player operations
+- mob operations
+- entity teleport preparation
+
+
 
 ### Async operations
 
@@ -1186,25 +1288,27 @@ Use async scheduler/executor.
 
 Examples:
 
-* SQL
-* Redis
-* HTTP
-* serialization where safe
-* analytics
+- SQL
+- Redis
+- HTTP
+- serialization where safe
+- analytics
 
 PaperMC explicitly distinguishes global, region, async and entity scheduling for Folia-compatible plugins.
 
 ---
 
+
+
 # 41. THREAD OWNERSHIP
 
 Never manipulate:
 
-* player
-* entity
-* chunk
-* block
-* inventory
+- player
+- entity
+- chunk
+- block
+- inventory
 
 from arbitrary async threads.
 
@@ -1227,6 +1331,8 @@ APPLY RESULT
 
 ---
 
+
+
 # 42. ANARCHYCORE
 
 Primary custom plugin.
@@ -1238,6 +1344,8 @@ Package recommendation:
 Replace `example` with final organization identifier.
 
 ---
+
+
 
 # 43. MODULE STRUCTURE
 
@@ -1270,6 +1378,8 @@ anarchy-platform/
 ```
 
 ---
+
+
 
 # 44. INTERNAL ANARCHYCORE PACKAGES
 
@@ -1327,6 +1437,8 @@ com.example.anarchy
 
 ---
 
+
+
 # 45. SERVICE ARCHITECTURE
 
 Core services should communicate through interfaces.
@@ -1364,6 +1476,8 @@ DATABASE
 
 ---
 
+
+
 # 46. DOMAIN OBJECTS
 
 Recommended:
@@ -1385,22 +1499,26 @@ Use immutable objects where practical.
 
 ---
 
+
+
 # 47. DATABASE
 
 Use PostgreSQL.
 
 Why:
 
-* strong transactions
-* row locking
-* mature indexing
-* JSONB support
-* excellent observability
-* robust concurrency behavior
+- strong transactions
+- row locking
+- mature indexing
+- JSONB support
+- excellent observability
+- robust concurrency behavior
 
 Do not use SQLite for production.
 
 ---
+
+
 
 # 48. DATABASE MIGRATIONS
 
@@ -1422,7 +1540,11 @@ Never manually change the production database without a migration except emergen
 
 ---
 
+
+
 # 49. DATABASE SCHEMA
+
+
 
 ## players
 
@@ -1447,6 +1569,8 @@ last_seen
 ```
 
 ---
+
+
 
 # 50. ACCOUNTS
 
@@ -1473,6 +1597,8 @@ balance >= 0
 unless overdrafts are intentionally supported later.
 
 ---
+
+
 
 # 51. TRANSACTIONS
 
@@ -1502,6 +1628,8 @@ related_entity
 ```
 
 ---
+
+
 
 # 52. AUCTIONS
 
@@ -1533,6 +1661,8 @@ EXPIRED
 
 ---
 
+
+
 # 53. DELIVERIES
 
 ```
@@ -1550,6 +1680,8 @@ claimed_at TIMESTAMPTZ NULL
 
 ---
 
+
+
 # 54. BOUNTIES
 
 ```
@@ -1566,6 +1698,8 @@ claimed_at TIMESTAMPTZ NULL
 ```
 
 ---
+
+
 
 # 55. KILLS
 
@@ -1589,6 +1723,8 @@ Coordinates remain private unless explicitly needed by staff.
 
 ---
 
+
+
 # 56. STATISTICS
 
 Prefer aggregated counters.
@@ -1611,6 +1747,8 @@ updated_at TIMESTAMPTZ
 
 ---
 
+
+
 # 57. DATABASE CONNECTION POOL
 
 Use HikariCP unless the runtime provides a better explicitly chosen implementation.
@@ -1631,22 +1769,26 @@ Never open a new database connection for every command.
 
 ---
 
+
+
 # 58. REDIS
 
 Redis responsibilities:
 
-* cache
-* cross-server messages
-* online presence
-* short-lived locks when appropriate
-* future network events
-* future web synchronization
+- cache
+- cross-server messages
+- online presence
+- short-lived locks when appropriate
+- future network events
+- future web synchronization
 
 Do NOT make Redis the authoritative economy database.
 
 PostgreSQL remains authoritative.
 
 ---
+
+
 
 # 59. REDIS KEYS
 
@@ -1664,6 +1806,8 @@ Use TTLs for ephemeral state.
 
 ---
 
+
+
 # 60. CACHE PHILOSOPHY
 
 Caches may become stale.
@@ -1678,25 +1822,29 @@ Do not design money transfer correctness around cached balances alone.
 
 ---
 
+
+
 # 61. ITEM SERIALIZATION
 
 Auction/delivery items must preserve:
 
-* material
-* quantity
-* enchantments
-* custom names
-* lore
-* components
-* durability
-* custom model data
-* future-compatible metadata
+- material
+- quantity
+- enchantments
+- custom names
+- lore
+- components
+- durability
+- custom model data
+- future-compatible metadata
 
 Prefer official supported serialization mechanisms where possible.
 
 Serialized items must include schema/version metadata.
 
 ---
+
+
 
 # 62. CONFIGURATION
 
@@ -1721,6 +1869,8 @@ messages.yml
 ```
 
 ---
+
+
 
 # 63. CONFIG EXAMPLE
 
@@ -1755,6 +1905,8 @@ Store monetary values internally as integer minor units even when configuration 
 
 ---
 
+
+
 # 64. PERMISSIONS
 
 Use LuckPerms as the permissions provider.
@@ -1777,6 +1929,8 @@ Production staff should have only permissions required for their role.
 
 ---
 
+
+
 # 65. COMMAND ARCHITECTURE
 
 Commands should:
@@ -1792,6 +1946,8 @@ Commands should:
 Commands should NOT contain core business logic.
 
 ---
+
+
 
 # 66. COMMANDS — LAUNCH
 
@@ -1837,6 +1993,8 @@ Admin:
 
 ---
 
+
+
 # 67. API
 
 Create internal public API module:
@@ -1859,6 +2017,8 @@ Do not expose implementation classes.
 
 ---
 
+
+
 # 68. EVENT API
 
 Custom events:
@@ -1876,30 +2036,34 @@ Carefully document thread context for every custom event.
 
 ---
 
+
+
 # 69. LOGGING
 
 Structured logs for:
 
-* startup
-* shutdown
-* DB connectivity
-* Redis connectivity
-* transactions
-* admin economy commands
-* auction failures
-* duplication detection
-* unusual transaction behavior
-* exceptions
-* performance warnings
+- startup
+- shutdown
+- DB connectivity
+- Redis connectivity
+- transactions
+- admin economy commands
+- auction failures
+- duplication detection
+- unusual transaction behavior
+- exceptions
+- performance warnings
 
 Never log:
 
-* passwords
-* database credentials
-* Redis credentials
-* proxy secrets
+- passwords
+- database credentials
+- Redis credentials
+- proxy secrets
 
 ---
+
+
 
 # 70. AUDIT LOG
 
@@ -1930,6 +2094,8 @@ UNBAN
 
 ---
 
+
+
 # 71. METRICS
 
 Expose Prometheus-compatible metrics when practical.
@@ -1938,45 +2104,57 @@ Track:
 
 ### Minecraft
 
-* TPS
-* MSPT
-* player count
-* loaded chunks
-* entities
-* tick durations
+- TPS
+- MSPT
+- player count
+- loaded chunks
+- entities
+- tick durations
+
+
 
 ### JVM
 
-* heap
-* GC
-* threads
-* CPU
+- heap
+- GC
+- threads
+- CPU
+
+
 
 ### Database
 
-* query duration
-* connection pool usage
-* transaction failures
+- query duration
+- connection pool usage
+- transaction failures
+
+
 
 ### Economy
 
-* total currency
-* hourly currency created
-* hourly currency destroyed
-* transfer count
-* auction volume
-* median sale value
+- total currency
+- hourly currency created
+- hourly currency destroyed
+- transfer count
+- auction volume
+- median sale value
+
+
 
 ### Custom plugin
 
-* command latency
-* async queue depth
-* cache hit rate
-* errors
+- command latency
+- async queue depth
+- cache hit rate
+- errors
 
 ---
 
+
+
 # 72. PERFORMANCE TARGETS
+
+
 
 ### Normal operation
 
@@ -2008,29 +2186,33 @@ Never block ticks while waiting.
 
 ---
 
+
+
 # 73. LOAD TESTING
 
 Before launch simulate:
 
-* 25 players
-* 50 players
-* 100 players
-* 200 players where hardware allows
+- 25 players
+- 50 players
+- 100 players
+- 200 players where hardware allows
 
 Tests should include:
 
-* chunk movement
-* elytra
-* entity farms
-* redstone
-* auctions
-* payments
-* deaths
-* combat
-* voice
-* database load
+- chunk movement
+- elytra
+- entity farms
+- redstone
+- auctions
+- payments
+- deaths
+- combat
+- voice
+- database load
 
 ---
+
+
 
 # 74. PERFORMANCE PHILOSOPHY
 
@@ -2042,17 +2224,19 @@ Use tools such as spark-compatible profiling.
 
 Optimize:
 
-* pathological farms
-* entity density
-* chunk loading
-* view distance
-* simulation distance
-* plugin event handlers
-* database interactions
+- pathological farms
+- entity density
+- chunk loading
+- view distance
+- simulation distance
+- plugin event handlers
+- database interactions
 
 Preserve vanilla gameplay wherever possible.
 
 ---
+
+
 
 # 75. FARM POLICY
 
@@ -2060,19 +2244,21 @@ An economy server will incentivize extreme industrial farms.
 
 Monitor:
 
-* iron farms
-* gold farms
-* raid farms
-* mob farms
-* villager halls
-* redstone clocks
-* minecart systems
+- iron farms
+- gold farms
+- raid farms
+- mob farms
+- villager halls
+- redstone clocks
+- minecart systems
 
 Do not arbitrarily ban efficient players.
 
 Instead configure sensible technical limits when specific constructs threaten stability.
 
 ---
+
+
 
 # 76. BACKUPS
 
@@ -2104,6 +2290,8 @@ Never keep the only backup on the game server.
 
 ---
 
+
+
 # 77. BACKUP TARGET
 
 Suggested:
@@ -2133,20 +2321,24 @@ Adjust based on storage.
 
 ---
 
+
+
 # 78. RESTORE TESTING
 
 A backup is not considered valid until restoration is tested.
 
 Create documented restore process for:
 
-* database
-* world
-* server configuration
-* plugin version
+- database
+- world
+- server configuration
+- plugin version
 
 Run periodic restore tests.
 
 ---
+
+
 
 # 79. DEPLOYMENT
 
@@ -2171,6 +2363,8 @@ Pterodactyl Wings
 PostgreSQL and Redis may initially run on the same host but should be isolated logically and designed for migration.
 
 ---
+
+
 
 # 80. DOCKER NETWORKING
 
@@ -2203,6 +2397,8 @@ Postgres and Redis should NOT be publicly exposed.
 
 ---
 
+
+
 # 81. REPOSITORY
 
 Recommended repository:
@@ -2223,6 +2419,8 @@ fix/*
 `main` should represent production-ready code.
 
 ---
+
+
 
 # 82. CI
 
@@ -2256,6 +2454,8 @@ production deploy
 
 ---
 
+
+
 # 83. TEST ENVIRONMENTS
 
 Three environments:
@@ -2276,81 +2476,95 @@ Never develop experimental economy logic directly against production.
 
 ---
 
+
+
 # 84. TEST STRATEGY
 
 Mandatory unit tests:
 
 ### Money
 
-* parsing
-* formatting
-* negative values
-* overflow
+- parsing
+- formatting
+- negative values
+- overflow
+
+
 
 ### Economy
 
-* transfer success
-* insufficient funds
-* simultaneous transfer
-* duplicate request
-* invalid account
+- transfer success
+- insufficient funds
+- simultaneous transfer
+- duplicate request
+- invalid account
+
+
 
 ### Auctions
 
-* purchase
-* double purchase
-* cancellation
-* expiration
-* full inventory
-* delivery
+- purchase
+- double purchase
+- cancellation
+- expiration
+- full inventory
+- delivery
+
+
 
 ### Bounty
 
-* creation
-* escrow
-* claim
-* duplicate claim
+- creation
+- escrow
+- claim
+- duplicate claim
+
+
 
 ### Serialization
 
-* complex item round trip
+- complex item round trip
 
 ---
+
+
 
 # 85. EXPLOIT TESTING
 
 Attempt:
 
-* double clicking purchase
-* duplicated command packets
-* disconnect during auction purchase
-* disconnect during trade
-* server crash during transfer
-* full inventory
-* database timeout
-* Redis unavailable
-* seller offline
-* buyer offline
-* item modification
-* negative amount
-* integer overflow
-* NaN-style parsing
-* extremely large input
-* alternate character inputs
+- double clicking purchase
+- duplicated command packets
+- disconnect during auction purchase
+- disconnect during trade
+- server crash during transfer
+- full inventory
+- database timeout
+- Redis unavailable
+- seller offline
+- buyer offline
+- item modification
+- negative amount
+- integer overflow
+- NaN-style parsing
+- extremely large input
+- alternate character inputs
 
 Economy correctness must survive hostile users.
 
 ---
 
+
+
 # 86. GRACEFUL FAILURE
 
 If PostgreSQL becomes unavailable:
 
-* prevent new financial mutations
-* preserve Minecraft world functionality where safe
-* notify administrators
-* retry connections
-* avoid guessing player balances
+- prevent new financial mutations
+- preserve Minecraft world functionality where safe
+- notify administrators
+- retry connections
+- avoid guessing player balances
 
 Example:
 
@@ -2363,18 +2577,22 @@ Do not allow money operations against uncertain state.
 
 ---
 
+
+
 # 87. REDIS FAILURE
 
 If Redis fails:
 
-* player survival gameplay continues
-* economy uses database
-* network caches degrade
-* cross-server features may temporarily stop
+- player survival gameplay continues
+- economy uses database
+- network caches degrade
+- cross-server features may temporarily stop
 
 Redis failure must never erase wealth.
 
 ---
+
+
 
 # 88. WEBSITE — FUTURE
 
@@ -2401,6 +2619,8 @@ store
 ```
 
 ---
+
+
 
 # 89. PUBLIC API — FUTURE
 
@@ -2432,6 +2652,8 @@ Never expose private coordinates or sensitive staff information.
 
 ---
 
+
+
 # 90. WEB STACK — FUTURE
 
 Suggested:
@@ -2449,36 +2671,42 @@ Financial mutations should pass through trusted service boundaries.
 
 ---
 
+
+
 # 91. ADMIN DASHBOARD — FUTURE
 
 Staff dashboard:
 
-* player lookup
-* transaction history
-* economy graph
-* auction lookup
-* bounty lookup
-* server performance
-* audit log
-* moderation notes
+- player lookup
+- transaction history
+- economy graph
+- auction lookup
+- bounty lookup
+- server performance
+- audit log
+- moderation notes
 
 High-risk actions require elevated permissions.
 
 ---
 
+
+
 # 92. DISCORD — FUTURE
 
 Potential integration:
 
-* server status
-* player count
-* major bounties
-* economy events
-* announcements
+- server status
+- player count
+- major bounties
+- economy events
+- announcements
 
 Do not expose base coordinates.
 
 ---
+
+
 
 # 93. MONETIZATION
 
@@ -2486,23 +2714,25 @@ Monetization must avoid pay-to-win where possible.
 
 Possible:
 
-* cosmetics
-* chat colors
-* name cosmetics
-* Discord roles
-* supporter badges
-* cosmetic particles
-* cosmetic titles
+- cosmetics
+- chat colors
+- name cosmetics
+- Discord roles
+- supporter badges
+- cosmetic particles
+- cosmetic titles
 
 Potentially:
 
-* queue priority
+- queue priority
 
 Be careful with gameplay advantages.
 
 Minecraft commercial rules must be reviewed before monetization is finalized.
 
 ---
+
+
 
 # 94. LAUNCH PLUGIN STACK
 
@@ -2546,19 +2776,23 @@ Avoid installing five plugins for functionality that belongs in AnarchyCore.
 
 ---
 
+
+
 # 95. WHAT ANARCHYCORE SHOULD NOT REIMPLEMENT
 
 Do not unnecessarily recreate:
 
-* permission backend
-* voice transport
-* Minecraft proxy
-* terrain generator
-* JVM profiler
+- permission backend
+- voice transport
+- Minecraft proxy
+- terrain generator
+- JVM profiler
 
 Build differentiating gameplay.
 
 ---
+
+
 
 # 96. ANARCHYCORE MVP
 
@@ -2570,85 +2804,101 @@ Must contain:
 
 ### Platform
 
-* startup
-* shutdown
-* configuration
-* database pool
-* migrations
-* Redis
-* scheduler abstraction
-* metrics foundation
+- startup
+- shutdown
+- configuration
+- database pool
+- migrations
+- Redis
+- scheduler abstraction
+- metrics foundation
+
+
 
 ### Players
 
-* player profiles
-* first join
-* join/leave tracking
-* playtime
+- player profiles
+- first join
+- join/leave tracking
+- playtime
+
+
 
 ### Economy
 
-* account
-* balance
-* payments
-* transaction ledger
-* admin economy commands
+- account
+- balance
+- payments
+- transaction ledger
+- admin economy commands
+
+
 
 ### Auctions
 
-* listings
-* sale
-* expiration
-* claim delivery
+- listings
+- sale
+- expiration
+- claim delivery
+
+
 
 ### Bounties
 
-* create
-* list
-* claim
-* escrow
+- create
+- list
+- claim
+- escrow
+
+
 
 ### Statistics
 
-* kills
-* deaths
-* playtime
+- kills
+- deaths
+- playtime
+
+
 
 ### Utilities
 
-* standardized messages
-* permissions
-* logging
+- standardized messages
+- permissions
+- logging
 
 ---
+
+
 
 # 97. MVP ACCEPTANCE CRITERIA
 
 Server can be considered Alpha-ready when:
 
-* Velocity works.
-* Folia backend works.
-* Modern forwarding works.
-* PostgreSQL migrations execute automatically.
-* Redis connects.
-* Player accounts are automatically created.
-* `/bal` works.
-* `/pay` works atomically.
-* Transaction history persists.
-* `/ah sell` works.
-* `/ah` purchases cannot double-sell.
-* Offline seller receives money.
-* Buyer receives item through safe delivery.
-* `/bounty add` moves money to escrow.
-* bounty payout occurs correctly.
-* kill/death stats work.
-* server survives PostgreSQL interruption without corrupting money.
-* all custom Minecraft access is Folia-safe.
-* backups work.
-* staging environment exists.
-* profiler shows no obvious AnarchyCore tick blocking.
+- Velocity works.
+- Folia backend works.
+- Modern forwarding works.
+- PostgreSQL migrations execute automatically.
+- Redis connects.
+- Player accounts are automatically created.
+- `/bal` works.
+- `/pay` works atomically.
+- Transaction history persists.
+- `/ah sell` works.
+- `/ah` purchases cannot double-sell.
+- Offline seller receives money.
+- Buyer receives item through safe delivery.
+- `/bounty add` moves money to escrow.
+- bounty payout occurs correctly.
+- kill/death stats work.
+- server survives PostgreSQL interruption without corrupting money.
+- all custom Minecraft access is Folia-safe.
+- backups work.
+- staging environment exists.
+- profiler shows no obvious AnarchyCore tick blocking.
 
 ---
+
+
 
 # 98. DEVELOPMENT PHASE 0 — REPOSITORY
 
@@ -2678,6 +2928,8 @@ Do not implement gameplay before the build works.
 
 ---
 
+
+
 # 99. DEVELOPMENT PHASE 1 — PLATFORM FOUNDATION
 
 Implement:
@@ -2700,6 +2952,8 @@ Deliverable:
 Plugin starts and cleanly connects/disconnects infrastructure.
 
 ---
+
+
 
 # 100. DEVELOPMENT PHASE 2 — PLAYER SERVICE
 
@@ -2734,6 +2988,8 @@ Do DB asynchronously.
 
 ---
 
+
+
 # 101. DEVELOPMENT PHASE 3 — ECONOMY
 
 Build:
@@ -2758,6 +3014,8 @@ Do not proceed to auction house until economy tests pass.
 
 ---
 
+
+
 # 102. DEVELOPMENT PHASE 4 — AUCTION HOUSE
 
 Build:
@@ -2781,6 +3039,8 @@ Exactly one succeeds.
 
 ---
 
+
+
 # 103. DEVELOPMENT PHASE 5 — BOUNTIES
 
 Implement:
@@ -2798,6 +3058,8 @@ Money enters escrow on creation.
 Never create bounty before escrow succeeds.
 
 ---
+
+
 
 # 104. DEVELOPMENT PHASE 6 — STATISTICS
 
@@ -2823,11 +3085,13 @@ PostgreSQL
 
 Flush:
 
-* periodically
-* on disconnect
-* on shutdown
+- periodically
+- on disconnect
+- on shutdown
 
 ---
+
+
 
 # 105. DEVELOPMENT PHASE 7 — DEPLOYMENT
 
@@ -2843,13 +3107,15 @@ redis/
 
 Provide:
 
-* example environment variables
-* healthchecks
-* volume structure
-* backup scripts
-* firewall documentation
+- example environment variables
+- healthchecks
+- volume structure
+- backup scripts
+- firewall documentation
 
 ---
+
+
 
 # 106. DEVELOPMENT PHASE 8 — STAGING
 
@@ -2868,16 +3134,18 @@ Run multiple simulated players.
 
 Test:
 
-* combat
-* deaths
-* voice
-* economy
-* auction race condition
-* restart
-* crash
-* DB outage
+- combat
+- deaths
+- voice
+- economy
+- auction race condition
+- restart
+- crash
+- DB outage
 
 ---
+
+
 
 # 107. DEVELOPMENT PHASE 9 — WORLD
 
@@ -2885,17 +3153,19 @@ Create production seed.
 
 Configure:
 
-* border
-* spawn
-* Nether
-* End
-* pregeneration
+- border
+- spawn
+- Nether
+- End
+- pregeneration
 
 Pregenerate all initial accessible terrain.
 
 Measure storage.
 
 ---
+
+
 
 # 108. DEVELOPMENT PHASE 10 — CLOSED ALPHA
 
@@ -2905,21 +3175,23 @@ Suggested:
 
 Observe:
 
-* economy
-* farms
-* PvP
-* lag
-* voice
-* item scarcity
-* travel
-* base discovery
-* auction prices
+- economy
+- farms
+- PvP
+- lag
+- voice
+- item scarcity
+- travel
+- base discovery
+- auction prices
 
 Do not artificially rebalance based on one unusual day.
 
 Collect data.
 
 ---
+
+
 
 # 109. DEVELOPMENT PHASE 11 — BETA
 
@@ -2929,33 +3201,37 @@ Target:
 
 Add:
 
-* public website
-* polished onboarding
-* moderation tools
-* alerting
-* DDoS strategy
-* production backups
-* status page
+- public website
+- polished onboarding
+- moderation tools
+- alerting
+- DDoS strategy
+- production backups
+- status page
 
 ---
+
+
 
 # 110. DEVELOPMENT PHASE 12 — PUBLIC LAUNCH
 
 Launch requirements:
 
-* documented rules
-* backups verified
-* monitoring active
-* database tested
-* rollback procedure
-* moderation permissions
-* server status page
-* issue reporting
-* network firewall
-* voice UDP verified
-* world pregenerated
+- documented rules
+- backups verified
+- monitoring active
+- database tested
+- rollback procedure
+- moderation permissions
+- server status page
+- issue reporting
+- network firewall
+- voice UDP verified
+- world pregenerated
 
 ---
+
+
 
 # 111. SCALING STRATEGY
 
@@ -2976,6 +3252,8 @@ Network scaling is:
 through Velocity.
 
 ---
+
+
 
 # 112. SCALE STAGE 1
 
@@ -3000,6 +3278,8 @@ NVMe.
 64 GB RAM recommended starting point for serious hosting.
 
 ---
+
+
 
 # 113. SCALE STAGE 2
 
@@ -3026,6 +3306,8 @@ Actual thresholds must be metrics-driven.
 
 ---
 
+
+
 # 114. SCALE STAGE 3
 
 Large network:
@@ -3050,6 +3332,8 @@ Anarchy survival remains one authoritative world unless a deliberate multi-world
 
 ---
 
+
+
 # 115. HARDWARE PHILOSOPHY
 
 Folia benefits from many strong CPU cores, and PaperMC's Folia guidance specifically notes large SMP-style populations and recommends substantial physical core counts for appropriate workloads.
@@ -3067,19 +3351,21 @@ Do not choose old server hardware merely because it has many weak cores.
 
 ---
 
+
+
 # 116. RAM
 
 Do not allocate every available GB to Minecraft.
 
 Leave room for:
 
-* OS
-* filesystem cache
-* PostgreSQL
-* Redis
-* Velocity
-* monitoring
-* Docker overhead
+- OS
+- filesystem cache
+- PostgreSQL
+- Redis
+- Velocity
+- monitoring
+- Docker overhead
 
 Example 64 GB server:
 
@@ -3096,6 +3382,8 @@ Tune from actual measurements.
 
 ---
 
+
+
 # 117. STORAGE
 
 Use high-quality NVMe.
@@ -3104,37 +3392,41 @@ World storage should be monitored.
 
 Track:
 
-* total size
-* region growth
-* daily growth
-* backup size
-* I/O latency
+- total size
+- region growth
+- daily growth
+- backup size
+- I/O latency
 
 Alert before disk usage becomes critical.
 
 ---
 
+
+
 # 118. ALERTING
 
 Create alerts for:
 
-* server offline
-* TPS degradation
-* high MSPT
-* disk >80%
-* database unreachable
-* Redis unreachable
-* backup failure
-* abnormal heap usage
-* repeated plugin exceptions
+- server offline
+- TPS degradation
+- high MSPT
+- disk >80%
+- database unreachable
+- Redis unreachable
+- backup failure
+- abnormal heap usage
+- repeated plugin exceptions
 
 Future notifications may use:
 
-* Discord
-* email
-* Grafana alerting
+- Discord
+- email
+- Grafana alerting
 
 ---
+
+
 
 # 119. SECURITY
 
@@ -3156,6 +3448,8 @@ Provide `.env.example`.
 
 ---
 
+
+
 # 120. DATABASE USER
 
 Minecraft plugin should not connect as PostgreSQL superuser.
@@ -3171,6 +3465,8 @@ Grant only necessary database privileges.
 Backups use separate credentials.
 
 ---
+
+
 
 # 121. FIREWALL
 
@@ -3198,39 +3494,45 @@ unless protected by appropriate private networking/firewall rules.
 
 ---
 
+
+
 # 122. ADMIN SECURITY
 
 Require:
 
-* unique accounts
-* strong passwords
-* MFA where supported
-* least privilege
-* audit logging
+- unique accounts
+- strong passwords
+- MFA where supported
+- least privilege
+- audit logging
 
 Do not share one universal owner credential among staff.
 
 ---
 
+
+
 # 123. MODERATION
 
 Moderators should have access to:
 
-* mute
-* kick
-* ban
-* player lookup
-* reports
+- mute
+- kick
+- ban
+- player lookup
+- reports
 
 Moderators should NOT automatically have:
 
-* economy editing
-* database access
-* filesystem access
-* console
-* world editing
+- economy editing
+- database access
+- filesystem access
+- console
+- world editing
 
 ---
+
+
 
 # 124. GAME MASTER PRINCIPLE
 
@@ -3238,20 +3540,22 @@ Staff should not interfere in legitimate survival conflicts.
 
 Do not restore:
 
-* raided bases
-* stolen items
-* lost inventories
-* failed trades
+- raided bases
+- stolen items
+- lost inventories
+- failed trades
 
 unless loss resulted from:
 
-* proven server bug
-* administrative mistake
-* severe exploit incident
+- proven server bug
+- administrative mistake
+- severe exploit incident
 
 Policies must be consistent.
 
 ---
+
+
 
 # 125. ECONOMIC OBSERVABILITY
 
@@ -3272,6 +3576,8 @@ Top balances
 This allows inflation to be managed with data.
 
 ---
+
+
 
 # 126. ECONOMIC INTEGRITY
 
@@ -3295,6 +3601,8 @@ Create reconciliation tooling.
 
 ---
 
+
+
 # 127. RECONCILIATION
 
 Admin command:
@@ -3307,31 +3615,35 @@ or offline maintenance task.
 
 Checks:
 
-* negative balances
-* orphan transactions
-* broken auctions
-* invalid escrow
-* duplicated listing claims
-* ledger/account mismatch
+- negative balances
+- orphan transactions
+- broken auctions
+- invalid escrow
+- duplicated listing claims
+- ledger/account mismatch
 
 Never automatically repair severe inconsistencies without logging.
 
 ---
 
+
+
 # 128. PLAYER PRIVACY
 
 Public endpoints should not disclose:
 
-* IP address
-* email
-* private moderation notes
-* base coordinates
-* login metadata
-* authentication information
+- IP address
+- email
+- private moderation notes
+- base coordinates
+- login metadata
+- authentication information
 
 Coordinates stored for technical/admin reasons remain private.
 
 ---
+
+
 
 # 129. FUTURE SYSTEMS
 
@@ -3339,59 +3651,67 @@ After successful launch consider:
 
 ### Economy
 
-* companies
-* contracts
-* shop stalls
-* stockpiles
-* banking
-* loans
+- companies
+- contracts
+- shop stalls
+- stockpiles
+- banking
+- loans
 
 Loans require careful anti-abuse design.
 
 ### PvP
 
-* bounty hunters
-* kill streaks
-* assassination contracts
+- bounty hunters
+- kill streaks
+- assassination contracts
+
+
 
 ### Social
 
-* organizations
-* reputation
-* alliances
+- organizations
+- reputation
+- alliances
+
+
 
 ### World
 
-* ruins
-* special events
-* rare world drops
+- ruins
+- special events
+- rare world drops
+
+
 
 ### Website
 
-* profiles
-* economy graphs
-* market browsing
-* leaderboards
+- profiles
+- economy graphs
+- market browsing
+- leaderboards
 
 ---
+
+
 
 # 130. FEATURES TO AVOID EARLY
 
 Do NOT initially build:
 
-* cryptocurrencies
-* blockchain
-* complex stock exchange
-* land claims
-* 100 custom items
-* custom RPG classes
-* custom skill trees
-* massive quest chains
-* procedural dungeons
-* separate currency types
-* AI NPC economy
-* player loans
-* cross-world survival sharding
+- cryptocurrencies
+- blockchain
+- complex stock exchange
+- land claims
+- 100 custom items
+- custom RPG classes
+- custom skill trees
+- massive quest chains
+- procedural dungeons
+- separate currency types
+- AI NPC economy
+- player loans
+- cross-world survival sharding
 
 First prove:
 
@@ -3399,80 +3719,104 @@ First prove:
 
 ---
 
+
+
 # 131. PROJECT ROADMAP
+
+
 
 ## V0.1 — Infrastructure
 
-* repository
-* Gradle
-* Folia plugin
-* Velocity plugin
-* PostgreSQL
-* Redis
-* migrations
-* health
-* logging
+- repository
+- Gradle
+- Folia plugin
+- Velocity plugin
+- PostgreSQL
+- Redis
+- migrations
+- health
+- logging
+
+
 
 ## V0.2 — Economy
 
-* player accounts
-* balances
-* pay
-* ledger
-* admin commands
+- player accounts
+- balances
+- pay
+- ledger
+- admin commands
+
+
 
 ## V0.3 — Market
 
-* auction house
-* delivery
-* history
-* fees
+- auction house
+- delivery
+- history
+- fees
+
+
 
 ## V0.4 — PvP Economy
 
-* kills
-* deaths
-* bounties
-* bounty payouts
+- kills
+- deaths
+- bounties
+- bounty payouts
+
+
 
 ## V0.5 — Stats
 
-* player statistics
-* leaderboards
-* playtime
+- player statistics
+- leaderboards
+- playtime
+
+
 
 ## V0.6 — Operations
 
-* metrics
-* alerts
-* backups
-* administration
+- metrics
+- alerts
+- backups
+- administration
+
+
 
 ## V0.7 — Alpha
 
-* real players
-* tuning
-* bug fixing
+- real players
+- tuning
+- bug fixing
+
+
 
 ## V0.8 — Web
 
-* status
-* profiles
-* leaderboard
-* market
+- status
+- profiles
+- leaderboard
+- market
+
+
 
 ## V0.9 — Beta
 
-* polish
-* scaling
-* security
-* load tests
+- polish
+- scaling
+- security
+- load tests
+
+
 
 ## V1.0 — Public
 
 Production launch.
 
 ---
+
+
 
 # 132. FIRST CURSOR IMPLEMENTATION TASK
 
@@ -3490,26 +3834,26 @@ anarchy-proxy
 
 Requirements:
 
-* Java 21+
-* Gradle Kotlin DSL
-* Folia API dependency for `anarchy-core`
-* Velocity API for `anarchy-proxy`
-* shared build conventions
-* `.gitignore`
-* `.editorconfig`
-* README
-* plugin metadata
-* configuration system
-* startup/shutdown lifecycle
-* logging
-* scheduler abstractions
-* PostgreSQL connectivity
-* HikariCP
-* Flyway
-* Redis client
-* Docker Compose development environment
-* JUnit
-* Testcontainers where appropriate
+- Java 21+
+- Gradle Kotlin DSL
+- Folia API dependency for `anarchy-core`
+- Velocity API for `anarchy-proxy`
+- shared build conventions
+- `.gitignore`
+- `.editorconfig`
+- README
+- plugin metadata
+- configuration system
+- startup/shutdown lifecycle
+- logging
+- scheduler abstractions
+- PostgreSQL connectivity
+- HikariCP
+- Flyway
+- Redis client
+- Docker Compose development environment
+- JUnit
+- Testcontainers where appropriate
 
 Docker development services:
 
@@ -3553,6 +3897,8 @@ Do not implement auction houses, bounties, companies or unrelated features durin
 
 ---
 
+
+
 # 133. SECOND CURSOR IMPLEMENTATION TASK
 
 After Phase 1 passes:
@@ -3578,17 +3924,19 @@ PlayerQuitListener
 
 Requirements:
 
-* UUID is authoritative.
-* Username updates automatically.
-* first join persists.
-* last join persists.
-* last seen persists.
-* DB calls asynchronous.
-* disconnect cannot generate unhandled exceptions.
-* database outage handled gracefully.
-* unit/integration tests included.
+- UUID is authoritative.
+- Username updates automatically.
+- first join persists.
+- last join persists.
+- last seen persists.
+- DB calls asynchronous.
+- disconnect cannot generate unhandled exceptions.
+- database outage handled gracefully.
+- unit/integration tests included.
 
 ---
+
+
 
 # 134. THIRD CURSOR IMPLEMENTATION TASK
 
@@ -3617,24 +3965,26 @@ EconomyAdminCommand
 
 Requirements:
 
-* BIGINT minor units.
-* no floating point.
-* UUID accounts.
-* PostgreSQL transaction.
-* row locks where needed.
-* no negative transfers.
-* overflow protection.
-* insufficient funds protection.
-* self-payment policy defined.
-* every balance change logged.
-* administrative changes logged.
-* concurrent payment tests.
-* idempotency infrastructure.
-* Folia-safe player messaging.
+- BIGINT minor units.
+- no floating point.
+- UUID accounts.
+- PostgreSQL transaction.
+- row locks where needed.
+- no negative transfers.
+- overflow protection.
+- insufficient funds protection.
+- self-payment policy defined.
+- every balance change logged.
+- administrative changes logged.
+- concurrent payment tests.
+- idempotency infrastructure.
+- Folia-safe player messaging.
 
 Do not begin Auction House until tests pass.
 
 ---
+
+
 
 # 135. ENGINEERING DEFINITION OF DONE
 
@@ -3642,43 +3992,45 @@ A feature is NOT complete merely because it works once.
 
 A feature is complete when:
 
-* implementation exists
-* configuration exists
-* permissions exist
-* invalid input handled
-* failure modes handled
-* logs exist
-* tests exist
-* concurrency considered
-* Folia thread safety verified
-* restart persistence verified
-* documentation updated
-* no known duplication exploit exists
+- implementation exists
+- configuration exists
+- permissions exist
+- invalid input handled
+- failure modes handled
+- logs exist
+- tests exist
+- concurrency considered
+- Folia thread safety verified
+- restart persistence verified
+- documentation updated
+- no known duplication exploit exists
 
 ---
+
+
 
 # 136. PRODUCT SUCCESS CRITERIA
 
 Technical success:
 
-* stable TPS
-* low latency
-* no economy duplication
-* minimal server crashes
-* safe backups
-* reliable restart
-* hundreds of players technically achievable with scaling
+- stable TPS
+- low latency
+- no economy duplication
+- minimal server crashes
+- safe backups
+- reliable restart
+- hundreds of players technically achievable with scaling
 
 Gameplay success:
 
-* players trade regularly
-* wealth matters
-* travel matters
-* bases matter
-* raids matter
-* proximity voice creates encounters
-* player organizations emerge naturally
-* market prices develop organically
+- players trade regularly
+- wealth matters
+- travel matters
+- bases matter
+- raids matter
+- proximity voice creates encounters
+- player organizations emerge naturally
+- market prices develop organically
 
 Community success:
 
@@ -3688,34 +4040,3 @@ That is the central goal.
 
 ---
 
-# 137. FINAL PRODUCT PRINCIPLE
-
-Do not attempt to manufacture every interaction.
-
-Provide systems that allow interactions to emerge.
-
-Minecraft already provides:
-
-* survival
-* building
-* destruction
-* exploration
-* combat
-* logistics
-
-This project adds:
-
-* economic infrastructure
-* persistent identity
-* market infrastructure
-* risk incentives
-* player statistics
-* social voice
-* scalability
-* operational reliability
-
-The server should not feel like Minecraft buried beneath plugins.
-
-It should feel like:
-
-> **Minecraft where civilization, wealth, politics, trade and conflict emerge because the players created them.**

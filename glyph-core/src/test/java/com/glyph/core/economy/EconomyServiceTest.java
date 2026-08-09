@@ -75,6 +75,20 @@ class EconomyServiceTest {
         }
 
         @Override
+        public MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
+                                              long amountMinor, com.glyph.api.economy.TransactionType type,
+                                              String reason) {
+            return adminAdjust(playerUuid, operation, amountMinor, null);
+        }
+
+        @Override
+        public boolean ensureAccount(UUID playerUuid) {
+            maybeFail();
+            balances.putIfAbsent(playerUuid, 0L);
+            return true;
+        }
+
+        @Override
         public List<TopBalance> topBalances(int limit) {
             maybeFail();
             return List.of();

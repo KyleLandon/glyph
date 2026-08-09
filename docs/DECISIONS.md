@@ -108,3 +108,25 @@ event-driven from EconomyService balance notifications — no polling, no
 periodic database reads. Known trade-off: GlyphCore owns the player's
 scoreboard; if a future feature needs sidebar lines, it extends MoneyHud
 rather than registering its own scoreboard.
+
+## ADR-009: Vault bridge runs blocking SQL on the calling thread
+
+**Status:** accepted (2026-08-09)
+
+VaultUnlocked lets third-party plugins (shops, jobs) use the Glyph economy,
+but classic Vault's API is synchronous while ours is async. The bridge
+(`VaultEconomyBridge`) executes the same locked single-row SQL transactions
+directly on the calling thread instead of block-waiting on the async executor:
+
+- Local queries are single-digit milliseconds; an occasional Vault call on a
+  region thread is tolerable, a deadlock-prone wait is not.
+- When the database is down every call fails fast (no pool access), so an
+  outage cannot stall tick threads.
+- Deposits mint as SYSTEM_REWARD, withdrawals burn as SYSTEM_SINK, reason
+  "vault bridge" — the money supply stays measurable (GDD section 122).
+- Successful mutations are pushed through EconomyService listeners so the
+  money HUD updates like any other change.
+
+Rule: Vault is for third-party compatibility only. Trusted Glyph plugins use
+the async `GlyphApi.economy()`. Banks are unsupported; worlds are ignored
+(one economy per network).
