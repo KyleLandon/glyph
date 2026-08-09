@@ -91,18 +91,21 @@ one database; using its clock makes cross-server timestamps consistent and
 monotonic per transaction. Only session *durations* (playtime) are measured
 on the game server.
 
-## ADR-008: Money HUD placement (sidebar → action bar)
+## ADR-008: Money HUD is a right-side scoreboard sidebar
 
-**Status:** HUD placement updated 2026-08-09; decimal-places part superseded
-by ADR-010
+**Status:** accepted (restored DonutSMP-style layout 2026-08-09);
+decimal-places part superseded by ADR-010
 
-The requested FiveM-style cash display originally used a per-player
-scoreboard sidebar. That sits under Xaero's Minimap (shipped in the client
-modpack) and most other minimap mods, so players could not see their
-balance. MoneyHud now uses the action bar (bottom-center, above the
-hotbar) and refreshes every 2s so it does not fade. Updates are still
-event-driven from EconomyService balance notifications — no extra
-database reads.
+Cash is shown on the vanilla scoreboard sidebar: white server name
+(`economy.hud.title`, default `GLYPH`) above a single green compact line
+(`$ 100`, `$ 12.5K`, `$ 1.6M`). Score digits are hidden via Paper's blank
+NumberFormat. Updates are event-driven from EconomyService balance
+notifications — no polling.
+
+Trade-off: client minimaps (Xaero in the Glyph client pack) also use the
+right edge and can cover the sidebar. Players should move the minimap left
+(`Y → Change Position`). GlyphCore owns the player's scoreboard; future
+sidebar lines extend MoneyHud rather than registering a second board.
 
 ## ADR-009: Vault bridge runs blocking SQL on the calling thread
 

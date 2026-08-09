@@ -4,13 +4,13 @@ import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.scheduler.SchedulerAdapter;
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,47 +18,41 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
 import org.slf4j.Logger;
 
 /**
- * Cash HUD shown on the action bar (above the hotbar).
+ * Right-side cash HUD (DonutSMP-style): scoreboard sidebar with the server
+ * name as the title and a single green money line under it.
  *
- * <p>The earlier scoreboard-sidebar approach sat under Xaero's Minimap (and
- * most other minimap mods), so players never saw their balance. The action
- * bar is bottom-center and stays clear. It fades after a couple of seconds
- * unless resent, so each player gets a light entity-scheduler refresh.</p>
+ * <p>Updates are event-driven from
+ * {@link com.glyph.core.economy.EconomyService#addBalanceListener} — no
+ * polling. Folia safety: scoreboards are only touched on the owning player's
+ * entity scheduler.</p>
  *
- * <p>Folia safety: action bars and entity tasks only run on the owning
- * player's entity scheduler. Balance notifications arrive on async I/O
- * threads and are bounced here.</p>
+ * <p>Client minimaps default to the top-right and can cover this. Players
+ * should park Xaero (etc.) on the left: {@code Y → Change Position}.</p>
  */
 public final class MoneyHud implements Listener {
 
-    /** Legacy sidebar objective — cleared on join so old boards disappear. */
-    private static final String LEGACY_OBJECTIVE = "glyph_money";
+    private static final String OBJECTIVE_NAME = "glyph_money";
 
-    /** Re-send interval so the action bar does not fade away. */
-    private static final long REFRESH_TICKS = 40L;
-
-    private final Plugin plugin;
     private final SchedulerAdapter scheduler;
     private final EconomySettings settings;
     private final EconomyApi economy;
     private final Logger logger;
 
-    private final Map<UUID, Money> balances = new ConcurrentHashMap<>();
-    private final Map<UUID, ScheduledTask> refreshTasks = new ConcurrentHashMap<>();
+    /** Current sidebar money entry per player (needed to reset the old line). */
+    private final Map<UUID, String> currentLines = new ConcurrentHashMap<>();
 
     public MoneyHud(
-            Plugin plugin,
             SchedulerAdapter scheduler,
             EconomySettings settings,
             EconomyApi economy,
             Logger logger) {
-        this.plugin = plugin;
         this.scheduler = scheduler;
         this.settings = settings;
         this.economy = economy;
@@ -72,10 +66,8 @@ public final class MoneyHud implements Listener {
         }
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
-        clearLegacySidebar(player);
-        show(player, null);
-        startRefresh(player);
 
+        render(player, null);
         economy.balance(uuid).whenComplete((balance, error) -> {
             if (error != null) {
                 logger.debug("Money HUD: initial balance fetch failed for {}", uuid, error);
@@ -87,12 +79,7 @@ public final class MoneyHud implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        UUID uuid = event.getPlayer().getUniqueId();
-        balances.remove(uuid);
-        ScheduledTask task = refreshTasks.remove(uuid);
-        if (task != null) {
-            task.cancel();
-        }
+        currentLines.remove(event.getPlayer().getUniqueId());
     }
 
     /** Called from any thread; also registered as an EconomyService balance listener. */
@@ -100,47 +87,70 @@ public final class MoneyHud implements Listener {
         if (!settings.hudEnabled()) {
             return;
         }
-        balances.put(uuid, balance);
         Player player = Bukkit.getPlayer(uuid);
         if (player == null) {
             return;
         }
-        scheduler.runForEntity(player, () -> show(player, balance), null);
-    }
-
-    private void startRefresh(Player player) {
-        UUID uuid = player.getUniqueId();
-        ScheduledTask previous = refreshTasks.remove(uuid);
-        if (previous != null) {
-            previous.cancel();
-        }
-        ScheduledTask task = player.getScheduler().runAtFixedRate(
-                plugin,
-                scheduled -> show(player, balances.get(uuid)),
-                () -> refreshTasks.remove(uuid),
-                REFRESH_TICKS,
-                REFRESH_TICKS);
-        if (task != null) {
-            refreshTasks.put(uuid, task);
-        }
+        scheduler.runForEntity(player, () -> render(player, balance), null);
     }
 
     /** Must run on the player's entity scheduler. */
-    private void show(Player player, Money balance) {
-        String text = balance == null
-                ? settings.currencySymbol() + "—"
-                : balance.format(settings.currencySymbol());
-        player.sendActionBar(Component.text(text, NamedTextColor.GREEN, TextDecoration.BOLD));
+    private void render(Player player, Money balance) {
+        Scoreboard board = player.getScoreboard();
+        Objective objective = board.getObjective(OBJECTIVE_NAME);
+        if (objective == null) {
+            board = Bukkit.getScoreboardManager().getNewScoreboard();
+            // White server name on top — matches the DonutSMP layout.
+            objective = board.registerNewObjective(
+                    OBJECTIVE_NAME,
+                    Criteria.DUMMY,
+                    Component.text(settings.hudTitle(), NamedTextColor.WHITE));
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+            // Hide the red score digits on the right of each line.
+            objective.numberFormat(NumberFormat.blank());
+            player.setScoreboard(board);
+        } else {
+            objective.displayName(Component.text(settings.hudTitle(), NamedTextColor.WHITE));
+        }
+
+        String line = "§a" + (balance == null
+                ? settings.currencySymbol() + " —"
+                : formatHud(balance, settings.currencySymbol()));
+
+        String previous = currentLines.put(player.getUniqueId(), line);
+        if (line.equals(previous)) {
+            return;
+        }
+        if (previous != null) {
+            board.resetScores(previous);
+        }
+        objective.getScore(line).setScore(0);
     }
 
-    /** Drop the old sidebar HUD if a previous build left one on this player. */
-    private static void clearLegacySidebar(Player player) {
-        Objective objective = player.getScoreboard().getObjective(LEGACY_OBJECTIVE);
-        if (objective != null) {
-            if (objective.getDisplaySlot() == DisplaySlot.SIDEBAR) {
-                objective.setDisplaySlot(null);
-            }
-            objective.unregister();
+    /**
+     * Compact cash line like {@code $ 1.6M} / {@code $ 12K} / {@code $ 100}.
+     * Space after the symbol matches the common SMP look.
+     */
+    static String formatHud(Money balance, String symbol) {
+        long dollars = balance.dollars();
+        if (dollars >= 1_000_000_000L) {
+            return symbol + " " + compact(dollars / 1_000_000_000.0) + "B";
         }
+        if (dollars >= 1_000_000L) {
+            return symbol + " " + compact(dollars / 1_000_000.0) + "M";
+        }
+        if (dollars >= 10_000L) {
+            // Start abbreviating at 10K so four-digit balances stay readable.
+            return symbol + " " + compact(dollars / 1_000.0) + "K";
+        }
+        return symbol + " " + String.format(Locale.US, "%,d", dollars);
+    }
+
+    /** {@code 1.6} not {@code 1.60}; whole numbers drop the decimal. */
+    private static String compact(double value) {
+        if (Math.abs(value - Math.rint(value)) < 0.05) {
+            return String.format(Locale.US, "%.0f", value);
+        }
+        return String.format(Locale.US, "%.1f", value);
     }
 }

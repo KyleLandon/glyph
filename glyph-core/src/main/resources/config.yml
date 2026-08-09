@@ -14,8 +14,9 @@ economy:
   starting-balance: 100
   # Prefix used when formatting amounts.
   currency-symbol: "$"
-  # Cash HUD on the action bar (above the hotbar). Sidebar was abandoned
-  # because client minimaps (Xaero, etc.) cover the right-side scoreboard.
+  # Right-side cash HUD (scoreboard sidebar): title on top, green $ line
+  # under it. Client minimaps sit on the same edge — move Xaero to the left
+  # (Y → Change Position) so it does not cover the balance.
   hud:
     enabled: true
     title: "GLYPH"

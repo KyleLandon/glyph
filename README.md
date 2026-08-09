@@ -117,9 +117,9 @@ Economy (Phase 3): `/balance` (`/bal`), `/pay <player> <amount>`, `/baltop`,
 `/money history`, and `/eco get|set|add|remove` for admins (permission
 `glyph.economy.admin`, every adjustment ledgered and logged). Transfers are
 atomic PostgreSQL transactions with row locks and idempotency keys; amounts
-are BIGINT whole dollars (the economy has no cents), never floats. An action-bar
-HUD shows each player's cash above the hotbar (keeps clear of client minimaps)
-and updates live on any balance change (configure under `economy.hud`).
+are BIGINT whole dollars (the economy has no cents), never floats. A right-side
+sidebar HUD shows the server name above compact cash (`$ 100` / `$ 1.6M`) and
+updates live on balance changes (configure under `economy.hud`).
 
 When VaultUnlocked is installed, GlyphCore registers a classic Vault economy
 provider (`GlyphEconomy`) so third-party plugins can use Glyph balances;
