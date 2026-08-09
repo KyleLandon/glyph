@@ -54,6 +54,10 @@ commands:
     usage: /claim
     aliases: [mail]
     permission: glyph.auction
+  bounty:
+    description: View or place bounties.
+    usage: /bounty [<player> | add <player> <amount>]
+    permission: glyph.bounty
 
 permissions:
   glyph.admin:
@@ -67,4 +71,7 @@ permissions:
     default: op
   glyph.auction:
     description: Access to the auction house and deliveries (/ah, /claim).
+    default: true
+  glyph.bounty:
+    description: Access to bounties (/bounty).
     default: true

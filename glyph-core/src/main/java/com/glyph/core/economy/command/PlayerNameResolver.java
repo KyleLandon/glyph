@@ -11,14 +11,14 @@ import org.bukkit.entity.Player;
  * Resolves a command argument to a player UUID: exact online match first
  * (no I/O), then the players table for offline targets.
  */
-final class PlayerNameResolver {
+public final class PlayerNameResolver {
 
-    record PlayerRef(UUID uuid, String name) { }
+    public record PlayerRef(UUID uuid, String name) { }
 
     private PlayerNameResolver() {
     }
 
-    static CompletableFuture<Optional<PlayerRef>> resolve(PlayerApi players, String name) {
+    public static CompletableFuture<Optional<PlayerRef>> resolve(PlayerApi players, String name) {
         Player online = Bukkit.getPlayerExact(name);
         if (online != null) {
             return CompletableFuture.completedFuture(

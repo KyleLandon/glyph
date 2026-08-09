@@ -34,6 +34,10 @@ class SettingsLoaderTest {
               sale-fee-percent: 7.0
               max-listings-per-player: 3
               duration-hours: 12
+            bounties:
+              enabled: false
+              minimum-minor: 5000
+              same-victim-cooldown-minutes: 30
             """;
 
     private static final String DATABASE_YML = """
@@ -96,6 +100,11 @@ class SettingsLoaderTest {
         assertThat(auction.saleFeeBasisPoints()).isEqualTo(700);
         assertThat(auction.maxListingsPerPlayer()).isEqualTo(3);
         assertThat(auction.durationHours()).isEqualTo(12);
+
+        BountySettings bounties = settings.bounties();
+        assertThat(bounties.enabled()).isFalse();
+        assertThat(bounties.minimumMinor()).isEqualTo(5000);
+        assertThat(bounties.sameVictimCooldownMinutes()).isEqualTo(30);
     }
 
     @Test
@@ -147,6 +156,9 @@ class SettingsLoaderTest {
         assertThat(settings.auction().saleFeeBasisPoints()).isEqualTo(500);
         assertThat(settings.auction().maxListingsPerPlayer()).isEqualTo(10);
         assertThat(settings.auction().durationHours()).isEqualTo(48);
+        assertThat(settings.bounties().enabled()).isTrue();
+        assertThat(settings.bounties().minimumMinor()).isEqualTo(10_000);
+        assertThat(settings.bounties().sameVictimCooldownMinutes()).isEqualTo(60);
     }
 
     @Test

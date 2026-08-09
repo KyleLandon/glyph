@@ -13,7 +13,8 @@ public record GlyphSettings(
         DatabaseSettings database,
         RedisSettings redis,
         EconomySettings economy,
-        AuctionSettings auction) {
+        AuctionSettings auction,
+        BountySettings bounties) {
 
     /**
      * Saves default config files if missing, then loads them applying

@@ -59,8 +59,14 @@ public final class SettingsLoader {
                 intVal(config, "auction.max-listings-per-player", null, 10),
                 intVal(config, "auction.duration-hours", null, 48));
 
+        BountySettings bountySettings = new BountySettings(
+                boolVal(config, "bounties.enabled", true),
+                longVal(config, "bounties.minimum-minor", null, 10_000L),
+                intVal(config, "bounties.same-victim-cooldown-minutes", null, 60));
+
         return new GlyphSettings(
-                serverId, databaseSettings, redisSettings, economySettings, auctionSettings);
+                serverId, databaseSettings, redisSettings, economySettings, auctionSettings,
+                bountySettings);
     }
 
     private int basisPoints(ConfigurationSection section, String path, double defPercent) {

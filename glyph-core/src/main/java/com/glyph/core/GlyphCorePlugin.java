@@ -7,6 +7,10 @@ import com.glyph.core.auction.PostgresAuctionRepository;
 import com.glyph.core.auction.command.AhCommand;
 import com.glyph.core.auction.command.ClaimCommand;
 import com.glyph.core.auction.gui.AuctionGui;
+import com.glyph.core.bounty.BountyService;
+import com.glyph.core.bounty.CombatListener;
+import com.glyph.core.bounty.PostgresBountyRepository;
+import com.glyph.core.bounty.command.BountyCommand;
 import com.glyph.core.command.GlyphCommand;
 import com.glyph.core.config.GlyphSettings;
 import com.glyph.core.database.DatabaseManager;
@@ -63,6 +67,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
     private EconomyService economyService;
     private AuctionService auctionService;
     private DeliveryService deliveryService;
+    private BountyService bountyService;
     private final AtomicBoolean sweeperRunning = new AtomicBoolean();
 
     @Override
@@ -158,6 +163,20 @@ public final class GlyphCorePlugin extends JavaPlugin {
         registerCommand("ah", ahCommand, ahCommand);
         registerCommand("claim", new ClaimCommand(deliveryClaimer), null);
         startExpirySweeper();
+
+        // Bounties + kill log (GDD Phase 5, sections 25, 33).
+        this.bountyService = new BountyService(
+                new PostgresBountyRepository(databaseManager::dataSource),
+                settings.bounties(),
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger());
+        getServer().getPluginManager().registerEvents(
+                new CombatListener(bountyService, schedulerAdapter,
+                        settings.economy(), getSLF4JLogger()), this);
+        BountyCommand bountyCommand = new BountyCommand(
+                bountyService, playerService, schedulerAdapter, settings.economy());
+        registerCommand("bounty", bountyCommand, bountyCommand);
 
         // Infrastructure connects asynchronously; the enable thread is never blocked.
         databaseManager.initAsync().whenComplete((ignored, error) -> {

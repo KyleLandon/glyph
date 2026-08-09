@@ -27,3 +27,11 @@ auction:
   max-listings-per-player: 10
   # Listing lifetime; expired items return via /claim.
   duration-hours: 48
+
+bounties:
+  enabled: true
+  # Smallest bounty, in MINOR units (10000 = $100.00). GDD section 63.
+  minimum-minor: 10000
+  # Killing the same player again within this window still records the kill
+  # but withholds the bounty payout (anti-farming, GDD section 25).
+  same-victim-cooldown-minutes: 60
