@@ -134,4 +134,6 @@ tunnel.
   - `GLYPH_USE_PLAYIT=1` pauses A-record DDNS
 - [ ] ISP public/static IP (then tear down tunnel — steps above)
 - [ ] Router: DHCP reservation + port forwards — desktop LAN IP 192.168.4.24
-- [ ] Outside-LAN connection verified on native public IP
+- [x] Outside path verified via tunnel Server List Ping to
+      `atoms-simmering.tun.ply.gg:60307` / SRV `play.glyphmc.net` (2026-08-09)
+- [ ] Outside-LAN connection verified on native public IP (post-CGNAT)
