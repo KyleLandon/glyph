@@ -1,5 +1,6 @@
 package com.glyph.core.stats;
 
+import com.glyph.core.rewards.ActivityTracker;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,25 +14,30 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
- * Feeds gameplay events into the stats buffer (GDD section 30). Every
- * handler only bumps in-memory counters — no I/O on event threads.
+ * Feeds gameplay events into the stats buffer (GDD section 30) and the
+ * playtime-reward activity tracker (GDD 16). Every handler only bumps
+ * in-memory counters — no I/O on event threads.
  */
 public final class StatsListener implements Listener {
 
     private final StatsService stats;
+    private final ActivityTracker activity;
 
-    public StatsListener(StatsService stats) {
+    public StatsListener(StatsService stats, ActivityTracker activity) {
         this.stats = stats;
+        this.activity = activity;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         stats.increment(event.getPlayer().getUniqueId(), StatType.BLOCKS_BROKEN);
+        activity.record(event.getPlayer().getUniqueId(), ActivityTracker.BLOCK_UNITS);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         stats.increment(event.getPlayer().getUniqueId(), StatType.BLOCKS_PLACED);
+        activity.record(event.getPlayer().getUniqueId(), ActivityTracker.BLOCK_UNITS);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -67,10 +73,12 @@ public final class StatsListener implements Listener {
         }
         long cm = Math.round(from.distance(to) * 100.0);
         stats.increment(event.getPlayer().getUniqueId(), StatType.DISTANCE_CM, cm);
+        activity.record(event.getPlayer().getUniqueId(), cm);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
         stats.flushPlayerAsync(event.getPlayer().getUniqueId());
+        activity.clear(event.getPlayer().getUniqueId());
     }
 }

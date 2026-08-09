@@ -64,9 +64,15 @@ public final class SettingsLoader {
                 longVal(config, "bounties.minimum-minor", null, 10_000L),
                 intVal(config, "bounties.same-victim-cooldown-minutes", null, 60));
 
+        PlaytimeRewardSettings rewardSettings = new PlaytimeRewardSettings(
+                boolVal(config, "rewards.playtime.enabled", true),
+                intVal(config, "rewards.playtime.interval-minutes", null, 15),
+                longVal(config, "rewards.playtime.amount-minor", null, 1_000L),
+                intVal(config, "rewards.playtime.min-activity", null, 20));
+
         return new GlyphSettings(
                 serverId, databaseSettings, redisSettings, economySettings, auctionSettings,
-                bountySettings);
+                bountySettings, rewardSettings);
     }
 
     private int basisPoints(ConfigurationSection section, String path, double defPercent) {

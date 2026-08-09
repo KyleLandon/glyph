@@ -7,8 +7,10 @@ server:
 
 economy:
   # Balance granted when a player's account is created, in MINOR units
-  # (cents): 500 means $5.00. Anarchy default is 0 (GDD section 55).
-  starting-balance-minor: 0
+  # (cents). $100.00 gives new players instant market liquidity — enough
+  # for the minimum bounty or a cheap auction buy. One-time per player,
+  # so alt accounts are not worth farming.
+  starting-balance-minor: 10000
   # Prefix used when formatting amounts.
   currency-symbol: "$"
   # Sidebar HUD showing the player's cash (FiveM-style).
@@ -35,3 +37,17 @@ bounties:
   # Killing the same player again within this window still records the kill
   # but withholds the bounty payout (anti-farming, GDD section 25).
   same-victim-cooldown-minutes: 60
+
+rewards:
+  # Active-playtime earnings: the launch money faucet (GDD section 16).
+  # Minted as SYSTEM_REWARD ledger entries, so supply growth is measurable.
+  playtime:
+    enabled: true
+    # Payout window length.
+    interval-minutes: 15
+    # Payment per active window, in MINOR units (1000 = $10.00 -> ~$40/hour
+    # of genuinely active play).
+    amount-minor: 1000
+    # Activity required in the window before it pays: 1 unit = one block
+    # broken/placed or one meter moved. AFK players earn nothing.
+    min-activity: 20

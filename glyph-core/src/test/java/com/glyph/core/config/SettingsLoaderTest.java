@@ -38,6 +38,12 @@ class SettingsLoaderTest {
               enabled: false
               minimum-minor: 5000
               same-victim-cooldown-minutes: 30
+            rewards:
+              playtime:
+                enabled: false
+                interval-minutes: 10
+                amount-minor: 500
+                min-activity: 40
             """;
 
     private static final String DATABASE_YML = """
@@ -105,6 +111,13 @@ class SettingsLoaderTest {
         assertThat(bounties.enabled()).isFalse();
         assertThat(bounties.minimumMinor()).isEqualTo(5000);
         assertThat(bounties.sameVictimCooldownMinutes()).isEqualTo(30);
+
+        PlaytimeRewardSettings rewards = settings.rewards();
+        assertThat(rewards.enabled()).isFalse();
+        assertThat(rewards.intervalMinutes()).isEqualTo(10);
+        assertThat(rewards.amountMinor()).isEqualTo(500);
+        assertThat(rewards.minActivity()).isEqualTo(40);
+        assertThat(rewards.minActivityUnits()).isEqualTo(4000);
     }
 
     @Test
@@ -159,6 +172,10 @@ class SettingsLoaderTest {
         assertThat(settings.bounties().enabled()).isTrue();
         assertThat(settings.bounties().minimumMinor()).isEqualTo(10_000);
         assertThat(settings.bounties().sameVictimCooldownMinutes()).isEqualTo(60);
+        assertThat(settings.rewards().enabled()).isTrue();
+        assertThat(settings.rewards().intervalMinutes()).isEqualTo(15);
+        assertThat(settings.rewards().amountMinor()).isEqualTo(1_000);
+        assertThat(settings.rewards().minActivity()).isEqualTo(20);
     }
 
     @Test

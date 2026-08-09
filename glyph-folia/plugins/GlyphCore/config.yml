@@ -4,3 +4,8 @@
 server:
   # Unique identifier of this backend server. Override: GLYPH_SERVER_ID
   id: glyph-01
+
+economy:
+  # $100.00 first-join grant: instant market liquidity for new players.
+  # One-time per player, so alt accounts are not worth farming.
+  starting-balance-minor: 10000

@@ -1,6 +1,7 @@
 package com.glyph.core;
 
 import com.glyph.api.GlyphApiProvider;
+import com.glyph.api.economy.Money;
 import com.glyph.core.api.GlyphApiImpl;
 import com.glyph.core.auction.AuctionService;
 import com.glyph.core.auction.PostgresAuctionRepository;
@@ -33,6 +34,8 @@ import com.glyph.core.player.PlayerService;
 import com.glyph.core.player.PlayerSessionService;
 import com.glyph.core.player.PostgresPlayerRepository;
 import com.glyph.core.redis.RedisManager;
+import com.glyph.core.rewards.ActivityTracker;
+import com.glyph.core.rewards.PlaytimeRewardService;
 import com.glyph.core.scheduler.FoliaSchedulerAdapter;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import com.glyph.core.stats.PostgresStatsRepository;
@@ -43,13 +46,17 @@ import com.glyph.core.stats.command.PlaytimeCommand;
 import com.glyph.core.stats.command.StatsCommand;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -75,6 +82,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
     private DeliveryService deliveryService;
     private BountyService bountyService;
     private StatsService statsService;
+    private PlaytimeRewardService playtimeRewardService;
     private final AtomicBoolean sweeperRunning = new AtomicBoolean();
 
     @Override
@@ -171,13 +179,16 @@ public final class GlyphCorePlugin extends JavaPlugin {
         registerCommand("claim", new ClaimCommand(deliveryClaimer), null);
         startExpirySweeper();
 
-        // Buffered statistics (GDD Phase 6, sections 30, 104).
+        // Buffered statistics (GDD Phase 6, sections 30, 104) + the activity
+        // tracker feeding playtime rewards.
         this.statsService = new StatsService(
                 new PostgresStatsRepository(databaseManager::dataSource),
                 databaseManager::isReady,
                 ioExecutor,
                 getSLF4JLogger());
-        getServer().getPluginManager().registerEvents(new StatsListener(statsService), this);
+        ActivityTracker activityTracker = new ActivityTracker();
+        getServer().getPluginManager().registerEvents(
+                new StatsListener(statsService, activityTracker), this);
         auctionService.addPurchaseListener((buyer, seller) -> {
             statsService.increment(buyer, StatType.AUCTION_PURCHASES);
             statsService.increment(seller, StatType.AUCTION_SALES);
@@ -186,6 +197,17 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 statsService, playerService, schedulerAdapter), null);
         registerCommand("playtime", new PlaytimeCommand(playerService, schedulerAdapter), null);
         startStatsFlusher();
+
+        // Money faucet: active-playtime earnings (GDD section 16).
+        this.playtimeRewardService = new PlaytimeRewardService(
+                activityTracker,
+                economyRepository,
+                economyService,
+                settings.rewards(),
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger());
+        startPlaytimeRewards();
 
         // Bounties + kill log (GDD Phase 5, sections 25, 33).
         this.bountyService = new BountyService(
@@ -236,6 +258,44 @@ public final class GlyphCorePlugin extends JavaPlugin {
         }
         auctionService.sweepExpired();
         schedulerAdapter.runAsyncLater(this::sweepAndReschedule, Duration.ofMinutes(1));
+    }
+
+    /**
+     * Playtime reward loop (GDD 16): every window, snapshot who is online on
+     * the global thread, pay the active ones async, then notify them on
+     * their entity threads.
+     */
+    private void startPlaytimeRewards() {
+        if (!settings.rewards().enabled()) {
+            return;
+        }
+        schedulerAdapter.runAsyncLater(this::payoutPlaytimeAndReschedule,
+                Duration.ofMinutes(settings.rewards().intervalMinutes()));
+    }
+
+    private void payoutPlaytimeAndReschedule() {
+        if (!sweeperRunning.get()) {
+            return;
+        }
+        schedulerAdapter.runGlobal(() -> {
+            List<UUID> online = getServer().getOnlinePlayers().stream()
+                    .map(Player::getUniqueId)
+                    .toList();
+            playtimeRewardService.payoutWindow(online).thenAccept(paid -> {
+                String formatted = Money.ofMinor(settings.rewards().amountMinor())
+                        .format(settings.economy().currencySymbol());
+                for (UUID uuid : paid) {
+                    Player player = getServer().getPlayer(uuid);
+                    if (player != null) {
+                        schedulerAdapter.runForEntity(player, () -> player.sendMessage(
+                                Component.text("+" + formatted + " earned for staying active.",
+                                        NamedTextColor.GREEN)), null);
+                    }
+                }
+            });
+        });
+        schedulerAdapter.runAsyncLater(this::payoutPlaytimeAndReschedule,
+                Duration.ofMinutes(settings.rewards().intervalMinutes()));
     }
 
     /** Periodic stats batch flush (GDD 104); final flush happens in onDisable. */
