@@ -9,10 +9,13 @@ import com.glyph.core.auction.AuctionRepository.PurchaseResult;
 import com.glyph.core.auction.AuctionRepository.PurchaseStatus;
 import com.glyph.core.config.AuctionSettings;
 import com.glyph.core.item.ItemCodec;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
+import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import org.bukkit.inventory.ItemStack;
 import org.slf4j.Logger;
@@ -30,6 +33,9 @@ public final class AuctionService {
     private final Executor ioExecutor;
     private final Logger logger;
 
+    /** Notified with (buyerUuid, sellerUuid) after each committed sale. */
+    private final List<BiConsumer<UUID, UUID>> purchaseListeners = new CopyOnWriteArrayList<>();
+
     public AuctionService(
             AuctionRepository repository,
             AuctionSettings settings,
@@ -45,6 +51,10 @@ public final class AuctionService {
 
     public AuctionSettings settings() {
         return settings;
+    }
+
+    public void addPurchaseListener(BiConsumer<UUID, UUID> listener) {
+        purchaseListeners.add(listener);
     }
 
     /**
@@ -97,9 +107,16 @@ public final class AuctionService {
                         logger.error("Auction purchase failed: listing {} buyer {}",
                                 listingId, buyerUuid, error);
                     } else if (result.status() == PurchaseStatus.SUCCESS) {
+                        AuctionListing sold = result.listing().orElseThrow();
                         logger.info("Auction sold: {} to {} for {}",
-                                listingId, buyerUuid,
-                                result.listing().orElseThrow().priceMinor());
+                                listingId, buyerUuid, sold.priceMinor());
+                        for (BiConsumer<UUID, UUID> listener : purchaseListeners) {
+                            try {
+                                listener.accept(buyerUuid, sold.sellerUuid());
+                            } catch (Exception e) {
+                                logger.error("Auction purchase listener failed", e);
+                            }
+                        }
                     }
                 })
                 .exceptionally(error -> PurchaseResult.failure(PurchaseStatus.FAILED));

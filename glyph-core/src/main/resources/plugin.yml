@@ -58,6 +58,14 @@ commands:
     description: View or place bounties.
     usage: /bounty [<player> | add <player> <amount>]
     permission: glyph.bounty
+  stats:
+    description: Show player statistics.
+    usage: /stats [player]
+    permission: glyph.stats
+  playtime:
+    description: Show your playtime.
+    usage: /playtime
+    permission: glyph.stats
 
 permissions:
   glyph.admin:
@@ -74,4 +82,7 @@ permissions:
     default: true
   glyph.bounty:
     description: Access to bounties (/bounty).
+    default: true
+  glyph.stats:
+    description: Access to statistics (/stats, /playtime).
     default: true

@@ -35,6 +35,12 @@ import com.glyph.core.player.PostgresPlayerRepository;
 import com.glyph.core.redis.RedisManager;
 import com.glyph.core.scheduler.FoliaSchedulerAdapter;
 import com.glyph.core.scheduler.SchedulerAdapter;
+import com.glyph.core.stats.PostgresStatsRepository;
+import com.glyph.core.stats.StatType;
+import com.glyph.core.stats.StatsListener;
+import com.glyph.core.stats.StatsService;
+import com.glyph.core.stats.command.PlaytimeCommand;
+import com.glyph.core.stats.command.StatsCommand;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -68,6 +74,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
     private AuctionService auctionService;
     private DeliveryService deliveryService;
     private BountyService bountyService;
+    private StatsService statsService;
     private final AtomicBoolean sweeperRunning = new AtomicBoolean();
 
     @Override
@@ -164,6 +171,22 @@ public final class GlyphCorePlugin extends JavaPlugin {
         registerCommand("claim", new ClaimCommand(deliveryClaimer), null);
         startExpirySweeper();
 
+        // Buffered statistics (GDD Phase 6, sections 30, 104).
+        this.statsService = new StatsService(
+                new PostgresStatsRepository(databaseManager::dataSource),
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger());
+        getServer().getPluginManager().registerEvents(new StatsListener(statsService), this);
+        auctionService.addPurchaseListener((buyer, seller) -> {
+            statsService.increment(buyer, StatType.AUCTION_PURCHASES);
+            statsService.increment(seller, StatType.AUCTION_SALES);
+        });
+        registerCommand("stats", new StatsCommand(
+                statsService, playerService, schedulerAdapter), null);
+        registerCommand("playtime", new PlaytimeCommand(playerService, schedulerAdapter), null);
+        startStatsFlusher();
+
         // Bounties + kill log (GDD Phase 5, sections 25, 33).
         this.bountyService = new BountyService(
                 new PostgresBountyRepository(databaseManager::dataSource),
@@ -172,7 +195,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 ioExecutor,
                 getSLF4JLogger());
         getServer().getPluginManager().registerEvents(
-                new CombatListener(bountyService, schedulerAdapter,
+                new CombatListener(bountyService, statsService, schedulerAdapter,
                         settings.economy(), getSLF4JLogger()), this);
         BountyCommand bountyCommand = new BountyCommand(
                 bountyService, playerService, schedulerAdapter, settings.economy());
@@ -215,9 +238,30 @@ public final class GlyphCorePlugin extends JavaPlugin {
         schedulerAdapter.runAsyncLater(this::sweepAndReschedule, Duration.ofMinutes(1));
     }
 
+    /** Periodic stats batch flush (GDD 104); final flush happens in onDisable. */
+    private void startStatsFlusher() {
+        schedulerAdapter.runAsyncLater(this::flushStatsAndReschedule, Duration.ofSeconds(60));
+    }
+
+    private void flushStatsAndReschedule() {
+        if (!sweeperRunning.get()) {
+            return;
+        }
+        statsService.flushAll();
+        schedulerAdapter.runAsyncLater(this::flushStatsAndReschedule, Duration.ofSeconds(60));
+    }
+
     @Override
     public void onDisable() {
         sweeperRunning.set(false);
+        // Shutdown flush (GDD 104): buffered stat deltas must not be lost.
+        if (statsService != null) {
+            try {
+                statsService.flushAll();
+            } catch (Exception e) {
+                getSLF4JLogger().error("Final stats flush failed", e);
+            }
+        }
         GlyphApiProvider.unregister();
         getServer().getServicesManager().unregisterAll(this);
 

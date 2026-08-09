@@ -3,6 +3,8 @@ package com.glyph.core.bounty;
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.scheduler.SchedulerAdapter;
+import com.glyph.core.stats.StatType;
+import com.glyph.core.stats.StatsService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -21,13 +23,15 @@ import org.slf4j.Logger;
 public final class CombatListener implements Listener {
 
     private final BountyService bounties;
+    private final StatsService stats;
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
     private final Logger logger;
 
-    public CombatListener(BountyService bounties, SchedulerAdapter scheduler,
-                          EconomySettings economy, Logger logger) {
+    public CombatListener(BountyService bounties, StatsService stats,
+                          SchedulerAdapter scheduler, EconomySettings economy, Logger logger) {
         this.bounties = bounties;
+        this.stats = stats;
         this.scheduler = scheduler;
         this.economy = economy;
         this.logger = logger;
@@ -60,6 +64,8 @@ public final class CombatListener implements Listener {
                     if (outcome.bountyPaidMinor() <= 0) {
                         return;
                     }
+                    stats.increment(killer.getUniqueId(), StatType.BOUNTIES_CLAIMED,
+                            outcome.bountiesClaimed());
                     String amount = Money.ofMinor(outcome.bountyPaidMinor())
                             .format(economy.currencySymbol());
                     // GDD section 33's special bounty message, network-wide.
