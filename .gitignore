@@ -10,6 +10,10 @@ bin/
 .env
 *.env.local
 
+# playit.gg agent secrets / claim scratch (never commit)
+.playit*
+playit.toml
+
 # IDE
 .idea/
 *.iml

@@ -39,5 +39,17 @@ function Start-ServerIfDown([int]$port, [string]$dir) {
     Write-Output "Started $dir"
 }
 
+# playit.gg agent (CGNAT tunnel until the ISP hands over a public IP).
+$playit = "C:\Program Files\playit_gg\bin\playit.exe"
+if (Test-Path $playit) {
+    $status = & $playit status 2>$null
+    if ("$status" -notmatch "Phase: running") {
+        & $playit start 2>$null | Out-Null
+        Write-Output "Started playitd"
+    } else {
+        Write-Output "playitd already running"
+    }
+}
+
 Start-ServerIfDown 25566 (Join-Path $root "glyph-folia")
 Start-ServerIfDown 25565 (Join-Path $root "glyph-velocity")
