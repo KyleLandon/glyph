@@ -38,11 +38,12 @@ scripts\dev-up.ps1              # starts PostgreSQL + Redis
 .\gradlew build
 ```
 
-The local test servers (`glyph-folia/`, `glyph-velocity/`) are **not** in git —
-they hold world data and server jars. To recreate them on a new machine,
-follow [`docs/LOCAL_TEST_SERVER.md`](docs/LOCAL_TEST_SERVER.md) (download the
-Folia/Velocity jars, apply the documented config, run
-`scripts\deploy-local.ps1`). Requires JDK 25 on PATH.
+The local test servers (`glyph-folia/`, `glyph-velocity/`) are in git
+including server jars, configs and plugins — only world data, logs, caches
+and the forwarding secret are excluded. On a new machine follow the quick
+start in [`docs/LOCAL_TEST_SERVER.md`](docs/LOCAL_TEST_SERVER.md) (run each
+server once, then `scripts\sync-forwarding-secret.ps1`). Requires JDK 25 on
+PATH.
 
 Artifacts:
 

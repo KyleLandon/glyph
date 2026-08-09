@@ -1,0 +1,6 @@
+# GlyphCore main configuration.
+# Every value can be overridden with environment variables (see comments).
+
+server:
+  # Unique identifier of this backend server. Override: GLYPH_SERVER_ID
+  id: glyph-01

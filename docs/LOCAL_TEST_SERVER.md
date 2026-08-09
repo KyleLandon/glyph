@@ -1,9 +1,21 @@
 # Local Test Network
 
-Two gitignored runtime directories make up the local test network — they
-contain world data, server jars and downloaded libraries, never source code.
-This document is the committed record of how they are set up, so they can be
-recreated from scratch.
+Two runtime directories make up the local test network. Their configs,
+server jars and plugins are **committed**, so a fresh clone runs with
+minimal setup. Not in git: world data, logs, auto-downloaded caches
+(`libraries/`, `cache/`, `versions/`, LuckPerms `libs/`) and the proxy
+forwarding secret (public repo).
+
+## New machine quick start
+
+```powershell
+scripts\dev-up.ps1              # PostgreSQL + Redis (Docker)
+glyph-velocity\start.bat        # once — generates forwarding.secret; stop it
+glyph-folia\start.bat           # once — generates config/paper-global.yml + world; stop it
+scripts\sync-forwarding-secret.ps1   # wires the secret into the backend
+scripts\deploy-local.ps1        # build + deploy glyph plugins
+# now start both servers normally
+```
 
 ```
 Minecraft client

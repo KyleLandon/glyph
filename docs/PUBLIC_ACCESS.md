@@ -24,8 +24,9 @@ Voice chat: UDP 24454, same path.
 
 ### 1. Repo + servers
 
-Clone the repo and follow `README.md` + `docs/LOCAL_TEST_SERVER.md`
-(Docker stack, Folia + Velocity runtimes, plugins).
+Clone the repo — the server runtimes, jars and plugins are committed.
+Follow the "New machine quick start" in `docs/LOCAL_TEST_SERVER.md`
+(Docker stack, run each server once, `scripts\sync-forwarding-secret.ps1`).
 
 ### 2. Cloudflare API token (one time)
 

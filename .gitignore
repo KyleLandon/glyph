@@ -25,7 +25,28 @@ run/
 logs/
 *.log
 
-# Local test server runtimes (world data, server jars, downloaded libraries).
-# Source code NEVER lives here.
-glyph-folia/
-glyph-velocity/
+# Local test server runtimes: configs, server jars and plugins ARE committed
+# so a fresh clone runs out of the box. Excluded: world data (churn), logs,
+# auto-downloaded caches, and secrets (public repo — see
+# scripts/sync-forwarding-secret.ps1). Source code NEVER lives here.
+glyph-folia/world/
+glyph-folia/world_nether/
+glyph-folia/world_the_end/
+glyph-folia/cache/
+glyph-folia/libraries/
+glyph-folia/versions/
+glyph-folia/logs/
+glyph-folia/crash-reports/
+glyph-folia/.console_history
+glyph-folia/usercache.json
+glyph-folia/version_history.json
+glyph-folia/plugins/LuckPerms/libs/
+glyph-folia/plugins/spark/tmp/
+glyph-folia/plugins/.paper-remapped/
+glyph-velocity/logs/
+glyph-velocity/plugins/luckperms/libs/
+
+# Proxy forwarding secret and the backend config embedding it (public repo).
+# On a new machine: run both servers once, then scripts/sync-forwarding-secret.ps1
+glyph-velocity/forwarding.secret
+glyph-folia/config/paper-global.yml
