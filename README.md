@@ -115,7 +115,7 @@ Economy (Phase 3): `/balance` (`/bal`), `/pay <player> <amount>`, `/baltop`,
 `/money history`, and `/eco get|set|add|remove` for admins (permission
 `glyph.economy.admin`, every adjustment ledgered and logged). Transfers are
 atomic PostgreSQL transactions with row locks and idempotency keys; amounts
-are BIGINT minor units, never floats. A scoreboard sidebar HUD shows each
+are BIGINT whole dollars (the economy has no cents), never floats. A scoreboard sidebar HUD shows each
 player's cash and updates live on any balance change (configure under
 `economy.hud` in `config.yml`).
 
@@ -131,7 +131,7 @@ their deposits/withdrawals are ledgered as SYSTEM_REWARD/SYSTEM_SINK
 2. All Minecraft-touching code must be Folia-safe: use
    `SchedulerAdapter` (global/region/entity/async), never assume a main thread.
 3. No blocking I/O on tick threads. Ever.
-4. Money is BIGINT minor units. No floats, no exceptions.
+4. Money is BIGINT whole dollars — no cents. No floats, no exceptions.
 5. PostgreSQL is the source of truth; Redis is cache/messaging only.
 6. Every schema change is a new Flyway migration.
 7. Features touching money/items/permissions require tests before merge.

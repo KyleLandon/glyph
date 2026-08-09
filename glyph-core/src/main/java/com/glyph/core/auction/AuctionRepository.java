@@ -69,16 +69,16 @@ public interface AuctionRepository {
      * GDD section 17).
      */
     CreateResult create(UUID sellerUuid, byte[] itemData, String summaryJson,
-                        long priceMinor, long listingFeeMinor,
+                        long price, long listingFee,
                         int durationHours, int maxActivePerSeller);
 
     /**
      * Atomic purchase (GDD section 22). Charges the buyer the full price,
-     * credits the seller price minus {@code saleFeeMinor} (fee burned),
+     * credits the seller price minus {@code saleFee} (fee burned),
      * marks the listing SOLD and queues an AUCTION_ITEM delivery for the
      * buyer — all in one transaction.
      */
-    PurchaseResult purchase(UUID listingId, UUID buyerUuid, long saleFeeMinor);
+    PurchaseResult purchase(UUID listingId, UUID buyerUuid, long saleFee);
 
     /** Cancels an ACTIVE listing and queues the item back to the seller. */
     CancelStatus cancel(UUID listingId, UUID sellerUuid);

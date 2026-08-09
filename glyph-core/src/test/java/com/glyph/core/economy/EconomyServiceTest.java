@@ -28,57 +28,57 @@ class EconomyServiceTest {
         boolean failNextCall;
 
         @Override
-        public Optional<Long> balanceMinor(UUID playerUuid) {
+        public Optional<Long> balance(UUID playerUuid) {
             maybeFail();
             return Optional.ofNullable(balances.get(playerUuid));
         }
 
         @Override
         public MutationOutcome transfer(UUID source, UUID destination,
-                                        long amountMinor, String idempotencyKey) {
+                                        long amount, String idempotencyKey) {
             maybeFail();
             Long sourceBalance = balances.get(source);
             Long destBalance = balances.get(destination);
             if (sourceBalance == null || destBalance == null) {
                 return MutationOutcome.failure(TransferResult.Status.ACCOUNT_NOT_FOUND);
             }
-            if (sourceBalance < amountMinor) {
+            if (sourceBalance < amount) {
                 return MutationOutcome.failure(TransferResult.Status.INSUFFICIENT_FUNDS);
             }
-            balances.put(source, sourceBalance - amountMinor);
-            balances.put(destination, destBalance + amountMinor);
+            balances.put(source, sourceBalance - amount);
+            balances.put(destination, destBalance + amount);
             return new MutationOutcome(
                     TransferResult.success(UUID.randomUUID(),
-                            Money.ofMinor(sourceBalance - amountMinor)),
-                    sourceBalance - amountMinor, destBalance + amountMinor);
+                            Money.of(sourceBalance - amount)),
+                    sourceBalance - amount, destBalance + amount);
         }
 
         @Override
         public MutationOutcome adminAdjust(UUID playerUuid, AdminOperation operation,
-                                           long amountMinor, UUID actor) {
+                                           long amount, UUID actor) {
             maybeFail();
             Long balance = balances.get(playerUuid);
             if (balance == null) {
                 return MutationOutcome.failure(TransferResult.Status.ACCOUNT_NOT_FOUND);
             }
             long target = switch (operation) {
-                case SET -> amountMinor;
-                case ADD -> balance + amountMinor;
-                case REMOVE -> balance - amountMinor;
+                case SET -> amount;
+                case ADD -> balance + amount;
+                case REMOVE -> balance - amount;
             };
             if (target < 0) {
                 return MutationOutcome.failure(TransferResult.Status.INSUFFICIENT_FUNDS);
             }
             balances.put(playerUuid, target);
             return new MutationOutcome(
-                    TransferResult.success(UUID.randomUUID(), Money.ofMinor(target)), target, -1);
+                    TransferResult.success(UUID.randomUUID(), Money.of(target)), target, -1);
         }
 
         @Override
         public MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
-                                              long amountMinor, com.glyph.api.economy.TransactionType type,
+                                              long amount, com.glyph.api.economy.TransactionType type,
                                               String reason) {
-            return adminAdjust(playerUuid, operation, amountMinor, null);
+            return adminAdjust(playerUuid, operation, amount, null);
         }
 
         @Override
@@ -123,12 +123,12 @@ class EconomyServiceTest {
         repository.balances.put(bob, 0L);
         List<String> notifications = new ArrayList<>();
         service.addBalanceListener((uuid, balance) ->
-                notifications.add(uuid + "=" + balance.minorUnits()));
+                notifications.add(uuid + "=" + balance.dollars()));
 
-        TransferResult result = service.transfer(alice, bob, Money.ofMinor(4_00), null).join();
+        TransferResult result = service.transfer(alice, bob, Money.of(4_00), null).join();
 
         assertThat(result.isSuccess()).isTrue();
-        assertThat(result.newBalance()).contains(Money.ofMinor(6_00));
+        assertThat(result.newBalance()).contains(Money.of(6_00));
         assertThat(repository.balances).containsEntry(alice, 6_00L).containsEntry(bob, 4_00L);
         assertThat(notifications).containsExactlyInAnyOrder(
                 alice + "=600", bob + "=400");
@@ -139,7 +139,7 @@ class EconomyServiceTest {
         repository.balances.put(alice, 10_00L);
         repository.failNextCall = true; // would explode if the repo were hit
 
-        TransferResult result = service.transfer(alice, alice, Money.ofMinor(1_00), null).join();
+        TransferResult result = service.transfer(alice, alice, Money.of(1_00), null).join();
 
         assertThat(result.status()).isEqualTo(TransferResult.Status.SELF_PAYMENT);
         assertThat(repository.failNextCall).isTrue();
@@ -157,9 +157,9 @@ class EconomyServiceTest {
     void databaseDownFailsSoftly() {
         databaseReady.set(false);
 
-        TransferResult transfer = service.transfer(alice, bob, Money.ofMinor(100), null).join();
+        TransferResult transfer = service.transfer(alice, bob, Money.of(100), null).join();
         TransferResult admin = service.adminAdjust(
-                alice, AdminOperation.ADD, Money.ofMinor(100), null).join();
+                alice, AdminOperation.ADD, Money.of(100), null).join();
 
         assertThat(transfer.status()).isEqualTo(TransferResult.Status.FAILED);
         assertThat(admin.status()).isEqualTo(TransferResult.Status.FAILED);
@@ -171,7 +171,7 @@ class EconomyServiceTest {
         repository.balances.put(bob, 0L);
         repository.failNextCall = true;
 
-        TransferResult result = service.transfer(alice, bob, Money.ofMinor(100), null).join();
+        TransferResult result = service.transfer(alice, bob, Money.of(100), null).join();
 
         assertThat(result.status()).isEqualTo(TransferResult.Status.FAILED);
     }
@@ -205,7 +205,7 @@ class EconomyServiceTest {
             throw new RuntimeException("broken HUD");
         });
 
-        TransferResult result = service.transfer(alice, bob, Money.ofMinor(100), null).join();
+        TransferResult result = service.transfer(alice, bob, Money.of(100), null).join();
 
         assertThat(result.isSuccess()).isTrue();
     }

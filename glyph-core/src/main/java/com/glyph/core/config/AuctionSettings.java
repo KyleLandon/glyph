@@ -2,7 +2,7 @@ package com.glyph.core.config;
 
 /**
  * Auction house configuration (GDD sections 21, 63). Fee percentages are
- * stored as basis points so fee math stays in integer minor units.
+ * stored as basis points so fee math stays in integer whole dollars.
  *
  * @param enabled              master switch for /ah
  * @param listingFeeBasisPoints fee charged at listing time (100 = 1%)
@@ -18,18 +18,18 @@ public record AuctionSettings(
         int durationHours) {
 
     /** Percent-of-price in integer math, rounding up so fees are never free. */
-    public static long fee(long priceMinor, int basisPoints) {
-        if (basisPoints <= 0 || priceMinor <= 0) {
+    public static long fee(long price, int basisPoints) {
+        if (basisPoints <= 0 || price <= 0) {
             return 0;
         }
-        return Math.ceilDiv(Math.multiplyExact(priceMinor, basisPoints), 10_000L);
+        return Math.ceilDiv(Math.multiplyExact(price, basisPoints), 10_000L);
     }
 
-    public long listingFee(long priceMinor) {
-        return fee(priceMinor, listingFeeBasisPoints);
+    public long listingFee(long price) {
+        return fee(price, listingFeeBasisPoints);
     }
 
-    public long saleFee(long priceMinor) {
-        return fee(priceMinor, saleFeeBasisPoints);
+    public long saleFee(long price) {
+        return fee(price, saleFeeBasisPoints);
     }
 }

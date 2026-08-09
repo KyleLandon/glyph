@@ -22,18 +22,18 @@ public interface BountyRepository {
     }
 
     /** Aggregated active bounty on one player, for lists and lookups. */
-    record TargetTotal(UUID targetUuid, String targetName, long totalMinor, int count) { }
+    record TargetTotal(UUID targetUuid, String targetName, long total, int count) { }
 
     /**
-     * @param bountyPaidMinor total paid to the killer (0 when none active
+     * @param bountyPaid total paid to the killer (0 when none active
      *                        or payout was withheld)
      * @param withheld        true when active bounties existed but the
      *                        same-victim cooldown blocked the payout
      */
-    record KillOutcome(long bountyPaidMinor, int bountiesClaimed, boolean withheld) { }
+    record KillOutcome(long bountyPaid, int bountiesClaimed, boolean withheld) { }
 
-    /** Escrows {@code amountMinor} from the creator and creates the bounty. */
-    PlaceResult place(UUID targetUuid, UUID creatorUuid, long amountMinor);
+    /** Escrows {@code amount} (whole dollars) from the creator and creates the bounty. */
+    PlaceResult place(UUID targetUuid, UUID creatorUuid, long amount);
 
     /**
      * Records a player kill (GDD 33) and pays out every ACTIVE bounty on the

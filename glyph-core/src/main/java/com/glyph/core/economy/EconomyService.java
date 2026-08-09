@@ -54,7 +54,7 @@ public final class EconomyService implements EconomyApi {
      * stay in sync.
      */
     public void publishBalanceChange(UUID playerUuid, Money newBalance) {
-        notifyBalance(playerUuid, newBalance.minorUnits());
+        notifyBalance(playerUuid, newBalance.dollars());
     }
 
     @Override
@@ -64,7 +64,7 @@ public final class EconomyService implements EconomyApi {
                     new IllegalStateException("Economy unavailable: database is down"));
         }
         return CompletableFuture.supplyAsync(
-                () -> repository.balanceMinor(playerUuid).map(Money::ofMinor), ioExecutor);
+                () -> repository.balance(playerUuid).map(Money::of), ioExecutor);
     }
 
     @Override
@@ -86,7 +86,7 @@ public final class EconomyService implements EconomyApi {
         }
         return CompletableFuture
                 .supplyAsync(() -> repository.transfer(
-                        source, destination, amount.minorUnits(), idempotencyKey), ioExecutor)
+                        source, destination, amount.dollars(), idempotencyKey), ioExecutor)
                 .thenApply(outcome -> {
                     if (outcome.result().isSuccess()) {
                         logger.info("Transfer {}: {} -> {} ({})",
@@ -142,7 +142,7 @@ public final class EconomyService implements EconomyApi {
         }
         return CompletableFuture
                 .supplyAsync(() -> repository.adminAdjust(
-                        playerUuid, operation, amount.minorUnits(), actor), ioExecutor)
+                        playerUuid, operation, amount.dollars(), actor), ioExecutor)
                 .thenApply(outcome -> {
                     if (outcome.result().isSuccess()) {
                         // GDD section 18: every administrative change MUST be logged.
@@ -161,14 +161,14 @@ public final class EconomyService implements EconomyApi {
                 });
     }
 
-    private void notifyBalance(UUID playerUuid, long balanceMinor) {
-        if (balanceMinor < 0) {
+    private void notifyBalance(UUID playerUuid, long balance) {
+        if (balance < 0) {
             return;
         }
-        Money balance = Money.ofMinor(balanceMinor);
+        Money money = Money.of(balance);
         for (BiConsumer<UUID, Money> listener : balanceListeners) {
             try {
-                listener.accept(playerUuid, balance);
+                listener.accept(playerUuid, money);
             } catch (Exception e) {
                 logger.error("Balance listener failed for {}", playerUuid, e);
             }

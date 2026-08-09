@@ -6,6 +6,6 @@ server:
   id: glyph-01
 
 economy:
-  # $100.00 first-join grant: instant market liquidity for new players.
+  # $100 first-join grant (whole dollars — the economy has no cents).
   # One-time per player, so alt accounts are not worth farming.
-  starting-balance-minor: 10000
+  starting-balance: 100

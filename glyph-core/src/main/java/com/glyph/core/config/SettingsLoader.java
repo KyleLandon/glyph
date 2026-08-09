@@ -45,13 +45,13 @@ public final class SettingsLoader {
                 str(redis, "redis.password", "GLYPH_REDIS_PASSWORD", ""));
 
         EconomySettings economySettings = new EconomySettings(
-                longVal(config, "economy.starting-balance-minor", null, 0L),
+                longVal(config, "economy.starting-balance", null, 0L),
                 str(config, "economy.currency-symbol", null, "$"),
                 boolVal(config, "economy.hud.enabled", true),
                 str(config, "economy.hud.title", null, "GLYPH"));
 
         // Percent values from YAML become basis points so all fee math stays
-        // in integer minor units (GDD section 63).
+        // in integer whole dollars (GDD section 63).
         AuctionSettings auctionSettings = new AuctionSettings(
                 boolVal(config, "auction.enabled", true),
                 basisPoints(config, "auction.listing-fee-percent", 1.0),
@@ -61,13 +61,13 @@ public final class SettingsLoader {
 
         BountySettings bountySettings = new BountySettings(
                 boolVal(config, "bounties.enabled", true),
-                longVal(config, "bounties.minimum-minor", null, 10_000L),
+                longVal(config, "bounties.minimum", null, 100L),
                 intVal(config, "bounties.same-victim-cooldown-minutes", null, 60));
 
         PlaytimeRewardSettings rewardSettings = new PlaytimeRewardSettings(
                 boolVal(config, "rewards.playtime.enabled", true),
                 intVal(config, "rewards.playtime.interval-minutes", null, 15),
-                longVal(config, "rewards.playtime.amount-minor", null, 1_000L),
+                longVal(config, "rewards.playtime.amount", null, 10L),
                 intVal(config, "rewards.playtime.min-activity", null, 20));
 
         return new GlyphSettings(

@@ -123,8 +123,8 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
         ItemStack snapshot = held.clone();
         player.getInventory().setItemInMainHand(null);
 
-        long listingFee = auctions.settings().listingFee(price.minorUnits());
-        auctions.list(player.getUniqueId(), player.getName(), snapshot, price.minorUnits())
+        long listingFee = auctions.settings().listingFee(price.dollars());
+        auctions.list(player.getUniqueId(), player.getName(), snapshot, price.dollars())
                 .whenComplete((result, error) -> {
                     listingInFlight.remove(player.getUniqueId());
                     boolean listed = error == null && result != null
@@ -154,7 +154,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
                     NamedTextColor.GREEN);
             if (listingFee > 0) {
                 message = message.append(Component.text(
-                        " Listing fee: " + Money.ofMinor(listingFee).format(symbol),
+                        " Listing fee: " + Money.of(listingFee).format(symbol),
                         NamedTextColor.GRAY));
             }
             player.sendMessage(message);
@@ -166,7 +166,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
                 player.getWorld().dropItemNaturally(player.getLocation(), rest));
         Component message = switch (result == null ? null : result.status()) {
             case INSUFFICIENT_FUNDS -> Component.text("You cannot afford the "
-                    + Money.ofMinor(listingFee).format(symbol) + " listing fee.",
+                    + Money.of(listingFee).format(symbol) + " listing fee.",
                     NamedTextColor.RED);
             case LIMIT_REACHED -> Component.text("You already have "
                     + auctions.settings().maxListingsPerPlayer() + " active listings.",

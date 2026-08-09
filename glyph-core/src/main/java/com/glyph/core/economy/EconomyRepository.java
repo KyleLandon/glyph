@@ -21,8 +21,8 @@ public interface EconomyRepository {
      * commit so the service can update HUDs without re-querying.
      *
      * @param result             API-facing outcome
-     * @param sourceBalanceAfter payer balance in minor units, -1 if no source
-     * @param destBalanceAfter   receiver balance in minor units, -1 if no destination
+     * @param sourceBalanceAfter payer balance in dollars, -1 if no source
+     * @param destBalanceAfter   receiver balance in dollars, -1 if no destination
      */
     record MutationOutcome(TransferResult result, long sourceBalanceAfter, long destBalanceAfter) {
 
@@ -31,22 +31,22 @@ public interface EconomyRepository {
         }
     }
 
-    /** @return the player's balance in minor units, empty if no account exists */
-    Optional<Long> balanceMinor(UUID playerUuid);
+    /** @return the player's balance in whole dollars, empty if no account exists */
+    Optional<Long> balance(UUID playerUuid);
 
     /**
      * Atomic transfer between two player accounts: one PostgreSQL transaction,
      * both rows locked with {@code SELECT ... FOR UPDATE} in deterministic
      * order, ledger entry inserted, then commit.
      */
-    MutationOutcome transfer(UUID source, UUID destination, long amountMinor, String idempotencyKey);
+    MutationOutcome transfer(UUID source, UUID destination, long amount, String idempotencyKey);
 
     /**
      * Administrative set/add/remove. Mints (add/raise) and burns (remove/
      * lower) are ledgered as ADMIN_ADJUSTMENT with a null counter-account and
      * the acting admin in {@code actor_uuid}.
      */
-    MutationOutcome adminAdjust(UUID playerUuid, AdminOperation operation, long amountMinor, UUID actor);
+    MutationOutcome adminAdjust(UUID playerUuid, AdminOperation operation, long amount, UUID actor);
 
     /**
      * Balance mutation on behalf of a third-party plugin (Vault bridge).
@@ -54,7 +54,7 @@ public interface EconomyRepository {
      * both are ledgered with the given reason.
      */
     MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
-                                   long amountMinor, TransactionType type, String reason);
+                                   long amount, TransactionType type, String reason);
 
     /**
      * Creates an empty account if none exists (Vault

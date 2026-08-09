@@ -63,8 +63,8 @@ public final class AuctionService {
      * caller must hand the item back.
      */
     public CompletableFuture<CreateResult> list(
-            UUID sellerUuid, String sellerName, ItemStack item, long priceMinor) {
-        if (priceMinor <= 0) {
+            UUID sellerUuid, String sellerName, ItemStack item, long price) {
+        if (price <= 0) {
             return CompletableFuture.completedFuture(
                     CreateResult.failure(CreateStatus.FAILED));
         }
@@ -74,10 +74,10 @@ public final class AuctionService {
         }
         byte[] itemData = ItemCodec.serialize(item);
         String summary = ItemCodec.summarize(item, sellerName).toJson();
-        long listingFee = settings.listingFee(priceMinor);
+        long listingFee = settings.listingFee(price);
         return CompletableFuture
                 .supplyAsync(() -> repository.create(
-                        sellerUuid, itemData, summary, priceMinor, listingFee,
+                        sellerUuid, itemData, summary, price, listingFee,
                         settings.durationHours(), settings.maxListingsPerPlayer()), ioExecutor)
                 .whenComplete((result, error) -> {
                     if (error != null) {
@@ -85,7 +85,7 @@ public final class AuctionService {
                     } else if (result.status() == CreateStatus.SUCCESS) {
                         logger.info("Auction listed: {} by {} for {} (fee {})",
                                 result.listing().orElseThrow().id(), sellerName,
-                                priceMinor, listingFee);
+                                price, listingFee);
                     }
                 })
                 .exceptionally(error -> CreateResult.failure(CreateStatus.FAILED));
@@ -99,7 +99,7 @@ public final class AuctionService {
         return CompletableFuture
                 .supplyAsync(() -> {
                     AuctionListing listing = repository.find(listingId).orElse(null);
-                    long saleFee = listing == null ? 0 : settings.saleFee(listing.priceMinor());
+                    long saleFee = listing == null ? 0 : settings.saleFee(listing.price());
                     return repository.purchase(listingId, buyerUuid, saleFee);
                 }, ioExecutor)
                 .whenComplete((result, error) -> {
@@ -109,7 +109,7 @@ public final class AuctionService {
                     } else if (result.status() == PurchaseStatus.SUCCESS) {
                         AuctionListing sold = result.listing().orElseThrow();
                         logger.info("Auction sold: {} to {} for {}",
-                                listingId, buyerUuid, sold.priceMinor());
+                                listingId, buyerUuid, sold.price());
                         for (BiConsumer<UUID, UUID> listener : purchaseListeners) {
                             try {
                                 listener.accept(buyerUuid, sold.sellerUuid());

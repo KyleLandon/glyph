@@ -80,14 +80,14 @@ public final class VaultEconomyBridge implements Economy {
 
     @Override
     public int fractionalDigits() {
-        return 2;
+        return 0;
     }
 
     @Override
     public String format(double amount) {
-        return toMinor(amount)
-                .map(minor -> Money.ofMinor(minor).format(currencySymbol))
-                .orElseGet(() -> currencySymbol + String.format("%.2f", amount));
+        return toDollars(amount)
+                .map(dollars -> Money.of(dollars).format(currencySymbol))
+                .orElseGet(() -> currencySymbol + String.format("%.0f", amount));
     }
 
     @Override
@@ -104,7 +104,7 @@ public final class VaultEconomyBridge implements Economy {
 
     @Override
     public boolean hasAccount(OfflinePlayer player) {
-        return guarded(() -> economyRepository.balanceMinor(player.getUniqueId()).isPresent(),
+        return guarded(() -> economyRepository.balance(player.getUniqueId()).isPresent(),
                 false);
     }
 
@@ -117,7 +117,7 @@ public final class VaultEconomyBridge implements Economy {
     @Deprecated
     public boolean hasAccount(String playerName) {
         return resolve(playerName).map(uuid -> guarded(
-                () -> economyRepository.balanceMinor(uuid).isPresent(), false)).orElse(false);
+                () -> economyRepository.balance(uuid).isPresent(), false)).orElse(false);
     }
 
     @Override
@@ -313,13 +313,13 @@ public final class VaultEconomyBridge implements Economy {
     // --- internals ----------------------------------------------------------
 
     private double balance(UUID uuid) {
-        return guarded(() -> economyRepository.balanceMinor(uuid).orElse(0L), 0L) / 100.0;
+        return guarded(() -> economyRepository.balance(uuid).orElse(0L), 0L);
     }
 
     private EconomyResponse mutate(UUID uuid, double amount,
                                    AdminOperation operation, TransactionType type) {
-        Optional<Long> minor = toMinor(amount);
-        if (minor.isEmpty()) {
+        Optional<Long> dollars = toDollars(amount);
+        if (dollars.isEmpty()) {
             return new EconomyResponse(amount, 0,
                     ResponseType.FAILURE, "Invalid amount");
         }
@@ -330,17 +330,17 @@ public final class VaultEconomyBridge implements Economy {
         MutationOutcome outcome;
         try {
             outcome = economyRepository.externalAdjust(
-                    uuid, operation, minor.get(), type, REASON);
+                    uuid, operation, dollars.get(), type, REASON);
         } catch (Exception e) {
             logger.error("Vault bridge {} failed for {}", operation, uuid, e);
             return new EconomyResponse(amount, 0,
                     ResponseType.FAILURE, "Economy operation failed");
         }
-        double balanceAfter = Math.max(0, outcome.sourceBalanceAfter()) / 100.0;
+        double balanceAfter = Math.max(0, outcome.sourceBalanceAfter());
         return switch (outcome.result().status()) {
             case SUCCESS -> {
                 economyService.publishBalanceChange(uuid,
-                        Money.ofMinor(outcome.sourceBalanceAfter()));
+                        Money.of(outcome.sourceBalanceAfter()));
                 yield new EconomyResponse(amount, balanceAfter, ResponseType.SUCCESS, null);
             }
             case INSUFFICIENT_FUNDS -> new EconomyResponse(amount, balanceAfter,
@@ -353,17 +353,17 @@ public final class VaultEconomyBridge implements Economy {
     }
 
     /**
-     * Converts a Vault double (dollars) to minor units, rejecting NaN,
-     * infinity, negatives and values that overflow.
+     * Converts a Vault double to whole dollars (the economy has no cents,
+     * fractions round half-up), rejecting NaN, infinity, negatives and
+     * values that overflow.
      */
-    static Optional<Long> toMinor(double amount) {
+    static Optional<Long> toDollars(double amount) {
         if (!Double.isFinite(amount) || amount < 0) {
             return Optional.empty();
         }
         try {
             return Optional.of(BigDecimal.valueOf(amount)
-                    .setScale(2, RoundingMode.HALF_UP)
-                    .movePointRight(2)
+                    .setScale(0, RoundingMode.HALF_UP)
                     .longValueExact());
         } catch (ArithmeticException overflow) {
             return Optional.empty();

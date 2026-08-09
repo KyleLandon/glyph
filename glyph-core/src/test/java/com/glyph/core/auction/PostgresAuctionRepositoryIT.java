@@ -84,11 +84,11 @@ class PostgresAuctionRepositoryIT {
         EXECUTOR.shutdownNow();
     }
 
-    private static UUID playerWithBalance(long balanceMinor) {
+    private static UUID playerWithBalance(long balance) {
         UUID uuid = UUID.randomUUID();
         players.recordJoin(uuid, "P" + uuid.toString().substring(0, 8));
-        if (balanceMinor > 0) {
-            economy.adminAdjust(uuid, AdminOperation.SET, balanceMinor, null);
+        if (balance > 0) {
+            economy.adminAdjust(uuid, AdminOperation.SET, balance, null);
         }
         return uuid;
     }
@@ -113,12 +113,12 @@ class PostgresAuctionRepositoryIT {
                 summary("DIAMOND_SWORD", "WEAPONS", "Seller"), 500_00, 5_00, 48, 10);
 
         assertThat(result.status()).isEqualTo(CreateStatus.SUCCESS);
-        assertThat(economy.balanceMinor(seller)).contains(5_00L);
+        assertThat(economy.balance(seller)).contains(5_00L);
 
         BrowsePage page = auctions.browse(new BrowseQuery(
                 0, 45, Sort.NEWEST, null, null, seller));
         assertThat(page.listings()).hasSize(1);
-        assertThat(page.listings().getFirst().priceMinor()).isEqualTo(500_00);
+        assertThat(page.listings().getFirst().price()).isEqualTo(500_00);
     }
 
     @Test
@@ -129,7 +129,7 @@ class PostgresAuctionRepositoryIT {
                 summary("DIRT", "BLOCKS", "Seller"), 500_00, 5_00, 48, 10);
 
         assertThat(result.status()).isEqualTo(CreateStatus.INSUFFICIENT_FUNDS);
-        assertThat(economy.balanceMinor(seller)).contains(1_00L);
+        assertThat(economy.balance(seller)).contains(1_00L);
     }
 
     @Test
@@ -155,8 +155,8 @@ class PostgresAuctionRepositoryIT {
 
         assertThat(result.status()).isEqualTo(PurchaseStatus.SUCCESS);
         assertThat(result.buyerBalanceAfter()).isEqualTo(40_00);
-        assertThat(economy.balanceMinor(buyer)).contains(40_00L);
-        assertThat(economy.balanceMinor(seller)).contains(57_00L);
+        assertThat(economy.balance(buyer)).contains(40_00L);
+        assertThat(economy.balance(seller)).contains(57_00L);
 
         AuctionListing sold = auctions.find(listing.id()).orElseThrow();
         assertThat(sold.status()).isEqualTo(AuctionListing.Status.SOLD);
@@ -178,7 +178,7 @@ class PostgresAuctionRepositoryIT {
         PurchaseResult result = auctions.purchase(listing.id(), buyer, 0);
 
         assertThat(result.status()).isEqualTo(PurchaseStatus.INSUFFICIENT_FUNDS);
-        assertThat(economy.balanceMinor(buyer)).contains(1_00L);
+        assertThat(economy.balance(buyer)).contains(1_00L);
         assertThat(auctions.find(listing.id()).orElseThrow().status())
                 .isEqualTo(AuctionListing.Status.ACTIVE);
         assertThat(deliveries.pendingCount(buyer)).isZero();
@@ -234,10 +234,10 @@ class PostgresAuctionRepositoryIT {
 
         // Exactly one buyer paid; everyone else is untouched.
         long paidBuyers = buyerIds.stream()
-                .filter(buyer -> economy.balanceMinor(buyer).orElseThrow() == 50_00L)
+                .filter(buyer -> economy.balance(buyer).orElseThrow() == 50_00L)
                 .count();
         assertThat(paidBuyers).isEqualTo(1);
-        assertThat(economy.balanceMinor(seller)).contains(50_00L);
+        assertThat(economy.balance(seller)).contains(50_00L);
 
         // Exactly one AUCTION_ITEM delivery for this listing.
         try (Connection connection = manager.dataSource().getConnection();
@@ -325,7 +325,7 @@ class PostgresAuctionRepositoryIT {
 
         BrowsePage cheapFirst = auctions.browse(new BrowseQuery(
                 0, 45, Sort.PRICE_ASC, null, null, seller));
-        assertThat(cheapFirst.listings().getFirst().priceMinor()).isEqualTo(10_00);
+        assertThat(cheapFirst.listings().getFirst().price()).isEqualTo(10_00);
 
         BrowsePage paged = auctions.browse(new BrowseQuery(0, 2, Sort.NEWEST, null, null, seller));
         assertThat(paged.listings()).hasSize(2);

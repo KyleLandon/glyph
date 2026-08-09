@@ -23,7 +23,7 @@ class SettingsLoaderTest {
             server:
               id: test-01
             economy:
-              starting-balance-minor: 2500
+              starting-balance: 25
               currency-symbol: "€"
               hud:
                 enabled: false
@@ -36,13 +36,13 @@ class SettingsLoaderTest {
               duration-hours: 12
             bounties:
               enabled: false
-              minimum-minor: 5000
+              minimum: 50
               same-victim-cooldown-minutes: 30
             rewards:
               playtime:
                 enabled: false
                 interval-minutes: 10
-                amount-minor: 500
+                amount: 5
                 min-activity: 40
             """;
 
@@ -95,7 +95,7 @@ class SettingsLoaderTest {
         assertThat(redis.hasPassword()).isTrue();
 
         EconomySettings economy = settings.economy();
-        assertThat(economy.startingBalanceMinor()).isEqualTo(2500);
+        assertThat(economy.startingBalance()).isEqualTo(25);
         assertThat(economy.currencySymbol()).isEqualTo("€");
         assertThat(economy.hudEnabled()).isFalse();
         assertThat(economy.hudTitle()).isEqualTo("TEST");
@@ -109,13 +109,13 @@ class SettingsLoaderTest {
 
         BountySettings bounties = settings.bounties();
         assertThat(bounties.enabled()).isFalse();
-        assertThat(bounties.minimumMinor()).isEqualTo(5000);
+        assertThat(bounties.minimum()).isEqualTo(50);
         assertThat(bounties.sameVictimCooldownMinutes()).isEqualTo(30);
 
         PlaytimeRewardSettings rewards = settings.rewards();
         assertThat(rewards.enabled()).isFalse();
         assertThat(rewards.intervalMinutes()).isEqualTo(10);
-        assertThat(rewards.amountMinor()).isEqualTo(500);
+        assertThat(rewards.amount()).isEqualTo(5);
         assertThat(rewards.minActivity()).isEqualTo(40);
         assertThat(rewards.minActivityUnits()).isEqualTo(4000);
     }
@@ -160,7 +160,7 @@ class SettingsLoaderTest {
         assertThat(settings.database().port()).isEqualTo(5432);
         assertThat(settings.redis().port()).isEqualTo(6379);
         assertThat(settings.redis().hasPassword()).isFalse();
-        assertThat(settings.economy().startingBalanceMinor()).isZero();
+        assertThat(settings.economy().startingBalance()).isZero();
         assertThat(settings.economy().currencySymbol()).isEqualTo("$");
         assertThat(settings.economy().hudEnabled()).isTrue();
         assertThat(settings.economy().hudTitle()).isEqualTo("GLYPH");
@@ -170,11 +170,11 @@ class SettingsLoaderTest {
         assertThat(settings.auction().maxListingsPerPlayer()).isEqualTo(10);
         assertThat(settings.auction().durationHours()).isEqualTo(48);
         assertThat(settings.bounties().enabled()).isTrue();
-        assertThat(settings.bounties().minimumMinor()).isEqualTo(10_000);
+        assertThat(settings.bounties().minimum()).isEqualTo(100);
         assertThat(settings.bounties().sameVictimCooldownMinutes()).isEqualTo(60);
         assertThat(settings.rewards().enabled()).isTrue();
         assertThat(settings.rewards().intervalMinutes()).isEqualTo(15);
-        assertThat(settings.rewards().amountMinor()).isEqualTo(1_000);
+        assertThat(settings.rewards().amount()).isEqualTo(10);
         assertThat(settings.rewards().minActivity()).isEqualTo(20);
     }
 

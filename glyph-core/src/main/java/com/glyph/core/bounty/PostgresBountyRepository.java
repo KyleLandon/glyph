@@ -119,7 +119,7 @@ public final class PostgresBountyRepository implements BountyRepository {
     private record LockedAccount(UUID accountId, long balance) { }
 
     @Override
-    public PlaceResult place(UUID targetUuid, UUID creatorUuid, long amountMinor) {
+    public PlaceResult place(UUID targetUuid, UUID creatorUuid, long amount) {
         try (Connection connection = dataSource.get().getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -128,26 +128,26 @@ public final class PostgresBountyRepository implements BountyRepository {
                     connection.rollback();
                     return PlaceResult.failure(PlaceStatus.ACCOUNT_NOT_FOUND);
                 }
-                if (creator.balance() < amountMinor) {
+                if (creator.balance() < amount) {
                     connection.rollback();
                     return PlaceResult.failure(PlaceStatus.INSUFFICIENT_FUNDS);
                 }
 
                 UUID bountyId = UUID.randomUUID();
-                execute(connection, DEBIT, amountMinor, amountMinor, creator.accountId());
-                executeEscrow(connection, ESCROW_ADD, amountMinor);
+                execute(connection, DEBIT, amount, amount, creator.accountId());
+                executeEscrow(connection, ESCROW_ADD, amount);
                 try (PreparedStatement statement = connection.prepareStatement(INSERT_BOUNTY)) {
                     statement.setObject(1, bountyId);
                     statement.setObject(2, targetUuid);
                     statement.setObject(3, creatorUuid);
-                    statement.setLong(4, amountMinor);
+                    statement.setLong(4, amount);
                     statement.executeUpdate();
                 }
-                ledger(connection, creator.accountId(), ESCROW_ACCOUNT_ID, amountMinor,
+                ledger(connection, creator.accountId(), ESCROW_ACCOUNT_ID, amount,
                         TransactionType.BOUNTY_ESCROW, "bounty placed", bountyId, creatorUuid);
 
                 connection.commit();
-                return new PlaceResult(PlaceStatus.SUCCESS, creator.balance() - amountMinor);
+                return new PlaceResult(PlaceStatus.SUCCESS, creator.balance() - amount);
             } catch (SQLException e) {
                 connection.rollback();
                 throw e;

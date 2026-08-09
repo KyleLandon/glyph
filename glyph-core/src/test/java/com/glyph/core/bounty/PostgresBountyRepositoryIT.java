@@ -75,11 +75,11 @@ class PostgresBountyRepositoryIT {
         EXECUTOR.shutdownNow();
     }
 
-    private static UUID playerWithBalance(long balanceMinor) {
+    private static UUID playerWithBalance(long balance) {
         UUID uuid = UUID.randomUUID();
         players.recordJoin(uuid, "P" + uuid.toString().substring(0, 8));
-        if (balanceMinor > 0) {
-            economy.adminAdjust(uuid, AdminOperation.SET, balanceMinor, null);
+        if (balance > 0) {
+            economy.adminAdjust(uuid, AdminOperation.SET, balance, null);
         }
         return uuid;
     }
@@ -113,7 +113,7 @@ class PostgresBountyRepositoryIT {
 
         assertThat(result.status()).isEqualTo(PlaceStatus.SUCCESS);
         assertThat(result.creatorBalanceAfter()).isEqualTo(300_00);
-        assertThat(economy.balanceMinor(creator)).contains(300_00L);
+        assertThat(economy.balance(creator)).contains(300_00L);
         assertThat(escrowBalance()).isEqualTo(escrowBefore + 200_00);
         assertThat(bounties.activeTotal(target)).isEqualTo(200_00);
     }
@@ -127,7 +127,7 @@ class PostgresBountyRepositoryIT {
         PlaceResult result = bounties.place(target, creator, 200_00);
 
         assertThat(result.status()).isEqualTo(PlaceStatus.INSUFFICIENT_FUNDS);
-        assertThat(economy.balanceMinor(creator)).contains(1_00L);
+        assertThat(economy.balance(creator)).contains(1_00L);
         assertThat(escrowBalance()).isEqualTo(escrowBefore);
         assertThat(bounties.activeTotal(target)).isZero();
     }
@@ -144,10 +144,10 @@ class PostgresBountyRepositoryIT {
 
         KillOutcome outcome = kill(killer, victim, 60);
 
-        assertThat(outcome.bountyPaidMinor()).isEqualTo(100_00);
+        assertThat(outcome.bountyPaid()).isEqualTo(100_00);
         assertThat(outcome.bountiesClaimed()).isEqualTo(2);
         assertThat(outcome.withheld()).isFalse();
-        assertThat(economy.balanceMinor(killer)).contains(100_00L);
+        assertThat(economy.balance(killer)).contains(100_00L);
         assertThat(escrowBalance()).isEqualTo(escrowBefore - 100_00);
         assertThat(bounties.activeTotal(victim)).isZero();
 
@@ -173,7 +173,7 @@ class PostgresBountyRepositoryIT {
 
         KillOutcome outcome = kill(killer, victim, 60);
 
-        assertThat(outcome.bountyPaidMinor()).isZero();
+        assertThat(outcome.bountyPaid()).isZero();
         assertThat(outcome.withheld()).isFalse();
     }
 
@@ -190,16 +190,16 @@ class PostgresBountyRepositoryIT {
         bounties.place(victim, creator, 50_00);
         KillOutcome second = kill(killer, victim, 60);
 
-        assertThat(second.bountyPaidMinor()).isZero();
+        assertThat(second.bountyPaid()).isZero();
         assertThat(second.withheld()).isTrue();
         // The bounty survives for someone else to claim.
         assertThat(bounties.activeTotal(victim)).isEqualTo(50_00);
-        assertThat(economy.balanceMinor(killer)).contains(0L);
+        assertThat(economy.balance(killer)).contains(0L);
 
         // A different killer collects it fine.
         UUID other = playerWithBalance(0);
         KillOutcome fresh = kill(other, victim, 60);
-        assertThat(fresh.bountyPaidMinor()).isEqualTo(50_00);
+        assertThat(fresh.bountyPaid()).isEqualTo(50_00);
     }
 
     /** Two concurrent kills of the same target: the bounty pays exactly once. */
@@ -229,13 +229,13 @@ class PostgresBountyRepositoryIT {
 
         long totalPaid = 0;
         for (Future<KillOutcome> future : futures) {
-            totalPaid += future.get().bountyPaidMinor();
+            totalPaid += future.get().bountyPaid();
         }
         assertThat(totalPaid).isEqualTo(300_00);
         assertThat(bounties.activeTotal(victim)).isZero();
 
         long killerBalances = killerIds.stream()
-                .mapToLong(killer -> economy.balanceMinor(killer).orElseThrow())
+                .mapToLong(killer -> economy.balance(killer).orElseThrow())
                 .sum();
         assertThat(killerBalances).isEqualTo(300_00);
     }
@@ -254,7 +254,7 @@ class PostgresBountyRepositoryIT {
         int wantedIdx = indexOf(top, wanted);
         int moreWantedIdx = indexOf(top, moreWanted);
         assertThat(moreWantedIdx).isLessThan(wantedIdx);
-        assertThat(top.get(moreWantedIdx).totalMinor()).isEqualTo(350_00);
+        assertThat(top.get(moreWantedIdx).total()).isEqualTo(350_00);
         assertThat(top.get(moreWantedIdx).count()).isEqualTo(2);
     }
 

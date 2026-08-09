@@ -199,7 +199,7 @@ public final class AuctionGui implements Listener {
         List<Component> lore = meta.hasLore() && meta.lore() != null
                 ? new ArrayList<>(meta.lore()) : new ArrayList<>();
         lore.add(Component.empty());
-        lore.add(line("Price: ", Money.ofMinor(listing.priceMinor())
+        lore.add(line("Price: ", Money.of(listing.price())
                 .format(economy.currencySymbol()), NamedTextColor.GOLD));
         lore.add(line("Seller: ", summary.sellerName(), NamedTextColor.GRAY));
         lore.add(line("Expires in: ", timeLeft(listing.expiresAt()), NamedTextColor.GRAY));
@@ -225,7 +225,7 @@ public final class AuctionGui implements Listener {
             item = new ItemStack(Material.BARRIER);
         }
         inventory.setItem(13, item);
-        String price = Money.ofMinor(listing.priceMinor()).format(economy.currencySymbol());
+        String price = Money.of(listing.price()).format(economy.currencySymbol());
         inventory.setItem(11, button(Material.LIME_WOOL,
                 cancelIntent ? "Confirm cancel" : "Buy for " + price, NamedTextColor.GREEN));
         inventory.setItem(15, button(Material.RED_WOOL, "Back", NamedTextColor.RED));
@@ -347,7 +347,7 @@ public final class AuctionGui implements Listener {
             return;
         }
 
-        String price = Money.ofMinor(holder.listing.priceMinor())
+        String price = Money.of(holder.listing.price())
                 .format(economy.currencySymbol());
         auctions.purchase(holder.listing.id(), player.getUniqueId())
                 .whenComplete((result, error) -> scheduler.runForEntity(player, () -> {

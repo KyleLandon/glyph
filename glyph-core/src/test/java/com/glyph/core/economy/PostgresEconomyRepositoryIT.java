@@ -74,11 +74,11 @@ class PostgresEconomyRepositoryIT {
     }
 
     /** Creates a player + account (the Phase 2 join flow) and funds it. */
-    private static UUID playerWithBalance(long balanceMinor) {
+    private static UUID playerWithBalance(long balance) {
         UUID uuid = UUID.randomUUID();
         playerRepository.recordJoin(uuid, "P" + uuid.toString().substring(0, 8));
-        if (balanceMinor > 0) {
-            repository.adminAdjust(uuid, AdminOperation.SET, balanceMinor, null);
+        if (balance > 0) {
+            repository.adminAdjust(uuid, AdminOperation.SET, balance, null);
         }
         return uuid;
     }
@@ -93,14 +93,14 @@ class PostgresEconomyRepositoryIT {
         assertThat(outcome.result().isSuccess()).isTrue();
         assertThat(outcome.sourceBalanceAfter()).isEqualTo(6_00);
         assertThat(outcome.destBalanceAfter()).isEqualTo(4_00);
-        assertThat(repository.balanceMinor(alice)).contains(6_00L);
-        assertThat(repository.balanceMinor(bob)).contains(4_00L);
+        assertThat(repository.balance(alice)).contains(6_00L);
+        assertThat(repository.balance(bob)).contains(4_00L);
 
         List<LedgerEntry> history = repository.history(alice, 10);
         assertThat(history).isNotEmpty();
         LedgerEntry entry = history.getFirst();
         assertThat(entry.type()).isEqualTo(TransactionType.PLAYER_TRANSFER);
-        assertThat(entry.amount().minorUnits()).isEqualTo(4_00);
+        assertThat(entry.amount().dollars()).isEqualTo(4_00);
         assertThat(entry.sourceOwner()).contains(alice);
         assertThat(entry.destOwner()).contains(bob);
     }
@@ -114,8 +114,8 @@ class PostgresEconomyRepositoryIT {
 
         assertThat(outcome.result().status())
                 .isEqualTo(TransferResult.Status.INSUFFICIENT_FUNDS);
-        assertThat(repository.balanceMinor(alice)).contains(1_00L);
-        assertThat(repository.balanceMinor(bob)).contains(0L);
+        assertThat(repository.balance(alice)).contains(1_00L);
+        assertThat(repository.balance(bob)).contains(0L);
     }
 
     @Test
@@ -126,7 +126,7 @@ class PostgresEconomyRepositoryIT {
 
         assertThat(outcome.result().status())
                 .isEqualTo(TransferResult.Status.ACCOUNT_NOT_FOUND);
-        assertThat(repository.balanceMinor(alice)).contains(10_00L);
+        assertThat(repository.balance(alice)).contains(10_00L);
     }
 
     @Test
@@ -141,8 +141,8 @@ class PostgresEconomyRepositoryIT {
         assertThat(first.result().isSuccess()).isTrue();
         assertThat(second.result().status())
                 .isEqualTo(TransferResult.Status.DUPLICATE_REQUEST);
-        assertThat(repository.balanceMinor(alice)).contains(8_00L);
-        assertThat(repository.balanceMinor(bob)).contains(2_00L);
+        assertThat(repository.balance(alice)).contains(8_00L);
+        assertThat(repository.balance(bob)).contains(2_00L);
     }
 
     /**
@@ -176,8 +176,8 @@ class PostgresEconomyRepositoryIT {
         }
 
         assertThat(successes).isEqualTo(5);
-        assertThat(repository.balanceMinor(payer)).contains(0L);
-        assertThat(repository.balanceMinor(payee)).contains(10_00L);
+        assertThat(repository.balance(payer)).contains(0L);
+        assertThat(repository.balance(payee)).contains(10_00L);
     }
 
     /** Opposing concurrent transfers must not deadlock (ordered locking). */
@@ -198,8 +198,8 @@ class PostgresEconomyRepositoryIT {
             }
         }
 
-        long total = repository.balanceMinor(alice).orElseThrow()
-                + repository.balanceMinor(bob).orElseThrow();
+        long total = repository.balance(alice).orElseThrow()
+                + repository.balance(bob).orElseThrow();
         assertThat(total).isEqualTo(200_00L);
     }
 
@@ -213,7 +213,7 @@ class PostgresEconomyRepositoryIT {
 
         assertThat(add.result().isSuccess()).isTrue();
         assertThat(remove.result().isSuccess()).isTrue();
-        assertThat(repository.balanceMinor(alice)).contains(30_00L);
+        assertThat(repository.balance(alice)).contains(30_00L);
 
         List<LedgerEntry> history = repository.history(alice, 10);
         assertThat(history).hasSizeGreaterThanOrEqualTo(2);
@@ -240,7 +240,7 @@ class PostgresEconomyRepositoryIT {
 
         assertThat(outcome.result().status())
                 .isEqualTo(TransferResult.Status.INSUFFICIENT_FUNDS);
-        assertThat(repository.balanceMinor(alice)).contains(1_00L);
+        assertThat(repository.balance(alice)).contains(1_00L);
     }
 
     @Test
@@ -263,7 +263,7 @@ class PostgresEconomyRepositoryIT {
         repository.externalAdjust(alice, AdminOperation.REMOVE, 3_00,
                 TransactionType.SYSTEM_SINK, "vault bridge");
 
-        assertThat(repository.balanceMinor(alice)).contains(7_00L);
+        assertThat(repository.balance(alice)).contains(7_00L);
         List<LedgerEntry> history = repository.history(alice, 10);
         assertThat(history).extracting(LedgerEntry::type)
                 .contains(TransactionType.SYSTEM_REWARD, TransactionType.SYSTEM_SINK);
@@ -276,7 +276,7 @@ class PostgresEconomyRepositoryIT {
 
         assertThat(repository.ensureAccount(ghost)).isTrue();
         assertThat(repository.ensureAccount(ghost)).isTrue();
-        assertThat(repository.balanceMinor(ghost)).contains(0L);
+        assertThat(repository.balance(ghost)).contains(0L);
     }
 
     @Test
@@ -290,8 +290,8 @@ class PostgresEconomyRepositoryIT {
         int richerIndex = indexOf(top, richer);
         assertThat(richerIndex).isLessThan(richIndex);
         for (int i = 1; i < top.size(); i++) {
-            assertThat(top.get(i - 1).balance().minorUnits())
-                    .isGreaterThanOrEqualTo(top.get(i).balance().minorUnits());
+            assertThat(top.get(i - 1).balance().dollars())
+                    .isGreaterThanOrEqualTo(top.get(i).balance().dollars());
         }
     }
 

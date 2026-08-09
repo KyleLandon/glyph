@@ -516,15 +516,10 @@ Initial currency:
 
 Example:
 
-`$12,482.50`
+`$12,482`
 
-Currency should internally use integer minor units.
-
-Example:
-
-```
-$1.00 = 100 cents
-```
+Currency is integer whole dollars — there are no cents. The smallest unit
+of money is $1 (amended 2026-08-09; see DECISIONS.md ADR-010).
 
 Never store balances as:
 
@@ -1901,7 +1896,7 @@ voice:
   expected: true
 ```
 
-Store monetary values internally as integer minor units even when configuration presents readable decimal values.
+Store monetary values as integer whole dollars everywhere — storage, config, and display (ADR-010).
 
 ---
 
@@ -3965,7 +3960,7 @@ EconomyAdminCommand
 
 Requirements:
 
-- BIGINT minor units.
+- BIGINT whole dollars.
 - no floating point.
 - UUID accounts.
 - PostgreSQL transaction.

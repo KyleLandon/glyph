@@ -61,12 +61,12 @@ public final class CombatListener implements Listener {
                         location.getBlockX(), location.getBlockY(), location.getBlockZ(),
                         weaponJson, cause)
                 .thenAccept(outcome -> {
-                    if (outcome.bountyPaidMinor() <= 0) {
+                    if (outcome.bountyPaid() <= 0) {
                         return;
                     }
                     stats.increment(killer.getUniqueId(), StatType.BOUNTIES_CLAIMED,
                             outcome.bountiesClaimed());
-                    String amount = Money.ofMinor(outcome.bountyPaidMinor())
+                    String amount = Money.of(outcome.bountyPaid())
                             .format(economy.currencySymbol());
                     // GDD section 33's special bounty message, network-wide.
                     scheduler.runGlobal(() -> Bukkit.getServer().broadcast(Component.text()

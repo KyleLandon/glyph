@@ -7,14 +7,14 @@ package com.glyph.core.config;
  *
  * @param enabled         master switch
  * @param intervalMinutes payout window length
- * @param amountMinor     payment per active window, in minor units
+ * @param amount          payment per active window, in whole dollars
  * @param minActivity     activity required per window before it pays:
  *                        1 unit = one block broken/placed or one meter moved
  */
 public record PlaytimeRewardSettings(
         boolean enabled,
         int intervalMinutes,
-        long amountMinor,
+        long amount,
         int minActivity) {
 
     /** Internal activity is tracked in centimeter-equivalents. */

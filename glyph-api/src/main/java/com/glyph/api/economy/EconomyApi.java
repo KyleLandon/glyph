@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p>All operations are asynchronous and never block a tick thread. Balance
  * mutations are atomic PostgreSQL transactions with row locks; every change
- * writes a ledger entry. Amounts are {@link Money} — BIGINT minor units,
+ * writes a ledger entry. Amounts are {@link Money} — BIGINT whole dollars,
  * never floating point.</p>
  */
 public interface EconomyApi {

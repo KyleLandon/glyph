@@ -42,20 +42,20 @@ public final class BountyService {
         return settings;
     }
 
-    public CompletableFuture<PlaceResult> place(UUID target, UUID creator, long amountMinor) {
-        if (amountMinor < settings.minimumMinor() || target.equals(creator)) {
+    public CompletableFuture<PlaceResult> place(UUID target, UUID creator, long amount) {
+        if (amount < settings.minimum() || target.equals(creator)) {
             return CompletableFuture.completedFuture(PlaceResult.failure(PlaceStatus.FAILED));
         }
         if (!databaseReady.getAsBoolean()) {
             return CompletableFuture.completedFuture(PlaceResult.failure(PlaceStatus.FAILED));
         }
         return CompletableFuture
-                .supplyAsync(() -> repository.place(target, creator, amountMinor), ioExecutor)
+                .supplyAsync(() -> repository.place(target, creator, amount), ioExecutor)
                 .whenComplete((result, error) -> {
                     if (error != null) {
                         logger.error("Bounty placement failed: {} on {}", creator, target, error);
                     } else if (result.status() == PlaceStatus.SUCCESS) {
-                        logger.info("Bounty placed: {} on {} for {}", creator, target, amountMinor);
+                        logger.info("Bounty placed: {} on {} for {}", creator, target, amount);
                     }
                 })
                 .exceptionally(error -> PlaceResult.failure(PlaceStatus.FAILED));
@@ -83,9 +83,9 @@ public final class BountyService {
                         logger.warn("SUSPICIOUS bounty redemption withheld: {} killed {} again "
                                         + "within {} minute(s) — bounties stay active",
                                 killer, victim, settings.sameVictimCooldownMinutes());
-                    } else if (outcome.bountyPaidMinor() > 0) {
+                    } else if (outcome.bountyPaid() > 0) {
                         logger.info("Bounty paid: {} claimed {} ({} bounty(ies)) for killing {}",
-                                killer, outcome.bountyPaidMinor(),
+                                killer, outcome.bountyPaid(),
                                 outcome.bountiesClaimed(), victim);
                     }
                 })

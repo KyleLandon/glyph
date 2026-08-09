@@ -27,29 +27,29 @@ class PlaytimeRewardServiceTest {
 
         @Override
         public MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
-                                              long amountMinor, TransactionType type,
+                                              long amount, TransactionType type,
                                               String reason) {
             minted.add(playerUuid);
             types.add(type);
             return new MutationOutcome(
-                    TransferResult.success(UUID.randomUUID(), Money.ofMinor(amountMinor)),
-                    amountMinor, -1);
+                    TransferResult.success(UUID.randomUUID(), Money.of(amount)),
+                    amount, -1);
         }
 
         @Override
-        public Optional<Long> balanceMinor(UUID playerUuid) {
+        public Optional<Long> balance(UUID playerUuid) {
             return Optional.of(0L);
         }
 
         @Override
         public MutationOutcome transfer(UUID source, UUID destination,
-                                        long amountMinor, String idempotencyKey) {
+                                        long amount, String idempotencyKey) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public MutationOutcome adminAdjust(UUID playerUuid, AdminOperation operation,
-                                           long amountMinor, UUID actor) {
+                                           long amount, UUID actor) {
             throw new UnsupportedOperationException();
         }
 

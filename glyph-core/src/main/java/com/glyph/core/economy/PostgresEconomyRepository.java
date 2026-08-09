@@ -112,13 +112,13 @@ public final class PostgresEconomyRepository implements EconomyRepository {
 
     @Override
     public MutationOutcome transfer(
-            UUID source, UUID destination, long amountMinor, String idempotencyKey) {
+            UUID source, UUID destination, long amount, String idempotencyKey) {
         // Defense in depth: the service validates too, but a self-transfer
         // would silently corrupt lifetime counters if it reached the SQL.
         if (source.equals(destination)) {
             return MutationOutcome.failure(TransferResult.Status.SELF_PAYMENT);
         }
-        if (amountMinor <= 0) {
+        if (amount <= 0) {
             return MutationOutcome.failure(TransferResult.Status.INVALID_AMOUNT);
         }
         try (Connection connection = dataSource.get().getConnection()) {
@@ -152,27 +152,27 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                     connection.rollback();
                     return MutationOutcome.failure(TransferResult.Status.ACCOUNT_NOT_FOUND);
                 }
-                if (sourceAccount.balance() < amountMinor) {
+                if (sourceAccount.balance() < amount) {
                     connection.rollback();
                     return MutationOutcome.failure(TransferResult.Status.INSUFFICIENT_FUNDS);
                 }
                 long destAfter;
                 try {
-                    destAfter = Math.addExact(destAccount.balance(), amountMinor);
+                    destAfter = Math.addExact(destAccount.balance(), amount);
                 } catch (ArithmeticException overflow) {
                     connection.rollback();
                     return MutationOutcome.failure(TransferResult.Status.INVALID_AMOUNT);
                 }
 
-                executeUpdate(connection, DEBIT, amountMinor, amountMinor, sourceAccount.accountId());
-                executeUpdate(connection, CREDIT, amountMinor, amountMinor, destAccount.accountId());
+                executeUpdate(connection, DEBIT, amount, amount, sourceAccount.accountId());
+                executeUpdate(connection, CREDIT, amount, amount, destAccount.accountId());
 
                 UUID transactionId = UUID.randomUUID();
                 try (PreparedStatement statement = connection.prepareStatement(INSERT_LEDGER)) {
                     statement.setObject(1, transactionId);
                     statement.setObject(2, sourceAccount.accountId());
                     statement.setObject(3, destAccount.accountId());
-                    statement.setLong(4, amountMinor);
+                    statement.setLong(4, amount);
                     statement.setString(5, TransactionType.PLAYER_TRANSFER.name());
                     statement.setString(6, "player payment");
                     statement.setObject(7, source);
@@ -181,9 +181,9 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                 }
 
                 connection.commit();
-                long sourceAfter = sourceAccount.balance() - amountMinor;
+                long sourceAfter = sourceAccount.balance() - amount;
                 return new MutationOutcome(
-                        TransferResult.success(transactionId, Money.ofMinor(sourceAfter)),
+                        TransferResult.success(transactionId, Money.of(sourceAfter)),
                         sourceAfter, destAfter);
             } catch (SQLException e) {
                 connection.rollback();
@@ -202,8 +202,8 @@ public final class PostgresEconomyRepository implements EconomyRepository {
 
     @Override
     public MutationOutcome adminAdjust(
-            UUID playerUuid, AdminOperation operation, long amountMinor, UUID actor) {
-        return adjust(playerUuid, operation, amountMinor, TransactionType.ADMIN_ADJUSTMENT,
+            UUID playerUuid, AdminOperation operation, long amount, UUID actor) {
+        return adjust(playerUuid, operation, amount, TransactionType.ADMIN_ADJUSTMENT,
                 "eco " + operation.name().toLowerCase()
                         + " by " + (actor == null ? "console" : actor),
                 actor);
@@ -211,14 +211,14 @@ public final class PostgresEconomyRepository implements EconomyRepository {
 
     @Override
     public MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
-                                          long amountMinor, TransactionType type, String reason) {
-        if (amountMinor < 0) {
+                                          long amount, TransactionType type, String reason) {
+        if (amount < 0) {
             return MutationOutcome.failure(TransferResult.Status.INVALID_AMOUNT);
         }
-        return adjust(playerUuid, operation, amountMinor, type, reason, null);
+        return adjust(playerUuid, operation, amount, type, reason, null);
     }
 
-    private MutationOutcome adjust(UUID playerUuid, AdminOperation operation, long amountMinor,
+    private MutationOutcome adjust(UUID playerUuid, AdminOperation operation, long amount,
                                    TransactionType type, String reason, UUID actor) {
         try (Connection connection = dataSource.get().getConnection()) {
             connection.setAutoCommit(false);
@@ -239,15 +239,15 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                 }
 
                 long target = switch (operation) {
-                    case SET -> amountMinor;
+                    case SET -> amount;
                     case ADD -> {
                         try {
-                            yield Math.addExact(account.balance(), amountMinor);
+                            yield Math.addExact(account.balance(), amount);
                         } catch (ArithmeticException overflow) {
                             yield -1;
                         }
                     }
-                    case REMOVE -> account.balance() - amountMinor;
+                    case REMOVE -> account.balance() - amount;
                 };
                 if (target < 0) {
                     connection.rollback();
@@ -261,7 +261,7 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                     connection.rollback();
                     return new MutationOutcome(
                             new TransferResult(TransferResult.Status.SUCCESS,
-                                    Optional.empty(), Optional.of(Money.ofMinor(target))),
+                                    Optional.empty(), Optional.of(Money.of(target))),
                             target, -1);
                 }
 
@@ -288,7 +288,7 @@ public final class PostgresEconomyRepository implements EconomyRepository {
 
                 connection.commit();
                 return new MutationOutcome(
-                        TransferResult.success(transactionId, Money.ofMinor(target)),
+                        TransferResult.success(transactionId, Money.of(target)),
                         target, -1);
             } catch (SQLException e) {
                 connection.rollback();
@@ -320,7 +320,7 @@ public final class PostgresEconomyRepository implements EconomyRepository {
     }
 
     @Override
-    public Optional<Long> balanceMinor(UUID playerUuid) {
+    public Optional<Long> balance(UUID playerUuid) {
         try (Connection connection = dataSource.get().getConnection();
              PreparedStatement statement = connection.prepareStatement(SELECT_BALANCE)) {
             statement.setObject(1, playerUuid);
@@ -343,7 +343,7 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                     top.add(new TopBalance(
                             row.getObject("owner_uuid", UUID.class),
                             row.getString("username"),
-                            Money.ofMinor(row.getLong("balance"))));
+                            Money.of(row.getLong("balance"))));
                 }
                 return top;
             }
@@ -366,7 +366,7 @@ public final class PostgresEconomyRepository implements EconomyRepository {
                             row.getObject("id", UUID.class),
                             Optional.ofNullable(row.getObject("source_owner", UUID.class)),
                             Optional.ofNullable(row.getObject("dest_owner", UUID.class)),
-                            Money.ofMinor(row.getLong("amount")),
+                            Money.of(row.getLong("amount")),
                             TransactionType.valueOf(row.getString("type")),
                             Optional.ofNullable(row.getString("reason")).orElse(""),
                             row.getObject("created_at", OffsetDateTime.class).toInstant()));

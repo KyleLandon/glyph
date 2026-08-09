@@ -99,7 +99,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
 
         this.playerSessionService = new PlayerSessionService();
         PostgresPlayerRepository playerRepository = new PostgresPlayerRepository(
-                databaseManager::dataSource, settings.economy().startingBalanceMinor());
+                databaseManager::dataSource, settings.economy().startingBalance());
         this.playerService = new PlayerService(
                 playerRepository,
                 playerSessionService,
@@ -282,7 +282,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
                     .map(Player::getUniqueId)
                     .toList();
             playtimeRewardService.payoutWindow(online).thenAccept(paid -> {
-                String formatted = Money.ofMinor(settings.rewards().amountMinor())
+                String formatted = Money.of(settings.rewards().amount())
                         .format(settings.economy().currencySymbol());
                 for (UUID uuid : paid) {
                     Player player = getServer().getPlayer(uuid);

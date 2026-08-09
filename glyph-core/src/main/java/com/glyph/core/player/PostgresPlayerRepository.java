@@ -70,11 +70,11 @@ public final class PostgresPlayerRepository implements PlayerRepository {
      * database readiness, so the supplier only resolves once a pool exists.
      */
     private final Supplier<DataSource> dataSource;
-    private final long startingBalanceMinor;
+    private final long startingBalance;
 
-    public PostgresPlayerRepository(Supplier<DataSource> dataSource, long startingBalanceMinor) {
+    public PostgresPlayerRepository(Supplier<DataSource> dataSource, long startingBalance) {
         this.dataSource = dataSource;
-        this.startingBalanceMinor = Math.max(0, startingBalanceMinor);
+        this.startingBalance = Math.max(0, startingBalance);
     }
 
     @Override
@@ -98,20 +98,20 @@ public final class PostgresPlayerRepository implements PlayerRepository {
                 try (PreparedStatement statement = connection.prepareStatement(ENSURE_ACCOUNT)) {
                     statement.setObject(1, UUID.randomUUID());
                     statement.setObject(2, uuid);
-                    statement.setLong(3, startingBalanceMinor);
-                    statement.setLong(4, startingBalanceMinor);
+                    statement.setLong(3, startingBalance);
+                    statement.setLong(4, startingBalance);
                     try (ResultSet created = statement.executeQuery()) {
                         if (created.next()) {
                             createdAccountId = created.getObject(1, UUID.class);
                         }
                     }
                 }
-                if (createdAccountId != null && startingBalanceMinor > 0) {
+                if (createdAccountId != null && startingBalance > 0) {
                     try (PreparedStatement statement =
                                  connection.prepareStatement(LEDGER_STARTING_BALANCE)) {
                         statement.setObject(1, UUID.randomUUID());
                         statement.setObject(2, createdAccountId);
-                        statement.setLong(3, startingBalanceMinor);
+                        statement.setLong(3, startingBalance);
                         statement.executeUpdate();
                     }
                 }

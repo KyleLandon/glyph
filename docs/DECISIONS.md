@@ -93,7 +93,8 @@ on the game server.
 
 ## ADR-008: Money is fixed at two decimal places; HUD uses the scoreboard sidebar
 
-**Status:** accepted (2026-08-09)
+**Status:** superseded by ADR-010 for the decimal-places part (2026-08-09);
+HUD decision still stands
 
 The GDD's sample config exposes `decimal-places`. We hardcode two decimals
 (minor units are cents) because making `Money` parse/format variable-precision
@@ -130,3 +131,23 @@ directly on the calling thread instead of block-waiting on the async executor:
 Rule: Vault is for third-party compatibility only. Trusted Glyph plugins use
 the async `GlyphApi.economy()`. Banks are unsupported; worlds are ignored
 (one economy per network).
+
+## ADR-010: The economy has no cents — whole dollars only
+
+**Status:** accepted (2026-08-09), supersedes the decimal part of ADR-008
+
+Prices in a Minecraft economy are whole-dollar in practice, and carrying
+cents through every amount (`priceMinor`, `10000 = $100.00`) made code and
+config harder to read for zero gameplay value. The smallest unit of money is
+now $1:
+
+- `Money` wraps BIGINT whole dollars; parsing rejects decimals; formatting
+  is `$1,234` with no decimal point.
+- Database BIGINT columns hold dollars (V6 migration divided existing
+  amounts by 100).
+- Config amounts are plain dollars (`starting-balance: 100`), no `-minor`
+  suffixes.
+- The Vault bridge reports `fractionalDigits() = 0` and rounds fractional
+  deposits/withdrawals from third-party plugins half-up to whole dollars.
+- Auction fee percentages remain basis points; `ceilDiv` keeps every nonzero
+  fee at least $1, so fees are never free.

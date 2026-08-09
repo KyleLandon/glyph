@@ -77,11 +77,11 @@ public final class PlaytimeRewardService {
                 }
                 try {
                     EconomyRepository.MutationOutcome outcome = economyRepository.externalAdjust(
-                            player, AdminOperation.ADD, settings.amountMinor(),
+                            player, AdminOperation.ADD, settings.amount(),
                             TransactionType.SYSTEM_REWARD, "active playtime reward");
                     if (outcome.result().isSuccess()) {
                         economyService.publishBalanceChange(
-                                player, Money.ofMinor(outcome.sourceBalanceAfter()));
+                                player, Money.of(outcome.sourceBalanceAfter()));
                         paid.add(player);
                     }
                 } catch (Exception e) {
@@ -90,7 +90,7 @@ public final class PlaytimeRewardService {
             }
             if (!paid.isEmpty()) {
                 logger.info("Playtime rewards: paid {} to {} active player(s)",
-                        settings.amountMinor(), paid.size());
+                        settings.amount(), paid.size());
             }
             return paid;
         }, ioExecutor);

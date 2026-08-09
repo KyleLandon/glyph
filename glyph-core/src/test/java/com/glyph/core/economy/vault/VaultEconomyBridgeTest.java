@@ -35,25 +35,25 @@ class VaultEconomyBridgeTest {
         String lastReason;
 
         @Override
-        public Optional<Long> balanceMinor(UUID playerUuid) {
+        public Optional<Long> balance(UUID playerUuid) {
             return Optional.ofNullable(balances.get(playerUuid));
         }
 
         @Override
         public MutationOutcome transfer(UUID source, UUID destination,
-                                        long amountMinor, String idempotencyKey) {
+                                        long amount, String idempotencyKey) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public MutationOutcome adminAdjust(UUID playerUuid, AdminOperation operation,
-                                           long amountMinor, UUID actor) {
+                                           long amount, UUID actor) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public MutationOutcome externalAdjust(UUID playerUuid, AdminOperation operation,
-                                              long amountMinor, TransactionType type, String reason) {
+                                              long amount, TransactionType type, String reason) {
             lastType = type;
             lastReason = reason;
             Long balance = balances.get(playerUuid);
@@ -61,13 +61,13 @@ class VaultEconomyBridgeTest {
                 return MutationOutcome.failure(TransferResult.Status.ACCOUNT_NOT_FOUND);
             }
             long target = operation == AdminOperation.ADD
-                    ? balance + amountMinor : balance - amountMinor;
+                    ? balance + amount : balance - amount;
             if (target < 0) {
                 return MutationOutcome.failure(TransferResult.Status.INSUFFICIENT_FUNDS);
             }
             balances.put(playerUuid, target);
             return new MutationOutcome(
-                    TransferResult.success(UUID.randomUUID(), Money.ofMinor(target)), target, -1);
+                    TransferResult.success(UUID.randomUUID(), Money.of(target)), target, -1);
         }
 
         @Override
@@ -144,28 +144,29 @@ class VaultEconomyBridgeTest {
         assertThat(bridge.isEnabled()).isTrue();
         assertThat(bridge.getName()).isEqualTo("GlyphEconomy");
         assertThat(bridge.hasBankSupport()).isFalse();
-        assertThat(bridge.fractionalDigits()).isEqualTo(2);
-        assertThat(bridge.format(1234.56)).isEqualTo("$1,234.56");
+        assertThat(bridge.fractionalDigits()).isZero();
+        assertThat(bridge.format(1234.0)).isEqualTo("$1,234");
     }
 
     @Test
     void conversionRejectsHostileDoubles() {
-        assertThat(VaultEconomyBridge.toMinor(9.99)).contains(999L);
-        assertThat(VaultEconomyBridge.toMinor(0.005)).contains(1L); // rounds half up
-        assertThat(VaultEconomyBridge.toMinor(-0.01)).isEmpty();
-        assertThat(VaultEconomyBridge.toMinor(Double.NaN)).isEmpty();
-        assertThat(VaultEconomyBridge.toMinor(Double.POSITIVE_INFINITY)).isEmpty();
-        assertThat(VaultEconomyBridge.toMinor(1e18)).isEmpty(); // overflows cents
+        assertThat(VaultEconomyBridge.toDollars(9.99)).contains(10L); // rounds half up
+        assertThat(VaultEconomyBridge.toDollars(0.5)).contains(1L);
+        assertThat(VaultEconomyBridge.toDollars(0.4)).contains(0L);
+        assertThat(VaultEconomyBridge.toDollars(-0.01)).isEmpty();
+        assertThat(VaultEconomyBridge.toDollars(Double.NaN)).isEmpty();
+        assertThat(VaultEconomyBridge.toDollars(Double.POSITIVE_INFINITY)).isEmpty();
+        assertThat(VaultEconomyBridge.toDollars(1e19)).isEmpty(); // overflows a long
     }
 
     @Test
     void balanceReadsAndAccountChecks() {
-        economy.balances.put(uuid, 12_34L);
+        economy.balances.put(uuid, 1234L);
 
         assertThat(bridge.hasAccount(player)).isTrue();
-        assertThat(bridge.getBalance(player)).isEqualTo(12.34);
-        assertThat(bridge.has(player, 12.34)).isTrue();
-        assertThat(bridge.has(player, 12.35)).isFalse();
+        assertThat(bridge.getBalance(player)).isEqualTo(1234.0);
+        assertThat(bridge.has(player, 1234.0)).isTrue();
+        assertThat(bridge.has(player, 1235.0)).isFalse();
         assertThat(bridge.hasAccount(offline(UUID.randomUUID()))).isFalse();
     }
 
@@ -173,44 +174,44 @@ class VaultEconomyBridgeTest {
     void depositMintsAsSystemReward() {
         economy.balances.put(uuid, 0L);
 
-        EconomyResponse response = bridge.depositPlayer(player, 5.25);
+        EconomyResponse response = bridge.depositPlayer(player, 5.0);
 
         assertThat(response.type).isEqualTo(ResponseType.SUCCESS);
-        assertThat(response.balance).isEqualTo(5.25);
-        assertThat(economy.balances).containsEntry(uuid, 5_25L);
+        assertThat(response.balance).isEqualTo(5.0);
+        assertThat(economy.balances).containsEntry(uuid, 5L);
         assertThat(economy.lastType).isEqualTo(TransactionType.SYSTEM_REWARD);
         assertThat(economy.lastReason).isEqualTo("vault bridge");
     }
 
     @Test
     void withdrawBurnsAsSystemSink() {
-        economy.balances.put(uuid, 10_00L);
+        economy.balances.put(uuid, 10L);
 
-        EconomyResponse response = bridge.withdrawPlayer(player, 4.00);
+        EconomyResponse response = bridge.withdrawPlayer(player, 4.0);
 
         assertThat(response.type).isEqualTo(ResponseType.SUCCESS);
-        assertThat(response.balance).isEqualTo(6.00);
+        assertThat(response.balance).isEqualTo(6.0);
         assertThat(economy.lastType).isEqualTo(TransactionType.SYSTEM_SINK);
     }
 
     @Test
     void withdrawBeyondBalanceFails() {
-        economy.balances.put(uuid, 1_00L);
+        economy.balances.put(uuid, 1L);
 
-        EconomyResponse response = bridge.withdrawPlayer(player, 5.00);
+        EconomyResponse response = bridge.withdrawPlayer(player, 5.0);
 
         assertThat(response.type).isEqualTo(ResponseType.FAILURE);
         assertThat(response.errorMessage).isEqualTo("Insufficient funds");
-        assertThat(economy.balances).containsEntry(uuid, 1_00L);
+        assertThat(economy.balances).containsEntry(uuid, 1L);
     }
 
     @Test
     void negativeAmountFails() {
-        economy.balances.put(uuid, 1_00L);
+        economy.balances.put(uuid, 100L);
 
         assertThat(bridge.depositPlayer(player, -5).type).isEqualTo(ResponseType.FAILURE);
         assertThat(bridge.withdrawPlayer(player, Double.NaN).type).isEqualTo(ResponseType.FAILURE);
-        assertThat(economy.balances).containsEntry(uuid, 1_00L);
+        assertThat(economy.balances).containsEntry(uuid, 100L);
     }
 
     @Test
@@ -223,37 +224,37 @@ class VaultEconomyBridgeTest {
 
     @Test
     void databaseDownFailsFastEverywhere() {
-        economy.balances.put(uuid, 10_00L);
+        economy.balances.put(uuid, 1000L);
         databaseReady.set(false);
 
         assertThat(bridge.getBalance(player)).isZero();
         assertThat(bridge.hasAccount(player)).isFalse();
-        assertThat(bridge.depositPlayer(player, 1.00).type).isEqualTo(ResponseType.FAILURE);
-        assertThat(bridge.withdrawPlayer(player, 1.00).type).isEqualTo(ResponseType.FAILURE);
-        assertThat(economy.balances).containsEntry(uuid, 10_00L);
+        assertThat(bridge.depositPlayer(player, 1.0).type).isEqualTo(ResponseType.FAILURE);
+        assertThat(bridge.withdrawPlayer(player, 1.0).type).isEqualTo(ResponseType.FAILURE);
+        assertThat(economy.balances).containsEntry(uuid, 1000L);
     }
 
     @Test
     void successNotifiesBalanceListeners() {
         economy.balances.put(uuid, 0L);
         List<Long> observed = new ArrayList<>();
-        service.addBalanceListener((id, balance) -> observed.add(balance.minorUnits()));
+        service.addBalanceListener((id, balance) -> observed.add(balance.dollars()));
 
-        bridge.depositPlayer(player, 3.00);
+        bridge.depositPlayer(player, 3.0);
 
-        assertThat(observed).containsExactly(3_00L);
+        assertThat(observed).containsExactly(3L);
     }
 
     @Test
     void nameBasedLookupsUseThePlayersTable() {
-        economy.balances.put(uuid, 7_50L);
+        economy.balances.put(uuid, 750L);
         players.byName.put("steve", uuid);
 
-        assertThat(bridge.getBalance("Steve")).isEqualTo(7.50);
+        assertThat(bridge.getBalance("Steve")).isEqualTo(750.0);
         assertThat(bridge.hasAccount("Steve")).isTrue();
-        assertThat(bridge.withdrawPlayer("Steve", 0.50).type).isEqualTo(ResponseType.SUCCESS);
+        assertThat(bridge.withdrawPlayer("Steve", 50.0).type).isEqualTo(ResponseType.SUCCESS);
         assertThat(bridge.getBalance("Nobody")).isZero();
-        assertThat(bridge.depositPlayer("Nobody", 1.00).type).isEqualTo(ResponseType.FAILURE);
+        assertThat(bridge.depositPlayer("Nobody", 1.0).type).isEqualTo(ResponseType.FAILURE);
     }
 
     @Test

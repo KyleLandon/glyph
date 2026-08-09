@@ -119,7 +119,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
 
     @Override
     public CreateResult create(UUID sellerUuid, byte[] itemData, String summaryJson,
-                               long priceMinor, long listingFeeMinor,
+                               long price, long listingFee,
                                int durationHours, int maxActivePerSeller) {
         try (Connection connection = dataSource.get().getConnection()) {
             connection.setAutoCommit(false);
@@ -129,7 +129,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
                     connection.rollback();
                     return CreateResult.failure(CreateStatus.ACCOUNT_NOT_FOUND);
                 }
-                if (seller.balance() < listingFeeMinor) {
+                if (seller.balance() < listingFee) {
                     connection.rollback();
                     return CreateResult.failure(CreateStatus.INSUFFICIENT_FUNDS);
                 }
@@ -148,23 +148,23 @@ public final class PostgresAuctionRepository implements AuctionRepository {
                     statement.setObject(3, seller.accountId());
                     statement.setBytes(4, itemData);
                     statement.setString(5, summaryJson);
-                    statement.setLong(6, priceMinor);
-                    statement.setLong(7, listingFeeMinor);
+                    statement.setLong(6, price);
+                    statement.setLong(7, listingFee);
                     statement.setTimestamp(8, Timestamp.from(expiresAt));
                     statement.executeUpdate();
                 }
 
-                if (listingFeeMinor > 0) {
-                    executeMoney(connection, DEBIT, listingFeeMinor, seller.accountId());
-                    ledger(connection, seller.accountId(), null, listingFeeMinor,
+                if (listingFee > 0) {
+                    executeMoney(connection, DEBIT, listingFee, seller.accountId());
+                    ledger(connection, seller.accountId(), null, listingFee,
                             TransactionType.AUCTION_FEE, "auction listing fee",
                             listingId, sellerUuid);
                 }
 
                 connection.commit();
                 AuctionListing listing = new AuctionListing(
-                        listingId, sellerUuid, itemData, summaryJson, priceMinor,
-                        listingFeeMinor, AuctionListing.Status.ACTIVE, Optional.empty(),
+                        listingId, sellerUuid, itemData, summaryJson, price,
+                        listingFee, AuctionListing.Status.ACTIVE, Optional.empty(),
                         Instant.now(), expiresAt, Optional.empty());
                 return new CreateResult(CreateStatus.SUCCESS, Optional.of(listing));
             } catch (SQLException e) {
@@ -179,7 +179,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
     }
 
     @Override
-    public PurchaseResult purchase(UUID listingId, UUID buyerUuid, long saleFeeMinor) {
+    public PurchaseResult purchase(UUID listingId, UUID buyerUuid, long saleFee) {
         try (Connection connection = dataSource.get().getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -224,12 +224,12 @@ public final class PostgresAuctionRepository implements AuctionRepository {
                     return PurchaseResult.failure(PurchaseStatus.ACCOUNT_NOT_FOUND);
                 }
 
-                long price = listing.priceMinor();
+                long price = listing.price();
                 if (buyer.balance() < price) {
                     connection.rollback();
                     return PurchaseResult.failure(PurchaseStatus.INSUFFICIENT_FUNDS);
                 }
-                long fee = Math.min(saleFeeMinor, price);
+                long fee = Math.min(saleFee, price);
                 long sellerProceeds = price - fee;
 
                 executeMoney(connection, DEBIT, price, buyer.accountId());
@@ -258,7 +258,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
                 connection.commit();
                 AuctionListing sold = new AuctionListing(
                         listing.id(), listing.sellerUuid(), listing.itemData(),
-                        listing.summaryJson(), listing.priceMinor(), listing.listingFeeMinor(),
+                        listing.summaryJson(), listing.price(), listing.listingFee(),
                         AuctionListing.Status.SOLD, Optional.of(buyerUuid),
                         listing.createdAt(), listing.expiresAt(), Optional.of(Instant.now()));
                 return new PurchaseResult(
@@ -299,7 +299,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
                     statement.executeUpdate();
                 }
                 insertDelivery(connection, sellerUuid, "AUCTION_RETURN", listing.itemData(),
-                        deliveryMetadata("AUCTION_CANCELLED", listingId, listing.priceMinor()));
+                        deliveryMetadata("AUCTION_CANCELLED", listingId, listing.price()));
 
                 connection.commit();
                 return CancelStatus.SUCCESS;

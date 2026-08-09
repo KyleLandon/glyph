@@ -6,11 +6,12 @@ server:
   id: glyph-01
 
 economy:
-  # Balance granted when a player's account is created, in MINOR units
-  # (cents). $100.00 gives new players instant market liquidity — enough
-  # for the minimum bounty or a cheap auction buy. One-time per player,
-  # so alt accounts are not worth farming.
-  starting-balance-minor: 10000
+  # All amounts are WHOLE DOLLARS — the economy has no cents.
+  # Balance granted when a player's account is created. $100 gives new
+  # players instant market liquidity — enough for the minimum bounty or a
+  # cheap auction buy. One-time per player, so alt accounts are not worth
+  # farming.
+  starting-balance: 100
   # Prefix used when formatting amounts.
   currency-symbol: "$"
   # Sidebar HUD showing the player's cash (FiveM-style).
@@ -32,8 +33,8 @@ auction:
 
 bounties:
   enabled: true
-  # Smallest bounty, in MINOR units (10000 = $100.00). GDD section 63.
-  minimum-minor: 10000
+  # Smallest bounty, in whole dollars. GDD section 63.
+  minimum: 100
   # Killing the same player again within this window still records the kill
   # but withholds the bounty payout (anti-farming, GDD section 25).
   same-victim-cooldown-minutes: 60
@@ -45,9 +46,9 @@ rewards:
     enabled: true
     # Payout window length.
     interval-minutes: 15
-    # Payment per active window, in MINOR units (1000 = $10.00 -> ~$40/hour
-    # of genuinely active play).
-    amount-minor: 1000
+    # Payment per active window, in whole dollars ($10 -> ~$40/hour of
+    # genuinely active play).
+    amount: 10
     # Activity required in the window before it pays: 1 unit = one block
     # broken/placed or one meter moved. AFK players earn nothing.
     min-activity: 20

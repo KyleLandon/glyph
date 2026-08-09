@@ -9,7 +9,7 @@ public record Bounty(
         UUID id,
         UUID targetUuid,
         UUID creatorUuid,
-        long amountMinor,
+        long amount,
         Status status,
         Optional<UUID> claimedBy,
         Instant createdAt,

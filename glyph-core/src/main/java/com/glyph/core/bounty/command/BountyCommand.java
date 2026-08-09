@@ -92,7 +92,7 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
                             .append(Component.text(target.targetName(), NamedTextColor.RED))
                             .append(Component.text(" — ", NamedTextColor.GRAY))
                             .append(Component.text(
-                                    Money.ofMinor(target.totalMinor())
+                                    Money.of(target.total())
                                             .format(economy.currencySymbol()),
                                     NamedTextColor.GOLD))
                             .append(Component.text(" (" + target.count() + " bounty(ies))",
@@ -117,7 +117,7 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
                                     : Component.text("Bounty on " + target.get().name() + ": ",
                                                     NamedTextColor.GRAY)
                                             .append(Component.text(
-                                                    Money.ofMinor(total)
+                                                    Money.of(total)
                                                             .format(economy.currencySymbol()),
                                                     NamedTextColor.GOLD)));
                 })
@@ -146,9 +146,9 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
             return;
         }
         String symbol = economy.currencySymbol();
-        if (amount.minorUnits() < bounties.settings().minimumMinor()) {
+        if (amount.dollars() < bounties.settings().minimum()) {
             creator.sendMessage(Component.text("Minimum bounty is "
-                    + Money.ofMinor(bounties.settings().minimumMinor()).format(symbol) + ".",
+                    + Money.of(bounties.settings().minimum()).format(symbol) + ".",
                     NamedTextColor.RED));
             return;
         }
@@ -169,7 +169,7 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
                                 new Outcome(target.get(), null));
                     }
                     return bounties.place(target.get().uuid(), creator.getUniqueId(),
-                                    amount.minorUnits())
+                                    amount.dollars())
                             .thenApply(result -> new Outcome(target.get(), result));
                 })
                 .whenComplete((outcome, error) -> {
