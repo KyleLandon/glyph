@@ -50,3 +50,7 @@ glyph-velocity/plugins/luckperms/libs/
 # On a new machine: run both servers once, then scripts/sync-forwarding-secret.ps1
 glyph-velocity/forwarding.secret
 glyph-folia/config/paper-global.yml
+
+# Client modpack: its own repo (github.com/KyleLandon/glyph-clientmods),
+# nested here on the desktop for convenience.
+glyph-clientmods/

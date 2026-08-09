@@ -19,6 +19,10 @@ deviations from the GDD are recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md)
 Supporting directories: `database/` (schema docs), `docker/` (production
 images, later phase), `scripts/` (dev helpers), `docs/` (GDD + decisions).
 
+Players: the optional client modpack (voice chat, maps, performance) lives at
+[KyleLandon/glyph-clientmods](https://github.com/KyleLandon/glyph-clientmods)
+with a self-updating install script.
+
 ## Requirements
 
 - **JDK 25** (Temurin or equivalent; GDD requires Java 21+)
