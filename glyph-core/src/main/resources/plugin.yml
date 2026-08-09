@@ -44,6 +44,16 @@ commands:
     description: Administrative balance control.
     usage: /eco <get|set|add|remove> <player> [amount]
     permission: glyph.economy.admin
+  ah:
+    description: The auction house.
+    usage: /ah [sell <price> | search <text>]
+    aliases: [auction, auctionhouse]
+    permission: glyph.auction
+  claim:
+    description: Claim pending item deliveries.
+    usage: /claim
+    aliases: [mail]
+    permission: glyph.auction
 
 permissions:
   glyph.admin:
@@ -55,3 +65,6 @@ permissions:
   glyph.economy.admin:
     description: Access to /eco and other players' balances.
     default: op
+  glyph.auction:
+    description: Access to the auction house and deliveries (/ah, /claim).
+    default: true

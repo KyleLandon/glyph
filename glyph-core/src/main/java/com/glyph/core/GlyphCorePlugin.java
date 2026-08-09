@@ -2,6 +2,11 @@ package com.glyph.core;
 
 import com.glyph.api.GlyphApiProvider;
 import com.glyph.core.api.GlyphApiImpl;
+import com.glyph.core.auction.AuctionService;
+import com.glyph.core.auction.PostgresAuctionRepository;
+import com.glyph.core.auction.command.AhCommand;
+import com.glyph.core.auction.command.ClaimCommand;
+import com.glyph.core.auction.gui.AuctionGui;
 import com.glyph.core.command.GlyphCommand;
 import com.glyph.core.config.GlyphSettings;
 import com.glyph.core.database.DatabaseManager;
@@ -12,6 +17,10 @@ import com.glyph.core.economy.command.BalanceTopCommand;
 import com.glyph.core.economy.command.EconomyAdminCommand;
 import com.glyph.core.economy.command.MoneyCommand;
 import com.glyph.core.economy.command.PayCommand;
+import com.glyph.core.delivery.DeliveryClaimer;
+import com.glyph.core.delivery.DeliveryJoinNotifier;
+import com.glyph.core.delivery.DeliveryService;
+import com.glyph.core.delivery.PostgresDeliveryRepository;
 import com.glyph.core.health.HealthService;
 import com.glyph.core.hud.MoneyHud;
 import com.glyph.core.player.PlayerJoinListener;
@@ -22,10 +31,12 @@ import com.glyph.core.player.PostgresPlayerRepository;
 import com.glyph.core.redis.RedisManager;
 import com.glyph.core.scheduler.FoliaSchedulerAdapter;
 import com.glyph.core.scheduler.SchedulerAdapter;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
@@ -50,6 +61,9 @@ public final class GlyphCorePlugin extends JavaPlugin {
     private PlayerSessionService playerSessionService;
     private PlayerService playerService;
     private EconomyService economyService;
+    private AuctionService auctionService;
+    private DeliveryService deliveryService;
+    private final AtomicBoolean sweeperRunning = new AtomicBoolean();
 
     @Override
     public void onEnable() {
@@ -119,6 +133,32 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 economyService, playerService, schedulerAdapter, settings.economy());
         registerCommand("eco", ecoCommand, ecoCommand);
 
+        // Auction house + delivery queue (GDD Phase 4, sections 21-23).
+        this.auctionService = new AuctionService(
+                new PostgresAuctionRepository(databaseManager::dataSource),
+                settings.auction(),
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger());
+        this.deliveryService = new DeliveryService(
+                new PostgresDeliveryRepository(databaseManager::dataSource),
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger());
+        DeliveryClaimer deliveryClaimer = new DeliveryClaimer(
+                deliveryService, schedulerAdapter, getSLF4JLogger());
+        AuctionGui auctionGui = new AuctionGui(
+                auctionService, deliveryClaimer, schedulerAdapter,
+                settings.economy(), getSLF4JLogger());
+        getServer().getPluginManager().registerEvents(auctionGui, this);
+        getServer().getPluginManager().registerEvents(
+                new DeliveryJoinNotifier(deliveryService, schedulerAdapter), this);
+        AhCommand ahCommand = new AhCommand(
+                auctionService, auctionGui, deliveryService, schedulerAdapter, settings.economy());
+        registerCommand("ah", ahCommand, ahCommand);
+        registerCommand("claim", new ClaimCommand(deliveryClaimer), null);
+        startExpirySweeper();
+
         // Infrastructure connects asynchronously; the enable thread is never blocked.
         databaseManager.initAsync().whenComplete((ignored, error) -> {
             if (error != null) {
@@ -139,8 +179,26 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 getPluginMeta().getVersion(), settings.serverId());
     }
 
+    /**
+     * Expired listings return to their sellers within a minute (GDD 21).
+     * Self-rescheduling async loop; stops when the plugin disables.
+     */
+    private void startExpirySweeper() {
+        sweeperRunning.set(true);
+        schedulerAdapter.runAsyncLater(this::sweepAndReschedule, Duration.ofMinutes(1));
+    }
+
+    private void sweepAndReschedule() {
+        if (!sweeperRunning.get()) {
+            return;
+        }
+        auctionService.sweepExpired();
+        schedulerAdapter.runAsyncLater(this::sweepAndReschedule, Duration.ofMinutes(1));
+    }
+
     @Override
     public void onDisable() {
+        sweeperRunning.set(false);
         GlyphApiProvider.unregister();
         getServer().getServicesManager().unregisterAll(this);
 

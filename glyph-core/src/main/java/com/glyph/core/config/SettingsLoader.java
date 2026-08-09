@@ -50,7 +50,25 @@ public final class SettingsLoader {
                 boolVal(config, "economy.hud.enabled", true),
                 str(config, "economy.hud.title", null, "GLYPH"));
 
-        return new GlyphSettings(serverId, databaseSettings, redisSettings, economySettings);
+        // Percent values from YAML become basis points so all fee math stays
+        // in integer minor units (GDD section 63).
+        AuctionSettings auctionSettings = new AuctionSettings(
+                boolVal(config, "auction.enabled", true),
+                basisPoints(config, "auction.listing-fee-percent", 1.0),
+                basisPoints(config, "auction.sale-fee-percent", 5.0),
+                intVal(config, "auction.max-listings-per-player", null, 10),
+                intVal(config, "auction.duration-hours", null, 48));
+
+        return new GlyphSettings(
+                serverId, databaseSettings, redisSettings, economySettings, auctionSettings);
+    }
+
+    private int basisPoints(ConfigurationSection section, String path, double defPercent) {
+        double percent = section != null ? section.getDouble(path, defPercent) : defPercent;
+        if (percent < 0 || percent > 100) {
+            throw new IllegalArgumentException(path + " must be between 0 and 100: " + percent);
+        }
+        return (int) Math.round(percent * 100);
     }
 
     private String str(ConfigurationSection section, String path, String envKey, String def) {

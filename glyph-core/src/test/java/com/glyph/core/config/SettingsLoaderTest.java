@@ -28,6 +28,12 @@ class SettingsLoaderTest {
               hud:
                 enabled: false
                 title: "TEST"
+            auction:
+              enabled: false
+              listing-fee-percent: 2.5
+              sale-fee-percent: 7.0
+              max-listings-per-player: 3
+              duration-hours: 12
             """;
 
     private static final String DATABASE_YML = """
@@ -83,6 +89,13 @@ class SettingsLoaderTest {
         assertThat(economy.currencySymbol()).isEqualTo("€");
         assertThat(economy.hudEnabled()).isFalse();
         assertThat(economy.hudTitle()).isEqualTo("TEST");
+
+        AuctionSettings auction = settings.auction();
+        assertThat(auction.enabled()).isFalse();
+        assertThat(auction.listingFeeBasisPoints()).isEqualTo(250);
+        assertThat(auction.saleFeeBasisPoints()).isEqualTo(700);
+        assertThat(auction.maxListingsPerPlayer()).isEqualTo(3);
+        assertThat(auction.durationHours()).isEqualTo(12);
     }
 
     @Test
@@ -129,6 +142,11 @@ class SettingsLoaderTest {
         assertThat(settings.economy().currencySymbol()).isEqualTo("$");
         assertThat(settings.economy().hudEnabled()).isTrue();
         assertThat(settings.economy().hudTitle()).isEqualTo("GLYPH");
+        assertThat(settings.auction().enabled()).isTrue();
+        assertThat(settings.auction().listingFeeBasisPoints()).isEqualTo(100);
+        assertThat(settings.auction().saleFeeBasisPoints()).isEqualTo(500);
+        assertThat(settings.auction().maxListingsPerPlayer()).isEqualTo(10);
+        assertThat(settings.auction().durationHours()).isEqualTo(48);
     }
 
     @Test

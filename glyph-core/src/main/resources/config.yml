@@ -15,3 +15,15 @@ economy:
   hud:
     enabled: true
     title: "GLYPH"
+
+auction:
+  enabled: true
+  # Charged when a listing is created, percent of the asking price. Burned
+  # as a money sink (GDD section 17).
+  listing-fee-percent: 1.0
+  # Deducted from the seller's proceeds when a listing sells. Also burned.
+  sale-fee-percent: 5.0
+  # Concurrent ACTIVE listings per player.
+  max-listings-per-player: 10
+  # Listing lifetime; expired items return via /claim.
+  duration-hours: 48

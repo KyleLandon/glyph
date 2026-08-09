@@ -12,7 +12,8 @@ public record GlyphSettings(
         String serverId,
         DatabaseSettings database,
         RedisSettings redis,
-        EconomySettings economy) {
+        EconomySettings economy,
+        AuctionSettings auction) {
 
     /**
      * Saves default config files if missing, then loads them applying
