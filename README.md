@@ -11,7 +11,7 @@ deviations from the GDD are recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md)
 | Module        | What it is                                                            |
 |---------------|-----------------------------------------------------------------------|
 | `glyph-api`   | Public API for trusted plugins (interfaces only, no implementation)   |
-| `glyph-core`  | Folia plugin: config, scheduling, PostgreSQL, Redis, health, lifecycle |
+| `glyph-core`  | Folia plugin: config, scheduling, PostgreSQL, Redis, health, player identity |
 | `glyph-proxy` | Velocity plugin: proxy-side platform foundation                       |
 
 Supporting directories: `database/` (schema docs), `docker/` (production
@@ -97,6 +97,12 @@ the production schema manually (GDD section 48).
 `/glyph status` (permission `glyph.admin`) reports PostgreSQL/Redis health;
 `/glyph version` shows build info. Health checks run on async I/O threads and
 report back through the player's entity scheduler — no tick-thread blocking.
+
+Player identity (Phase 2): every join upserts the player's row in `players`
+(username, `last_join`, `last_seen`) and creates their economy account on
+first join; quits persist `last_seen` and accumulated playtime. All writes are
+asynchronous, and a database outage degrades gracefully (events are logged and
+skipped, gameplay continues).
 
 ## Development rules (short version)
 

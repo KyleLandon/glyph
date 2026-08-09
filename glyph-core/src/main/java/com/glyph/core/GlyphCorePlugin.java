@@ -6,6 +6,11 @@ import com.glyph.core.command.GlyphCommand;
 import com.glyph.core.config.GlyphSettings;
 import com.glyph.core.database.DatabaseManager;
 import com.glyph.core.health.HealthService;
+import com.glyph.core.player.PlayerJoinListener;
+import com.glyph.core.player.PlayerQuitListener;
+import com.glyph.core.player.PlayerService;
+import com.glyph.core.player.PlayerSessionService;
+import com.glyph.core.player.PostgresPlayerRepository;
 import com.glyph.core.redis.RedisManager;
 import com.glyph.core.scheduler.FoliaSchedulerAdapter;
 import com.glyph.core.scheduler.SchedulerAdapter;
@@ -21,7 +26,8 @@ import org.bukkit.plugin.java.JavaPlugin;
  *
  * <p>Phase 1 scope (GDD section 132): configuration, Folia-safe scheduling,
  * PostgreSQL pool + Flyway migrations, Redis, health checks, clean lifecycle.
- * No gameplay features yet.</p>
+ * Phase 2 (sections 100/133): player identity — profiles persisted on
+ * join/quit, economy account created on first join.</p>
  */
 public final class GlyphCorePlugin extends JavaPlugin {
 
@@ -31,6 +37,8 @@ public final class GlyphCorePlugin extends JavaPlugin {
     private DatabaseManager databaseManager;
     private RedisManager redisManager;
     private HealthService healthService;
+    private PlayerSessionService playerSessionService;
+    private PlayerService playerService;
 
     @Override
     public void onEnable() {
@@ -44,7 +52,19 @@ public final class GlyphCorePlugin extends JavaPlugin {
         this.redisManager = new RedisManager(settings.redis(), getSLF4JLogger(), ioExecutor);
         this.healthService = new HealthService(List.of(databaseManager, redisManager));
 
-        GlyphApiProvider.register(new GlyphApiImpl(settings.serverId(), healthService));
+        this.playerSessionService = new PlayerSessionService();
+        this.playerService = new PlayerService(
+                new PostgresPlayerRepository(databaseManager::dataSource),
+                playerSessionService,
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger());
+        getServer().getPluginManager().registerEvents(
+                new PlayerJoinListener(playerService, getSLF4JLogger()), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerQuitListener(playerService, getSLF4JLogger()), this);
+
+        GlyphApiProvider.register(new GlyphApiImpl(settings.serverId(), healthService, playerService));
 
         PluginCommand glyphCommand = getCommand("glyph");
         if (glyphCommand != null) {
@@ -115,5 +135,13 @@ public final class GlyphCorePlugin extends JavaPlugin {
 
     public HealthService healthService() {
         return healthService;
+    }
+
+    public PlayerService playerService() {
+        return playerService;
+    }
+
+    public PlayerSessionService playerSessionService() {
+        return playerSessionService;
     }
 }

@@ -1,6 +1,7 @@
 package com.glyph.api;
 
 import com.glyph.api.health.HealthApi;
+import com.glyph.api.player.PlayerApi;
 
 /**
  * Entry point to the Glyph platform API.
@@ -10,7 +11,7 @@ import com.glyph.api.health.HealthApi;
  * interface themselves.</p>
  *
  * <p>Gameplay APIs (economy, auctions, bounties, statistics) will be added here
- * in later phases. Phase 1 exposes only platform health.</p>
+ * in later phases.</p>
  */
 public interface GlyphApi {
 
@@ -23,4 +24,9 @@ public interface GlyphApi {
      * @return access to infrastructure health checks
      */
     HealthApi health();
+
+    /**
+     * @return access to player identity data (Phase 2)
+     */
+    PlayerApi players();
 }

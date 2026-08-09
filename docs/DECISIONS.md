@@ -63,3 +63,30 @@ exactly as specified in GDD sections 49-51, even though the economy service
 arrives in Phase 3. The schema is the GDD's own definition; having it from V1
 avoids churn and lets integration tests validate the real schema now. Later
 phases add tables via new numbered migrations only.
+
+## ADR-006: Player identity skips (not queues) writes during database outages
+
+**Status:** accepted (2026-08-09)
+
+GDD section 133 requires database outages to be handled gracefully. During an
+outage, `PlayerService` logs and **skips** join/quit persistence instead of
+queueing writes for replay. Rationale:
+
+- The join upsert is self-healing: the next successful join recreates or
+  refreshes the row (and the economy account insert is idempotent).
+- Timestamps come from the PostgreSQL clock (`now()`), so replayed writes
+  would carry wrong times anyway.
+- A replay queue is real complexity (persistence, ordering, dedup) for data
+  that is not money. Phase 3 economy writes will get stronger guarantees.
+
+Cost: playtime/last-seen from sessions that end mid-outage is lost. Accepted.
+
+## ADR-007: Timestamps come from the database clock
+
+**Status:** accepted (2026-08-09)
+
+`first_join`, `last_join`, `last_seen` and `updated_at` are written with
+PostgreSQL `now()`, never with JVM time. Multiple backend servers will share
+one database; using its clock makes cross-server timestamps consistent and
+monotonic per transaction. Only session *durations* (playtime) are measured
+on the game server.
