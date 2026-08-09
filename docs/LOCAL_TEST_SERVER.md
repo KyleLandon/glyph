@@ -92,6 +92,27 @@ Op yourself for testing:
 op <your-name>
 ```
 
+## Third-party plugins
+
+| Plugin | Folia | Velocity | Purpose |
+|--------|-------|----------|---------|
+| LuckPerms 5.5.x | `LuckPerms-Bukkit` | `LuckPerms-Velocity` | Permissions. **Use the Bukkit jar on Folia — the Fabric jar is a different mod loader and silently never loads.** |
+| Simple Voice Chat | `voicechat-bukkit` | `voicechat-velocity` | Proximity voice (GDD section 2). Version numbers differ per platform — that is normal. |
+| VaultUnlocked | ✔ | — | Economy/permissions API bridge for third-party plugins. GlyphCore does not register a Vault economy provider yet. |
+| ViaVersion + ViaBackwards | — | ✔ | Newer/older clients can join through the proxy. |
+| spark | ✔ | — | Profiling (GDD section 74). |
+
+Both LuckPerms instances are configured for **shared storage on the dev
+PostgreSQL** (`storage-method: postgresql`, database `glyph`, tables
+`luckperms_*`) with **Redis messaging** (`messaging-service: redis`), so
+permission changes propagate proxy⇄backend instantly. On a fresh machine,
+apply the same edits to `plugins/LuckPerms/config.yml` (Folia, also
+`server: anarchy`) and `plugins/luckperms/config.yml` (Velocity,
+`server: proxy`): point `data:` at `127.0.0.1:5432`/`glyph`/`glyph_app` and
+`redis:` at `127.0.0.1:6379` with the dev passwords from `.env`.
+The Docker stack (`scripts/dev-up.ps1`) must be running or LuckPerms falls
+back with errors at startup.
+
 ## Daily use
 
 ```powershell
