@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -46,6 +48,28 @@ public final class PostgresPlayerRepository implements PlayerRepository {
             RETURNING id
             """;
 
+    /*
+     * Heal accounts created empty by a race with Vault ensureAccount (or an
+     * older config with starting-balance 0): still never-earned, never got the
+     * starting-balance ledger row. Skips anyone who already earned/spent.
+     */
+    private static final String HEAL_MISSED_STARTING_BALANCE = """
+            UPDATE accounts a
+            SET balance = ?,
+                lifetime_earned = ?,
+                updated_at = now()
+            WHERE a.owner_type = 'PLAYER'
+              AND a.owner_uuid = ?
+              AND a.balance = 0
+              AND a.lifetime_earned = 0
+              AND NOT EXISTS (
+                  SELECT 1 FROM transactions t
+                  WHERE t.destination_account = a.id
+                    AND t.reason = 'starting balance'
+              )
+            RETURNING a.id
+            """;
+
     /* GDD section 122: every balance change corresponds to a transaction.
        A configured starting balance is a mint (null source). */
     private static final String LEDGER_STARTING_BALANCE = """
@@ -63,6 +87,13 @@ public final class PostgresPlayerRepository implements PlayerRepository {
 
     private static final String SELECT_COLUMNS =
             "SELECT uuid, username, first_join, last_join, last_seen, playtime_seconds FROM players ";
+
+    private static final String TOP_PLAYTIME = """
+            SELECT username, playtime_seconds
+            FROM players
+            ORDER BY playtime_seconds DESC, lower(username) ASC
+            LIMIT ?
+            """;
 
     /*
      * Supplier because the plugin constructs the repository before the pool
@@ -94,7 +125,7 @@ public final class PostgresPlayerRepository implements PlayerRepository {
                     }
                 }
                 // Idempotent: also heals a missing account for existing players.
-                UUID createdAccountId = null;
+                UUID grantedAccountId = null;
                 try (PreparedStatement statement = connection.prepareStatement(ENSURE_ACCOUNT)) {
                     statement.setObject(1, UUID.randomUUID());
                     statement.setObject(2, uuid);
@@ -102,15 +133,29 @@ public final class PostgresPlayerRepository implements PlayerRepository {
                     statement.setLong(4, startingBalance);
                     try (ResultSet created = statement.executeQuery()) {
                         if (created.next()) {
-                            createdAccountId = created.getObject(1, UUID.class);
+                            grantedAccountId = created.getObject(1, UUID.class);
                         }
                     }
                 }
-                if (createdAccountId != null && startingBalance > 0) {
+                // Vault (or a zero-config deploy) may have inserted balance=0 first.
+                if (grantedAccountId == null && startingBalance > 0) {
+                    try (PreparedStatement statement =
+                                 connection.prepareStatement(HEAL_MISSED_STARTING_BALANCE)) {
+                        statement.setLong(1, startingBalance);
+                        statement.setLong(2, startingBalance);
+                        statement.setObject(3, uuid);
+                        try (ResultSet healed = statement.executeQuery()) {
+                            if (healed.next()) {
+                                grantedAccountId = healed.getObject(1, UUID.class);
+                            }
+                        }
+                    }
+                }
+                if (grantedAccountId != null && startingBalance > 0) {
                     try (PreparedStatement statement =
                                  connection.prepareStatement(LEDGER_STARTING_BALANCE)) {
                         statement.setObject(1, UUID.randomUUID());
-                        statement.setObject(2, createdAccountId);
+                        statement.setObject(2, grantedAccountId);
                         statement.setLong(3, startingBalance);
                         statement.executeUpdate();
                     }
@@ -165,6 +210,26 @@ public final class PostgresPlayerRepository implements PlayerRepository {
             }
         } catch (SQLException e) {
             throw new PlayerPersistenceException("findByUsername failed for " + username, e);
+        }
+    }
+
+    @Override
+    public List<PlaytimeLeader> topPlaytime(int limit) {
+        int capped = Math.max(1, Math.min(limit, 100));
+        try (Connection connection = dataSource.get().getConnection();
+             PreparedStatement statement = connection.prepareStatement(TOP_PLAYTIME)) {
+            statement.setInt(1, capped);
+            try (ResultSet rows = statement.executeQuery()) {
+                List<PlaytimeLeader> top = new ArrayList<>();
+                while (rows.next()) {
+                    top.add(new PlaytimeLeader(
+                            rows.getString("username"),
+                            rows.getLong("playtime_seconds")));
+                }
+                return top;
+            }
+        } catch (SQLException e) {
+            throw new PlayerPersistenceException("topPlaytime failed", e);
         }
     }
 

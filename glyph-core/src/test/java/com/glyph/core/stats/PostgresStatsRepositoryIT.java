@@ -1,6 +1,7 @@
 package com.glyph.core.stats;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.glyph.core.config.DatabaseSettings;
 import com.glyph.core.database.DatabaseManager;
@@ -113,5 +114,34 @@ class PostgresStatsRepositoryIT {
         PlayerStats row = service.stats(player).join().orElseThrow();
         assertThat(row.kills()).isEqualTo(1);
         assertThat(row.blocksPlaced()).isEqualTo(4);
+    }
+
+    @Test
+    void topOrdersByKillsAndJoinsUsername() {
+        // Fixed names so ORDER BY value DESC, lower(username) ASC is deterministic on ties.
+        UUID alice = joinedAs("Alice");
+        UUID bob = joinedAs("Bob");
+        UUID carol = joinedAs("Carol");
+
+        stats.addDeltas(Map.of(
+                alice, Map.of(StatType.KILLS, 5L),
+                bob, Map.of(StatType.KILLS, 12L),
+                carol, Map.of(StatType.KILLS, 12L, StatType.DEATHS, 3L)));
+
+        assertThat(stats.top(StatType.KILLS, 2))
+                .extracting(StatLeader::uuid, StatLeader::username, StatLeader::value)
+                .containsExactly(
+                        tuple(bob, "Bob", 12L),
+                        tuple(carol, "Carol", 12L));
+
+        assertThat(stats.top(StatType.DEATHS, 10))
+                .extracting(StatLeader::uuid, StatLeader::value)
+                .contains(tuple(carol, 3L));
+    }
+
+    private static UUID joinedAs(String username) {
+        UUID uuid = UUID.randomUUID();
+        players.recordJoin(uuid, username);
+        return uuid;
     }
 }

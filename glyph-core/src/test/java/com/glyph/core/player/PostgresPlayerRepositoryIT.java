@@ -134,6 +134,45 @@ class PostgresPlayerRepositoryIT {
         assertThat(repository.findByUuid(UUID.randomUUID())).isEmpty();
     }
 
+    @Test
+    void joinHealsEmptyAccountCreatedByVaultRace() throws Exception {
+        PostgresPlayerRepository funded = new PostgresPlayerRepository(manager::dataSource, 100);
+        UUID uuid = UUID.randomUUID();
+        // Simulate Vault createPlayerAccount winning the race with balance=0.
+        try (Connection connection = manager.dataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     INSERT INTO accounts (id, owner_type, owner_uuid, balance, lifetime_earned)
+                     VALUES (?, 'PLAYER', ?, 0, 0)
+                     """)) {
+            statement.setObject(1, UUID.randomUUID());
+            statement.setObject(2, uuid);
+            statement.executeUpdate();
+        }
+
+        PlayerRepository.JoinResult result = funded.recordJoin(uuid, "Raced");
+
+        assertThat(result.firstJoin()).isTrue();
+        assertThat(accountBalance(uuid)).isEqualTo(100);
+        try (Connection connection = manager.dataSource().getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     SELECT count(*) FROM transactions
+                     WHERE reason = 'starting balance'
+                       AND destination_account = (
+                           SELECT id FROM accounts
+                           WHERE owner_type = 'PLAYER' AND owner_uuid = ?
+                       )
+                     """)) {
+            statement.setObject(1, uuid);
+            try (ResultSet row = statement.executeQuery()) {
+                row.next();
+                assertThat(row.getInt(1)).isEqualTo(1);
+            }
+        }
+        // Second join must not double-grant.
+        funded.recordJoin(uuid, "Raced");
+        assertThat(accountBalance(uuid)).isEqualTo(100);
+    }
+
     private static int accountCount(UUID owner) throws Exception {
         try (Connection connection = manager.dataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement(

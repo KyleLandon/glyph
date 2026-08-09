@@ -9,3 +9,9 @@ economy:
   # $100 first-join grant (whole dollars — the economy has no cents).
   # One-time per player, so alt accounts are not worth farming.
   starting-balance: 100
+
+tab:
+  enabled: true
+  header: "GLYPH"
+  footer: "play.glyphmc.net"
+

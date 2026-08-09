@@ -1,10 +1,10 @@
 package com.glyph.core.hud;
 
-import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.scheduler.SchedulerAdapter;
-import io.papermc.paper.scoreboard.numbers.NumberFormat;
+import fr.mrmicky.fastboard.adventure.FastBoard;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -18,45 +18,32 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.scoreboard.Criteria;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
-import org.slf4j.Logger;
 
 /**
- * Right-side cash HUD (DonutSMP-style): scoreboard sidebar with the server
- * name as the title and a single green money line under it.
+ * Right-side cash HUD (DonutSMP-style): packet scoreboard sidebar with the
+ * server name as the title and a single green money line under it.
+ *
+ * <p>Uses FastBoard instead of Bukkit {@code ScoreboardManager} — Folia throws
+ * {@code UnsupportedOperationException} on {@code getNewScoreboard()}.</p>
  *
  * <p>Updates are event-driven from
- * {@link com.glyph.core.economy.EconomyService#addBalanceListener} — no
- * polling. Folia safety: scoreboards are only touched on the owning player's
- * entity scheduler.</p>
+ * {@link com.glyph.core.economy.EconomyService#addBalanceListener} — including
+ * a post-join {@code resyncBalance} after the starting-balance mint. Folia
+ * safety: boards are only touched on the owning player's entity scheduler.</p>
  *
  * <p>Client minimaps default to the top-right and can cover this. Players
  * should park Xaero (etc.) on the left: {@code Y → Change Position}.</p>
  */
 public final class MoneyHud implements Listener {
 
-    private static final String OBJECTIVE_NAME = "glyph_money";
-
     private final SchedulerAdapter scheduler;
     private final EconomySettings settings;
-    private final EconomyApi economy;
-    private final Logger logger;
 
-    /** Current sidebar money entry per player (needed to reset the old line). */
-    private final Map<UUID, String> currentLines = new ConcurrentHashMap<>();
+    private final Map<UUID, FastBoard> boards = new ConcurrentHashMap<>();
 
-    public MoneyHud(
-            SchedulerAdapter scheduler,
-            EconomySettings settings,
-            EconomyApi economy,
-            Logger logger) {
+    public MoneyHud(SchedulerAdapter scheduler, EconomySettings settings) {
         this.scheduler = scheduler;
         this.settings = settings;
-        this.economy = economy;
-        this.logger = logger;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -65,21 +52,16 @@ public final class MoneyHud implements Listener {
             return;
         }
         Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-
-        render(player, null);
-        economy.balance(uuid).whenComplete((balance, error) -> {
-            if (error != null) {
-                logger.debug("Money HUD: initial balance fetch failed for {}", uuid, error);
-            } else {
-                balance.ifPresent(value -> updateBalance(uuid, value));
-            }
-        });
+        // Placeholder until join persistence finishes and EconomyService resyncs.
+        scheduler.runForEntity(player, () -> render(player, null), null);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        currentLines.remove(event.getPlayer().getUniqueId());
+        FastBoard board = boards.remove(event.getPlayer().getUniqueId());
+        if (board != null) {
+            board.delete();
+        }
     }
 
     /** Called from any thread; also registered as an EconomyService balance listener. */
@@ -96,35 +78,19 @@ public final class MoneyHud implements Listener {
 
     /** Must run on the player's entity scheduler. */
     private void render(Player player, Money balance) {
-        Scoreboard board = player.getScoreboard();
-        Objective objective = board.getObjective(OBJECTIVE_NAME);
-        if (objective == null) {
-            board = Bukkit.getScoreboardManager().getNewScoreboard();
-            // White server name on top — matches the DonutSMP layout.
-            objective = board.registerNewObjective(
-                    OBJECTIVE_NAME,
-                    Criteria.DUMMY,
-                    Component.text(settings.hudTitle(), NamedTextColor.WHITE));
-            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-            // Hide the red score digits on the right of each line.
-            objective.numberFormat(NumberFormat.blank());
-            player.setScoreboard(board);
-        } else {
-            objective.displayName(Component.text(settings.hudTitle(), NamedTextColor.WHITE));
-        }
-
-        String line = "§a" + (balance == null
-                ? settings.currencySymbol() + " —"
-                : formatHud(balance, settings.currencySymbol()));
-
-        String previous = currentLines.put(player.getUniqueId(), line);
-        if (line.equals(previous)) {
+        if (!player.isOnline()) {
             return;
         }
-        if (previous != null) {
-            board.resetScores(previous);
-        }
-        objective.getScore(line).setScore(0);
+        FastBoard board = boards.computeIfAbsent(player.getUniqueId(), id -> new FastBoard(player));
+        board.updateTitle(Component.text(settings.hudTitle(), NamedTextColor.WHITE));
+
+        String line = balance == null
+                ? settings.currencySymbol() + " —"
+                : formatHud(balance, settings.currencySymbol());
+        // Blank custom scores so the red digits on the right don't show.
+        board.updateLines(
+                List.of(Component.text(line, NamedTextColor.GREEN)),
+                List.of(Component.empty()));
     }
 
     /**

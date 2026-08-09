@@ -160,10 +160,13 @@ class SettingsLoaderTest {
         assertThat(settings.database().port()).isEqualTo(5432);
         assertThat(settings.redis().port()).isEqualTo(6379);
         assertThat(settings.redis().hasPassword()).isFalse();
-        assertThat(settings.economy().startingBalance()).isZero();
+        assertThat(settings.economy().startingBalance()).isEqualTo(100);
         assertThat(settings.economy().currencySymbol()).isEqualTo("$");
         assertThat(settings.economy().hudEnabled()).isTrue();
         assertThat(settings.economy().hudTitle()).isEqualTo("GLYPH");
+        assertThat(settings.tab().enabled()).isTrue();
+        assertThat(settings.tab().header()).isEqualTo("GLYPH");
+        assertThat(settings.tab().footer()).isEqualTo("play.glyphmc.net");
         assertThat(settings.auction().enabled()).isTrue();
         assertThat(settings.auction().listingFeeBasisPoints()).isEqualTo(100);
         assertThat(settings.auction().saleFeeBasisPoints()).isEqualTo(500);
@@ -185,5 +188,15 @@ class SettingsLoaderTest {
         assertThatThrownBy(() -> loader.load(yaml(CONFIG_YML), yaml(DATABASE_YML), yaml(REDIS_YML)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("GLYPH_DB_PORT");
+    }
+
+    @Test
+    void legacyStartingBalanceMinorIsConvertedToDollars() {
+        GlyphSettings settings = new SettingsLoader(Map.of()).load(yaml("""
+                economy:
+                  starting-balance-minor: 10000
+                """), new YamlConfiguration(), new YamlConfiguration());
+
+        assertThat(settings.economy().startingBalance()).isEqualTo(100);
     }
 }

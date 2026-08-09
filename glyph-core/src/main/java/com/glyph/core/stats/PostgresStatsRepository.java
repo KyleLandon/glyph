@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -95,6 +97,37 @@ public final class PostgresStatsRepository implements StatsRepository {
             }
         } catch (SQLException e) {
             throw new StatsPersistenceException("stats lookup failed for " + playerUuid, e);
+        }
+    }
+
+    @Override
+    public List<StatLeader> top(StatType type, int limit) {
+        if (type != StatType.KILLS && type != StatType.DEATHS) {
+            throw new IllegalArgumentException("leaderboard stat must be KILLS or DEATHS: " + type);
+        }
+        int capped = Math.max(1, Math.min(limit, 100));
+        String sql = """
+                SELECT p.uuid, p.username, s.%s AS stat_value
+                FROM player_stats s
+                JOIN players p ON p.uuid = s.player_uuid
+                ORDER BY stat_value DESC, lower(p.username) ASC
+                LIMIT ?
+                """.formatted(type.column());
+        try (Connection connection = dataSource.get().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, capped);
+            try (ResultSet rows = statement.executeQuery()) {
+                List<StatLeader> top = new ArrayList<>();
+                while (rows.next()) {
+                    top.add(new StatLeader(
+                            rows.getObject("uuid", UUID.class),
+                            rows.getString("username"),
+                            rows.getLong("stat_value")));
+                }
+                return top;
+            }
+        } catch (SQLException e) {
+            throw new StatsPersistenceException("stats top failed for " + type, e);
         }
     }
 }

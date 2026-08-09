@@ -57,8 +57,9 @@ public interface EconomyRepository {
                                    long amount, TransactionType type, String reason);
 
     /**
-     * Creates an empty account if none exists (Vault
-     * {@code createPlayerAccount}). Idempotent.
+     * Creates an account if none exists (Vault {@code createPlayerAccount}).
+     * Uses the configured starting balance (and ledgers it) so a Vault race
+     * cannot steal the first-join faucet. Idempotent.
      *
      * @return true if the account exists after the call
      */

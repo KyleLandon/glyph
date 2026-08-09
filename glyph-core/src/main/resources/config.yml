@@ -21,6 +21,12 @@ economy:
     enabled: true
     title: "GLYPH"
 
+# Tab list (player list): header/footer + per-player money and death count.
+tab:
+  enabled: true
+  header: "GLYPH"
+  footer: "play.glyphmc.net"
+
 auction:
   enabled: true
   # Charged when a listing is created, percent of the asking price. Burned

@@ -66,6 +66,10 @@ commands:
     description: Show your playtime.
     usage: /playtime
     permission: glyph.stats
+  top:
+    description: Show leaderboards.
+    usage: /top <money|kills|deaths|playtime|bounty>
+    permission: glyph.stats
 
 permissions:
   glyph.admin:
@@ -84,5 +88,5 @@ permissions:
     description: Access to bounties (/bounty).
     default: true
   glyph.stats:
-    description: Access to statistics (/stats, /playtime).
+    description: Access to statistics (/stats, /playtime, /top).
     default: true

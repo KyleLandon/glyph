@@ -13,6 +13,7 @@ public record GlyphSettings(
         DatabaseSettings database,
         RedisSettings redis,
         EconomySettings economy,
+        TabSettings tab,
         AuctionSettings auction,
         BountySettings bounties,
         PlaytimeRewardSettings rewards) {

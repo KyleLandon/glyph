@@ -11,6 +11,9 @@ GDD sections 8–11. Pregeneration uses [Chunky](https://hangar.papermc.io/pop49
 - Chunky 1.5.3 installed; smoke pregen (`radius 2500` around spawn) started.
 - Production seed `glyphmc-2026` is set in `server.properties` for the next
   world creation (current world keeps its original seed until wiped).
+- **Closed alpha decision:** keep the current staging world (no wipe). Wipe +
+  full border pregen is a pre–public-launch maintenance window, not an alpha
+  blocker. Spawn protection remains vanilla `spawn-protection=96`.
 
 ## Settings
 

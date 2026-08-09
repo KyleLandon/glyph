@@ -45,10 +45,15 @@ public final class SettingsLoader {
                 str(redis, "redis.password", "GLYPH_REDIS_PASSWORD", ""));
 
         EconomySettings economySettings = new EconomySettings(
-                longVal(config, "economy.starting-balance", null, 0L),
+                startingBalance(config),
                 str(config, "economy.currency-symbol", null, "$"),
                 boolVal(config, "economy.hud.enabled", true),
                 str(config, "economy.hud.title", null, "GLYPH"));
+
+        TabSettings tabSettings = new TabSettings(
+                boolVal(config, "tab.enabled", true),
+                str(config, "tab.header", null, "GLYPH"),
+                str(config, "tab.footer", null, "play.glyphmc.net"));
 
         // Percent values from YAML become basis points so all fee math stays
         // in integer whole dollars (GDD section 63).
@@ -71,8 +76,24 @@ public final class SettingsLoader {
                 intVal(config, "rewards.playtime.min-activity", null, 20));
 
         return new GlyphSettings(
-                serverId, databaseSettings, redisSettings, economySettings, auctionSettings,
-                bountySettings, rewardSettings);
+                serverId, databaseSettings, redisSettings, economySettings, tabSettings,
+                auctionSettings, bountySettings, rewardSettings);
+    }
+
+    /**
+     * Whole-dollar first-join grant. Prefers {@code economy.starting-balance};
+     * falls back to legacy {@code economy.starting-balance-minor} (cents / 100)
+     * for configs written before ADR-010; default matches packaged config.yml.
+     */
+    private long startingBalance(ConfigurationSection config) {
+        if (config != null && config.isSet("economy.starting-balance")) {
+            return Math.max(0L, config.getLong("economy.starting-balance"));
+        }
+        if (config != null && config.isSet("economy.starting-balance-minor")) {
+            long minor = Math.max(0L, config.getLong("economy.starting-balance-minor"));
+            return minor / 100L;
+        }
+        return 100L;
     }
 
     private int basisPoints(ConfigurationSection section, String path, double defPercent) {

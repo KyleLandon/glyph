@@ -16,6 +16,9 @@ dependencies {
     compileOnly(libs.vault.api) { isTransitive = false }
     testImplementation(libs.vault.api) { isTransitive = false }
 
+    // Packet scoreboard HUD — Folia rejects Bukkit ScoreboardManager.
+    implementation(libs.fastboard)
+
     testImplementation(libs.folia.api)
     testImplementation(libs.hikaricp)
     testImplementation(libs.flyway.core)
@@ -41,6 +44,14 @@ tasks.jar {
     val apiJar = project(":glyph-api").tasks.named<Jar>("jar")
     dependsOn(apiJar)
     from(apiJar.flatMap { it.archiveFile }.map { zipTree(it) }) {
+        exclude("META-INF/**")
+    }
+    // Shade FastBoard into the plugin jar (not listed in plugin.yml libraries).
+    from({
+        configurations.runtimeClasspath.get()
+            .filter { it.name.startsWith("fastboard") }
+            .map { zipTree(it) }
+    }) {
         exclude("META-INF/**")
     }
 }

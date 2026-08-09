@@ -1,5 +1,6 @@
 package com.glyph.core.stats;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,4 +12,7 @@ public interface StatsRepository {
     void addDeltas(Map<UUID, Map<StatType, Long>> deltas);
 
     Optional<PlayerStats> find(UUID playerUuid);
+
+    /** Top players for {@code KILLS} or {@code DEATHS} only. */
+    List<StatLeader> top(StatType type, int limit);
 }

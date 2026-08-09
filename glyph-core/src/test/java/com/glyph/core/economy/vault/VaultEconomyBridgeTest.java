@@ -111,6 +111,11 @@ class VaultEconomyBridgeTest {
                     .map(uuid -> new PlayerProfile(uuid, username,
                             Instant.EPOCH, Instant.EPOCH, Instant.EPOCH, 0));
         }
+
+        @Override
+        public List<PlaytimeLeader> topPlaytime(int limit) {
+            return List.of();
+        }
     }
 
     /** OfflinePlayer stub without pulling in a running server or mockito. */

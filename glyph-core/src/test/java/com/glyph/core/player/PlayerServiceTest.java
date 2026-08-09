@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.glyph.api.player.PlayerProfile;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,6 +58,16 @@ class PlayerServiceTest {
             return rows.values().stream()
                     .filter(p -> p.username().equalsIgnoreCase(username))
                     .findFirst();
+        }
+
+        @Override
+        public List<PlaytimeLeader> topPlaytime(int limit) {
+            maybeFail();
+            return rows.values().stream()
+                    .sorted((a, b) -> Long.compare(b.playtimeSeconds(), a.playtimeSeconds()))
+                    .limit(limit)
+                    .map(p -> new PlaytimeLeader(p.username(), p.playtimeSeconds()))
+                    .toList();
         }
 
         private void maybeFail() {

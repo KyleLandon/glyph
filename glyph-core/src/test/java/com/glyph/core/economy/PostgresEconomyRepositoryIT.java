@@ -280,6 +280,23 @@ class PostgresEconomyRepositoryIT {
     }
 
     @Test
+    void ensureAccountMintsConfiguredStartingBalance() {
+        PostgresEconomyRepository funded =
+                new PostgresEconomyRepository(manager::dataSource, 100);
+        UUID ghost = UUID.randomUUID();
+
+        assertThat(funded.ensureAccount(ghost)).isTrue();
+        assertThat(funded.balance(ghost)).contains(100L);
+        assertThat(funded.ensureAccount(ghost)).isTrue();
+        assertThat(funded.balance(ghost)).contains(100L);
+        assertThat(funded.history(ghost, 10))
+                .anySatisfy(entry -> {
+                    assertThat(entry.amount().dollars()).isEqualTo(100);
+                    assertThat(entry.reason()).isEqualTo("starting balance");
+                });
+    }
+
+    @Test
     void topBalancesOrderedDescending() {
         UUID rich = playerWithBalance(1_000_00);
         UUID richer = playerWithBalance(2_000_00);

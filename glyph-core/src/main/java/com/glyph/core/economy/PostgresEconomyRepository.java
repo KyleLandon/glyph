@@ -103,9 +103,15 @@ public final class PostgresEconomyRepository implements EconomyRepository {
             """;
 
     private final Supplier<DataSource> dataSource;
+    private final long startingBalance;
 
     public PostgresEconomyRepository(Supplier<DataSource> dataSource) {
+        this(dataSource, 0L);
+    }
+
+    public PostgresEconomyRepository(Supplier<DataSource> dataSource, long startingBalance) {
         this.dataSource = dataSource;
+        this.startingBalance = Math.max(0L, startingBalance);
     }
 
     private record LockedAccount(UUID accountId, long balance) { }
@@ -304,16 +310,49 @@ public final class PostgresEconomyRepository implements EconomyRepository {
 
     @Override
     public boolean ensureAccount(UUID playerUuid) {
-        try (Connection connection = dataSource.get().getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
-                     INSERT INTO accounts (id, owner_type, owner_uuid)
-                     VALUES (?, 'PLAYER', ?)
-                     ON CONFLICT (owner_type, owner_uuid) DO NOTHING
-                     """)) {
-            statement.setObject(1, UUID.randomUUID());
-            statement.setObject(2, playerUuid);
-            statement.executeUpdate();
-            return true;
+        // Must mint the configured starting balance when creating the row —
+        // otherwise a Vault createPlayerAccount race leaves balance=0 and the
+        // join upsert's ON CONFLICT DO NOTHING never grants the faucet.
+        try (Connection connection = dataSource.get().getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                UUID createdId = null;
+                try (PreparedStatement statement = connection.prepareStatement("""
+                        INSERT INTO accounts (id, owner_type, owner_uuid, balance, lifetime_earned)
+                        VALUES (?, 'PLAYER', ?, ?, ?)
+                        ON CONFLICT (owner_type, owner_uuid) DO NOTHING
+                        RETURNING id
+                        """)) {
+                    statement.setObject(1, UUID.randomUUID());
+                    statement.setObject(2, playerUuid);
+                    statement.setLong(3, startingBalance);
+                    statement.setLong(4, startingBalance);
+                    try (ResultSet created = statement.executeQuery()) {
+                        if (created.next()) {
+                            createdId = created.getObject(1, UUID.class);
+                        }
+                    }
+                }
+                if (createdId != null && startingBalance > 0) {
+                    try (PreparedStatement statement = connection.prepareStatement("""
+                            INSERT INTO transactions
+                                (id, source_account, destination_account, amount, type, reason)
+                            VALUES (?, NULL, ?, ?, 'SYSTEM_REWARD', 'starting balance')
+                            """)) {
+                        statement.setObject(1, UUID.randomUUID());
+                        statement.setObject(2, createdId);
+                        statement.setLong(3, startingBalance);
+                        statement.executeUpdate();
+                    }
+                }
+                connection.commit();
+                return true;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             throw new EconomyPersistenceException("ensureAccount failed for " + playerUuid, e);
         }

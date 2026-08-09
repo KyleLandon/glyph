@@ -1,6 +1,7 @@
 package com.glyph.core.player;
 
 import com.glyph.api.player.PlayerProfile;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,4 +39,10 @@ public interface PlayerRepository {
 
     /** Case-insensitive exact-name lookup; most recently seen holder wins. */
     Optional<PlayerProfile> findByUsername(String username);
+
+    /** One row on the playtime leaderboard. */
+    record PlaytimeLeader(String username, long playtimeSeconds) { }
+
+    /** Players with the most accumulated online time. */
+    List<PlaytimeLeader> topPlaytime(int limit);
 }

@@ -1,5 +1,6 @@
 package com.glyph.core.stats;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,6 +80,22 @@ public final class StatsService {
     }
 
     /**
+     * Persisted death total for UI baselines (tab list). Combines the DB row
+     * with any still-buffered deaths (peek, no drain). The tab list treats
+     * this as the full pre-session total and only adds deaths that occur
+     * after the baseline is applied.
+     */
+    public CompletableFuture<Long> deathsSnapshot(UUID playerUuid) {
+        if (!databaseReady.getAsBoolean()) {
+            return CompletableFuture.completedFuture(buffer.peek(playerUuid, StatType.DEATHS));
+        }
+        return CompletableFuture.supplyAsync(() -> {
+            long stored = repository.find(playerUuid).map(PlayerStats::deaths).orElse(0L);
+            return stored + buffer.peek(playerUuid, StatType.DEATHS);
+        }, ioExecutor);
+    }
+
+    /**
      * Read-through stats lookup: the player's pending deltas are flushed
      * first so /stats never lags behind gameplay.
      */
@@ -99,5 +116,19 @@ public final class StatsService {
             }
             return repository.find(playerUuid);
         }, ioExecutor);
+    }
+
+    /** Top players by kills or deaths (persisted totals only). */
+    public CompletableFuture<List<StatLeader>> top(StatType type, int limit) {
+        if (type != StatType.KILLS && type != StatType.DEATHS) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("leaderboard stat must be KILLS or DEATHS: " + type));
+        }
+        int capped = Math.max(1, Math.min(limit, 100));
+        if (!databaseReady.getAsBoolean()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalStateException("Statistics unavailable: database is down"));
+        }
+        return CompletableFuture.supplyAsync(() -> repository.top(type, capped), ioExecutor);
     }
 }

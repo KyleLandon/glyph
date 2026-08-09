@@ -28,11 +28,13 @@ import com.glyph.core.delivery.DeliveryService;
 import com.glyph.core.delivery.PostgresDeliveryRepository;
 import com.glyph.core.health.HealthService;
 import com.glyph.core.hud.MoneyHud;
+import com.glyph.core.hud.TabListDisplay;
 import com.glyph.core.player.PlayerJoinListener;
 import com.glyph.core.player.PlayerQuitListener;
 import com.glyph.core.player.PlayerService;
 import com.glyph.core.player.PlayerSessionService;
 import com.glyph.core.player.PostgresPlayerRepository;
+import com.glyph.core.player.WelcomeListener;
 import com.glyph.core.redis.RedisManager;
 import com.glyph.core.rewards.ActivityTracker;
 import com.glyph.core.rewards.PlaytimeRewardService;
@@ -44,6 +46,7 @@ import com.glyph.core.stats.StatsListener;
 import com.glyph.core.stats.StatsService;
 import com.glyph.core.stats.command.PlaytimeCommand;
 import com.glyph.core.stats.command.StatsCommand;
+import com.glyph.core.stats.command.TopCommand;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -107,12 +110,10 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 ioExecutor,
                 getSLF4JLogger());
         getServer().getPluginManager().registerEvents(
-                new PlayerJoinListener(playerService, getSLF4JLogger()), this);
-        getServer().getPluginManager().registerEvents(
                 new PlayerQuitListener(playerService, getSLF4JLogger()), this);
 
-        PostgresEconomyRepository economyRepository =
-                new PostgresEconomyRepository(databaseManager::dataSource);
+        PostgresEconomyRepository economyRepository = new PostgresEconomyRepository(
+                databaseManager::dataSource, settings.economy().startingBalance());
         this.economyService = new EconomyService(
                 economyRepository,
                 databaseManager::isReady,
@@ -126,8 +127,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
                     this, economyRepository, playerRepository);
         }
 
-        MoneyHud moneyHud = new MoneyHud(
-                schedulerAdapter, settings.economy(), economyService, getSLF4JLogger());
+        MoneyHud moneyHud = new MoneyHud(schedulerAdapter, settings.economy());
         economyService.addBalanceListener(moneyHud::updateBalance);
         getServer().getPluginManager().registerEvents(moneyHud, this);
 
@@ -198,6 +198,26 @@ public final class GlyphCorePlugin extends JavaPlugin {
         registerCommand("playtime", new PlaytimeCommand(playerService, schedulerAdapter), null);
         startStatsFlusher();
 
+        // Tab list: money + deaths on each row, branded header/footer.
+        TabListDisplay tabList = new TabListDisplay(
+                schedulerAdapter,
+                settings.tab(),
+                settings.economy(),
+                statsService,
+                getSLF4JLogger());
+        economyService.addBalanceListener(tabList::updateBalance);
+        getServer().getPluginManager().registerEvents(tabList, this);
+
+        WelcomeListener welcomeListener = new WelcomeListener(schedulerAdapter, settings.economy());
+        // After account + starting-balance mint: HUD/tab money, death baseline, welcome.
+        getServer().getPluginManager().registerEvents(
+                new PlayerJoinListener(playerService, (uuid, firstJoin) -> {
+                    economyService.resyncBalance(uuid);
+                    tabList.onJoinPersisted(uuid);
+                    welcomeListener.onPersisted(uuid, firstJoin);
+                }, getSLF4JLogger()),
+                this);
+
         // Money faucet: active-playtime earnings (GDD section 16).
         this.playtimeRewardService = new PlaytimeRewardService(
                 activityTracker,
@@ -222,6 +242,10 @@ public final class GlyphCorePlugin extends JavaPlugin {
         BountyCommand bountyCommand = new BountyCommand(
                 bountyService, playerService, schedulerAdapter, settings.economy());
         registerCommand("bounty", bountyCommand, bountyCommand);
+        TopCommand topCommand = new TopCommand(
+                economyService, statsService, playerService, bountyService,
+                schedulerAdapter, settings.economy());
+        registerCommand("top", topCommand, topCommand);
 
         // Infrastructure connects asynchronously; the enable thread is never blocked.
         databaseManager.initAsync().whenComplete((ignored, error) -> {

@@ -57,6 +57,22 @@ public final class EconomyService implements EconomyApi {
         notifyBalance(playerUuid, newBalance.dollars());
     }
 
+    /**
+     * Reloads the player's balance from the database and notifies listeners.
+     * Used after join persistence: the starting-balance mint bypasses this
+     * service, and a HUD fetch that races ahead of account creation would
+     * otherwise stick on empty/`$ 0`.
+     */
+    public CompletableFuture<Void> resyncBalance(UUID playerUuid) {
+        return balance(playerUuid)
+                .thenAccept(balance -> balance.ifPresent(
+                        money -> notifyBalance(playerUuid, money.dollars())))
+                .exceptionally(error -> {
+                    logger.debug("Balance resync failed for {}", playerUuid, error);
+                    return null;
+                });
+    }
+
     @Override
     public CompletableFuture<Optional<Money>> balance(UUID playerUuid) {
         if (!databaseReady.getAsBoolean()) {

@@ -27,6 +27,16 @@ public final class StatsBuffer {
                 .add(amount);
     }
 
+    /** Pending delta for one counter without draining (tab list / live UI). */
+    public long peek(UUID playerUuid, StatType type) {
+        ConcurrentMap<StatType, LongAdder> player = counters.get(playerUuid);
+        if (player == null) {
+            return 0L;
+        }
+        LongAdder adder = player.get(type);
+        return adder == null ? 0L : adder.sum();
+    }
+
     /** Removes and returns all pending deltas. */
     public Map<UUID, Map<StatType, Long>> drain() {
         Map<UUID, Map<StatType, Long>> snapshot = new HashMap<>();

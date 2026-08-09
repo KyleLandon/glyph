@@ -2,6 +2,7 @@ package com.glyph.core.player;
 
 import com.glyph.api.player.PlayerApi;
 import com.glyph.api.player.PlayerProfile;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -50,19 +51,20 @@ public final class PlayerService implements PlayerApi {
      * Handles a join: starts session tracking immediately, then upserts the
      * player row (and economy account on first join) asynchronously.
      *
-     * @return future for tests and composition; failures are already logged
+     * @return {@code true} when this join created the player row; failures and
+     *         skipped persistence yield {@code false}
      */
-    public CompletableFuture<Void> handleJoin(UUID uuid, String username) {
+    public CompletableFuture<Boolean> handleJoin(UUID uuid, String username) {
         sessions.beginSession(uuid);
 
         if (!databaseReady.getAsBoolean()) {
             logger.warn("Join of {} ({}) not persisted: database unavailable", username, uuid);
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(false);
         }
 
         return CompletableFuture
                 .supplyAsync(() -> repository.recordJoin(uuid, username), ioExecutor)
-                .thenAccept(result -> {
+                .thenApply(result -> {
                     onlineProfiles.put(uuid, result.profile());
                     if (result.firstJoin()) {
                         logger.info("First join: {} ({}) — profile and economy account created",
@@ -70,11 +72,22 @@ public final class PlayerService implements PlayerApi {
                     } else {
                         logger.debug("Join persisted for {} ({})", username, uuid);
                     }
+                    return result.firstJoin();
                 })
                 .exceptionally(error -> {
                     logger.error("Failed to persist join of {} ({})", username, uuid, error);
-                    return null;
+                    return false;
                 });
+    }
+
+    /** Top players by accumulated playtime (persisted seconds only). */
+    public CompletableFuture<List<PlayerRepository.PlaytimeLeader>> topPlaytime(int limit) {
+        int capped = Math.max(1, Math.min(limit, 100));
+        if (!databaseReady.getAsBoolean()) {
+            return CompletableFuture.failedFuture(
+                    new IllegalStateException("Playtime leaderboard unavailable: database is down"));
+        }
+        return CompletableFuture.supplyAsync(() -> repository.topPlaytime(capped), ioExecutor);
     }
 
     /**
