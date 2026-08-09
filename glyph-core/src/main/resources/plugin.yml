@@ -1,0 +1,27 @@
+name: GlyphCore
+version: "${version}"
+main: com.glyph.core.GlyphCorePlugin
+api-version: "26.1.2"
+folia-supported: true
+description: Core platform plugin for the Glyph anarchy-economy network.
+authors: [Glyph]
+
+# Downloaded by the server from Maven Central at startup; keep versions in
+# sync with gradle/libs.versions.toml (they are injected at build time).
+libraries:
+  - com.zaxxer:HikariCP:${hikaricpVersion}
+  - org.flywaydb:flyway-core:${flywayVersion}
+  - org.flywaydb:flyway-database-postgresql:${flywayVersion}
+  - org.postgresql:postgresql:${postgresqlVersion}
+  - io.lettuce:lettuce-core:${lettuceVersion}
+
+commands:
+  glyph:
+    description: Glyph platform administration.
+    usage: /glyph <status|version>
+    permission: glyph.admin
+
+permissions:
+  glyph.admin:
+    description: Access to Glyph platform administration commands.
+    default: op

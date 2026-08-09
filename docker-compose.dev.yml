@@ -1,0 +1,41 @@
+# Local development infrastructure (GDD section 132).
+# Usage:  docker compose -f docker-compose.dev.yml up -d
+# Values come from .env (copy .env.example to .env first).
+
+name: glyph-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: glyph-dev-postgres
+    environment:
+      POSTGRES_DB: ${GLYPH_DB_DATABASE:-glyph}
+      POSTGRES_USER: ${GLYPH_DB_USERNAME:-glyph_app}
+      POSTGRES_PASSWORD: ${GLYPH_DB_PASSWORD:-glyph_dev_password}
+    ports:
+      - "127.0.0.1:${GLYPH_DB_PORT:-5432}:5432"
+    volumes:
+      - glyph-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GLYPH_DB_USERNAME:-glyph_app} -d ${GLYPH_DB_DATABASE:-glyph}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: glyph-dev-redis
+    command: ["redis-server", "--requirepass", "${GLYPH_REDIS_PASSWORD:-glyph_dev_password}"]
+    ports:
+      - "127.0.0.1:${GLYPH_REDIS_PORT:-6379}:6379"
+    volumes:
+      - glyph-redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${GLYPH_REDIS_PASSWORD:-glyph_dev_password} ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  glyph-postgres-data:
+  glyph-redis-data:

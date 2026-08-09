@@ -1,0 +1,16 @@
+# PostgreSQL connection settings.
+# Environment variable overrides take precedence over this file.
+
+database:
+  host: localhost        # GLYPH_DB_HOST
+  port: 5432             # GLYPH_DB_PORT
+  name: glyph            # GLYPH_DB_DATABASE
+  username: glyph_app    # GLYPH_DB_USERNAME
+  password: ""           # GLYPH_DB_PASSWORD  (never commit real passwords)
+
+  pool:
+    minimum-idle: 2
+    maximum-pool-size: 10
+    connection-timeout-ms: 5000
+    idle-timeout-ms: 600000
+    max-lifetime-ms: 1800000

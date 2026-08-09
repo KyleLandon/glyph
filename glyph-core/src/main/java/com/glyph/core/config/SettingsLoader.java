@@ -1,0 +1,91 @@
+package com.glyph.core.config;
+
+import java.util.Map;
+import java.util.Objects;
+import org.bukkit.configuration.ConfigurationSection;
+
+/**
+ * Builds {@link GlyphSettings} from YAML configuration sections, applying
+ * {@code GLYPH_*} environment variable overrides.
+ *
+ * <p>Precedence: environment variable &gt; YAML value &gt; built-in default.
+ * The environment map is injected so tests do not depend on the real process
+ * environment.</p>
+ */
+public final class SettingsLoader {
+
+    private final Map<String, String> env;
+
+    public SettingsLoader(Map<String, String> env) {
+        this.env = Objects.requireNonNull(env, "env");
+    }
+
+    public GlyphSettings load(
+            ConfigurationSection config,
+            ConfigurationSection database,
+            ConfigurationSection redis) {
+
+        String serverId = str(config, "server.id", "GLYPH_SERVER_ID", "glyph-01");
+
+        DatabaseSettings databaseSettings = new DatabaseSettings(
+                str(database, "database.host", "GLYPH_DB_HOST", "localhost"),
+                intVal(database, "database.port", "GLYPH_DB_PORT", 5432),
+                str(database, "database.name", "GLYPH_DB_DATABASE", "glyph"),
+                str(database, "database.username", "GLYPH_DB_USERNAME", "glyph_app"),
+                str(database, "database.password", "GLYPH_DB_PASSWORD", ""),
+                intVal(database, "database.pool.minimum-idle", null, 2),
+                intVal(database, "database.pool.maximum-pool-size", null, 10),
+                longVal(database, "database.pool.connection-timeout-ms", null, 5_000L),
+                longVal(database, "database.pool.idle-timeout-ms", null, 600_000L),
+                longVal(database, "database.pool.max-lifetime-ms", null, 1_800_000L));
+
+        RedisSettings redisSettings = new RedisSettings(
+                str(redis, "redis.host", "GLYPH_REDIS_HOST", "localhost"),
+                intVal(redis, "redis.port", "GLYPH_REDIS_PORT", 6379),
+                str(redis, "redis.password", "GLYPH_REDIS_PASSWORD", ""));
+
+        return new GlyphSettings(serverId, databaseSettings, redisSettings);
+    }
+
+    private String str(ConfigurationSection section, String path, String envKey, String def) {
+        String fromEnv = envValue(envKey);
+        if (fromEnv != null) {
+            return fromEnv;
+        }
+        return section != null ? section.getString(path, def) : def;
+    }
+
+    private int intVal(ConfigurationSection section, String path, String envKey, int def) {
+        String fromEnv = envValue(envKey);
+        if (fromEnv != null) {
+            try {
+                return Integer.parseInt(fromEnv.trim());
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Environment variable " + envKey + " is not a valid integer: " + fromEnv);
+            }
+        }
+        return section != null ? section.getInt(path, def) : def;
+    }
+
+    private long longVal(ConfigurationSection section, String path, String envKey, long def) {
+        String fromEnv = envValue(envKey);
+        if (fromEnv != null) {
+            try {
+                return Long.parseLong(fromEnv.trim());
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        "Environment variable " + envKey + " is not a valid long: " + fromEnv);
+            }
+        }
+        return section != null ? section.getLong(path, def) : def;
+    }
+
+    private String envValue(String key) {
+        if (key == null) {
+            return null;
+        }
+        String value = env.get(key);
+        return (value == null || value.isBlank()) ? null : value;
+    }
+}

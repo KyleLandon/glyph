@@ -1,0 +1,7 @@
+# Redis connection settings.
+# Environment variable overrides take precedence over this file.
+
+redis:
+  host: localhost   # GLYPH_REDIS_HOST
+  port: 6379        # GLYPH_REDIS_PORT
+  password: ""      # GLYPH_REDIS_PASSWORD  (never commit real passwords)

@@ -1,0 +1,32 @@
+[versions]
+folia-api = "26.1.2.build.8-stable"
+velocity-api = "4.1.0-SNAPSHOT"
+hikaricp = "6.3.0"
+flyway = "11.8.2"
+postgresql = "42.7.7"
+lettuce = "6.7.1.RELEASE"
+junit = "5.12.2"
+testcontainers = "1.21.0"
+assertj = "3.27.3"
+slf4j = "2.0.17"
+
+[libraries]
+folia-api = { module = "dev.folia:folia-api", version.ref = "folia-api" }
+velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+testcontainers-core = { module = "org.testcontainers:testcontainers" }
+testcontainers-junit = { module = "org.testcontainers:junit-jupiter" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql" }

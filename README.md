@@ -1,0 +1,111 @@
+# Glyph Server
+
+Persistent anarchy/economy Minecraft network. Folia backend, Velocity proxy,
+PostgreSQL + Redis, custom `GlyphCore` plugin.
+
+The full specification lives in [`docs/GDD.md`](docs/GDD.md). Architectural
+deviations from the GDD are recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+## Modules
+
+| Module        | What it is                                                            |
+|---------------|-----------------------------------------------------------------------|
+| `glyph-api`   | Public API for trusted plugins (interfaces only, no implementation)   |
+| `glyph-core`  | Folia plugin: config, scheduling, PostgreSQL, Redis, health, lifecycle |
+| `glyph-proxy` | Velocity plugin: proxy-side platform foundation                       |
+
+Supporting directories: `database/` (schema docs), `docker/` (production
+images, later phase), `scripts/` (dev helpers), `docs/` (GDD + decisions).
+
+## Requirements
+
+- **JDK 25** (Temurin or equivalent; GDD requires Java 21+)
+- **Docker** (for local PostgreSQL/Redis and integration tests) — optional but recommended
+
+## Quick start (new machine)
+
+```powershell
+git clone <repo-url> Glyph-Server
+cd Glyph-Server
+
+# 1. Environment
+Copy-Item .env.example .env     # then edit passwords
+
+# 2. Infrastructure (needs Docker Desktop)
+scripts\dev-up.ps1              # starts PostgreSQL + Redis
+
+# 3. Build + tests (Gradle wrapper is committed — no Gradle install needed)
+.\gradlew build
+```
+
+The local test servers (`glyph-folia/`, `glyph-velocity/`) are **not** in git —
+they hold world data and server jars. To recreate them on a new machine,
+follow [`docs/LOCAL_TEST_SERVER.md`](docs/LOCAL_TEST_SERVER.md) (download the
+Folia/Velocity jars, apply the documented config, run
+`scripts\deploy-local.ps1`). Requires JDK 25 on PATH.
+
+Artifacts:
+
+- `glyph-core/build/libs/glyph-core-<version>.jar` → Folia `plugins/`
+- `glyph-proxy/build/libs/glyph-proxy-<version>.jar` → Velocity `plugins/`
+
+`GlyphCore` declares its runtime libraries (HikariCP, Flyway, PostgreSQL
+driver, Lettuce) in `plugin.yml`; the server downloads them from Maven Central
+at first startup — no shading.
+
+## Configuration
+
+`plugins/GlyphCore/` contains `config.yml`, `database.yml`, `redis.yml`
+(created with defaults on first start). Every value can be overridden with
+environment variables — env always wins:
+
+| Variable               | Meaning                          |
+|------------------------|----------------------------------|
+| `GLYPH_SERVER_ID`      | Backend server identifier        |
+| `GLYPH_DB_HOST`        | PostgreSQL host                  |
+| `GLYPH_DB_PORT`        | PostgreSQL port                  |
+| `GLYPH_DB_DATABASE`    | Database name                    |
+| `GLYPH_DB_USERNAME`    | Database user (not a superuser!) |
+| `GLYPH_DB_PASSWORD`    | Database password                |
+| `GLYPH_REDIS_HOST`     | Redis host                       |
+| `GLYPH_REDIS_PORT`     | Redis port                       |
+| `GLYPH_REDIS_PASSWORD` | Redis password                   |
+
+Secrets belong in the environment or secret storage, never in git
+(GDD section 119).
+
+## Database migrations
+
+Flyway migrations live in
+`glyph-core/src/main/resources/db/migration/` (`V1__initial_schema.sql`, ...).
+They run automatically and asynchronously when GlyphCore starts. Never modify
+the production schema manually (GDD section 48).
+
+## Testing
+
+```powershell
+./gradlew test
+```
+
+- Unit tests (config, health aggregation) always run.
+- Integration tests (`*IT`: real PostgreSQL/Redis via Testcontainers) run when
+  Docker is available and are skipped otherwise. CI (GitHub Actions,
+  `.github/workflows/build.yml`) runs everything.
+
+## In-game
+
+`/glyph status` (permission `glyph.admin`) reports PostgreSQL/Redis health;
+`/glyph version` shows build info. Health checks run on async I/O threads and
+report back through the player's entity scheduler — no tick-thread blocking.
+
+## Development rules (short version)
+
+1. This repo follows `docs/GDD.md`; correctness → stability → exploit
+   resistance → performance → maintainability → features.
+2. All Minecraft-touching code must be Folia-safe: use
+   `SchedulerAdapter` (global/region/entity/async), never assume a main thread.
+3. No blocking I/O on tick threads. Ever.
+4. Money is BIGINT minor units. No floats, no exceptions.
+5. PostgreSQL is the source of truth; Redis is cache/messaging only.
+6. Every schema change is a new Flyway migration.
+7. Features touching money/items/permissions require tests before merge.

@@ -1,0 +1,1 @@
+{"id":"glyph-proxy","name":"GlyphProxy","version":"0.1.0","description":"Proxy-side platform plugin for the Glyph anarchy-economy network.","authors":["Glyph"],"dependencies":[],"main":"com.glyph.proxy.GlyphProxyPlugin"}
