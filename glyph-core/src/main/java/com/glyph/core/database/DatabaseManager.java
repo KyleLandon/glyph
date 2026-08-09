@@ -65,6 +65,12 @@ public final class DatabaseManager implements HealthCheck, AutoCloseable {
                 Flyway flyway = Flyway.configure(DatabaseManager.class.getClassLoader())
                         .dataSource(pool)
                         .locations("classpath:db/migration")
+                        // LuckPerms shares this database (docs/LOCAL_TEST_SERVER.md), so on a
+                        // fresh machine its tables may exist before our first migration runs.
+                        // Baseline at 0 keeps Flyway happy with the non-empty schema while
+                        // still applying every real migration (V1+).
+                        .baselineOnMigrate(true)
+                        .baselineVersion("0")
                         .load();
                 MigrateResult result = flyway.migrate();
                 String schemaVersion = flyway.info().current() != null

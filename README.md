@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/glyph-logo.png" alt="Glyph logo" width="200"></p>
+
 # Glyph Server
 
 Persistent anarchy/economy Minecraft network. Folia backend, Velocity proxy,

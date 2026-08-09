@@ -100,8 +100,12 @@ ISP uses CGNAT too — then we tunnel instead (playit.gg or a $5 VPS).
 - [x] Domain purchased: glyphmc.net (Cloudflare, 2026-08-09)
 - [x] DDNS updater script (multi-record: play + bare domain)
 - [x] Firewall script ready (`scripts/setup-firewall.ps1`)
-- [ ] Desktop: repo cloned + servers running
-- [ ] Desktop: API token + DDNS env vars + first run + scheduled task
-- [ ] Desktop: firewall script run as admin
-- [ ] Router: DHCP reservation + port forwards (TCP 25565, UDP 24454)
+- [x] Desktop: repo cloned + servers running (2026-08-09)
+- [x] Desktop: API token + DDNS env vars + first run + scheduled task (2026-08-09)
+- [x] Desktop: firewall script run as admin (2026-08-09)
+- [ ] **BLOCKED: fiber ISP uses CGNAT** — router WAN shows 100.64.127.157
+  (2026-08-09) while egress is 169.224.198.164, so inbound connections cannot
+  reach the desktop. ISP has been asked for a public IP; port forwards are
+  pointless until then. Fallback if refused: playit.gg tunnel or VPS.
+- [ ] Router: DHCP reservation + port forwards (TCP 25565, UDP 24454) — desktop LAN IP 192.168.4.24, router admin at 192.168.4.1 (no UPnP)
 - [ ] Outside-LAN connection verified
