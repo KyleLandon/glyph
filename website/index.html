@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Glyph — Anarchy Economy</title>
+    <meta
+      name="description"
+      content="Glyph: a persistent Minecraft anarchy world with a player-driven economy. Join play.glyphmc.net."
+    />
+    <meta property="og:title" content="Glyph — Anarchy Economy" />
+    <meta
+      property="og:description"
+      content="No claims. No grief protection. Make money or lose everything."
+    />
+    <meta property="og:image" content="assets/glyph-logo.png" />
+    <link rel="icon" href="assets/glyph-logo.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="glow glow-a"></div>
+      <div class="glow glow-b"></div>
+      <div class="grain"></div>
+    </div>
+
+    <main class="hero">
+      <img
+        class="mark"
+        src="assets/glyph-logo.png"
+        width="960"
+        height="960"
+        alt="Glyph"
+      />
+
+      <p class="tagline">
+        Persistent anarchy. Player-driven economy.<br />
+        No claims. No handouts. Trust carefully.
+      </p>
+
+      <div class="actions">
+        <button type="button" class="btn btn-join" id="join-btn" data-address="play.glyphmc.net">
+          Join Server
+          <span class="btn-sub" id="join-address">play.glyphmc.net</span>
+        </button>
+        <a
+          class="btn btn-discord"
+          href="https://discord.gg/htkQHR4gdf"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Discord
+        </a>
+      </div>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+      Address copied — paste in Minecraft
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

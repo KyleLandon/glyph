@@ -146,4 +146,7 @@ Stats
  /stats  ·  /stats <player>  ·  /playtime  ·  /top <money|kills|deaths|playtime|bounty>
 
 Voice: Simple Voice Chat (optional) — pack: github.com/KyleLandon/glyph-clientmods
+
+Discord: https://discord.gg/htkQHR4gdf
+Site: https://glyphmc.net
 ```

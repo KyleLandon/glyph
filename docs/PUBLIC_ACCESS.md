@@ -7,6 +7,7 @@ do not try to host from it.
 
 Domain: **glyphmc.net**, registered at Cloudflare (nameservers
 kyrie/daisy.ns.cloudflare.com). Players connect to `play.glyphmc.net`.
+Marketing site: **https://glyphmc.net** (Cloudflare Pages project `glyph`).
 
 ## Current path: playit.gg tunnel (temporary)
 
