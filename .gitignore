@@ -61,4 +61,5 @@ glyph-folia/config/paper-global.yml
 glyph-clientmods/
 
 # Cloudflare Wrangler local cache (Pages deploys)
+.wrangler/
 website/.wrangler/

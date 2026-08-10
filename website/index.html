@@ -45,9 +45,16 @@
       </p>
 
       <div class="actions">
-        <button type="button" class="btn btn-join" id="join-btn" data-address="play.glyphmc.net">
+        <button
+          type="button"
+          class="btn btn-join"
+          id="join-btn"
+          data-address="play.glyphmc.net"
+          aria-haspopup="dialog"
+          aria-controls="join-modal"
+        >
           Join Server
-          <span class="btn-sub" id="join-address">play.glyphmc.net</span>
+          <span class="btn-sub">play.glyphmc.net</span>
         </button>
         <a
           class="btn btn-discord"
@@ -59,6 +66,80 @@
         </a>
       </div>
     </main>
+
+    <div
+      class="modal"
+      id="join-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="join-title"
+      hidden
+    >
+      <div class="modal-backdrop" data-close></div>
+      <div class="modal-panel">
+        <button type="button" class="modal-close" data-close aria-label="Close">
+          ×
+        </button>
+
+        <h2 id="join-title">Join Glyph</h2>
+        <p class="modal-lead">Minecraft Java — no account whitelist.</p>
+
+        <div class="address-row">
+          <code class="address" id="server-address">play.glyphmc.net</code>
+          <button type="button" class="btn btn-copy" id="copy-btn">Copy</button>
+        </div>
+
+        <dl class="specs">
+          <div>
+            <dt>Version</dt>
+            <dd>Minecraft Java <strong>26.2</strong></dd>
+          </div>
+          <div>
+            <dt>Launcher</dt>
+            <dd>Vanilla, Prism, MultiMC, or Modrinth App</dd>
+          </div>
+          <div>
+            <dt>Mods</dt>
+            <dd>Optional — Fabric pack for voice, maps, QoL</dd>
+          </div>
+        </dl>
+
+        <h3>How to join</h3>
+        <ol class="steps">
+          <li>Install Minecraft Java <strong>26.2</strong>.</li>
+          <li>Multiplayer → Add Server.</li>
+          <li>
+            Server Address:
+            <strong>play.glyphmc.net</strong>
+          </li>
+          <li>Join. You start with <strong>$100</strong>.</li>
+        </ol>
+
+        <h3>Optional client mods</h3>
+        <p class="mods-blurb">
+          Not required to play. Adds proximity voice, minimap, performance, and
+          recipe helpers. Fabric on <strong>26.2</strong>.
+        </p>
+        <div class="modal-actions">
+          <a
+            class="btn btn-mods"
+            href="https://github.com/KyleLandon/glyph-clientmods"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Get client mods
+          </a>
+          <a
+            class="btn btn-mods-secondary"
+            href="https://github.com/KyleLandon/glyph-clientmods/archive/refs/heads/main.zip"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Download ZIP
+          </a>
+        </div>
+      </div>
+    </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden>
       Address copied — paste in Minecraft
