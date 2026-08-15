@@ -116,6 +116,9 @@ tunnel.
 - Auto-start: the "Glyph Servers" scheduled task runs `scripts/start-all.ps1`
   at logon — Docker engine, PostgreSQL + Redis, playitd, backend, proxy.
   Server start scripts prefer `JAVA_HOME` (User env, JDK 25 on the desktop).
+- Auto-pull: `scripts\auto-pull.ps1 -Register` creates "Glyph Auto Pull"
+  (every 2 minutes). The desktop cannot receive GitHub webhooks (CGNAT), so
+  it polls `origin/main` instead. Pulls do not restart the game servers.
 - playit agent secret lives in `C:\ProgramData\playit_gg\playit.toml` — never
   commit it.
 

@@ -38,6 +38,9 @@ pieces are left alone.
 
 Connect to `localhost` or `play.glyphmc.net`.
 
+On the desktop, one-time: `scripts\auto-pull.ps1 -Register` so that machine
+fast-forwards `main` a couple of minutes after you push from the laptop.
+
 ## Quick start (new machine)
 
 ```powershell
