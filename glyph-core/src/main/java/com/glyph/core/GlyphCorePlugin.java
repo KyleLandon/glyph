@@ -12,9 +12,16 @@ import com.glyph.core.bounty.BountyService;
 import com.glyph.core.bounty.CombatListener;
 import com.glyph.core.bounty.PostgresBountyRepository;
 import com.glyph.core.bounty.command.BountyCommand;
+import com.glyph.core.chat.ItemChatListener;
+import com.glyph.core.chat.command.ItemCommand;
 import com.glyph.core.command.GlyphCommand;
 import com.glyph.core.config.GlyphSettings;
 import com.glyph.core.database.DatabaseManager;
+import com.glyph.core.discord.DiscordLinkService;
+import com.glyph.core.discord.PostgresDiscordLinkRepository;
+import com.glyph.core.discord.command.LinkDiscordCommand;
+import com.glyph.core.discord.command.UnlinkDiscordCommand;
+import com.glyph.core.event.GlyphEventPublisher;
 import com.glyph.core.economy.EconomyService;
 import com.glyph.core.economy.PostgresEconomyRepository;
 import com.glyph.core.economy.command.BalanceCommand;
@@ -27,6 +34,13 @@ import com.glyph.core.delivery.DeliveryJoinNotifier;
 import com.glyph.core.delivery.DeliveryService;
 import com.glyph.core.delivery.PostgresDeliveryRepository;
 import com.glyph.core.health.HealthService;
+import com.glyph.core.glyphs.DeathMessageListener;
+import com.glyph.core.glyphs.GlyphAchievementService;
+import com.glyph.core.glyphs.GlyphShopService;
+import com.glyph.core.glyphs.GlyphsService;
+import com.glyph.core.glyphs.PostgresGlyphsRepository;
+import com.glyph.core.glyphs.command.GlyphAdminCommand;
+import com.glyph.core.glyphs.command.GlyphsCommand;
 import com.glyph.core.hud.MoneyHud;
 import com.glyph.core.hud.TabListDisplay;
 import com.glyph.core.player.PlayerJoinListener;
@@ -84,6 +98,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
     private AuctionService auctionService;
     private DeliveryService deliveryService;
     private BountyService bountyService;
+    private GlyphsService glyphsService;
     private StatsService statsService;
     private PlaytimeRewardService playtimeRewardService;
     private final AtomicBoolean sweeperRunning = new AtomicBoolean();
@@ -127,9 +142,55 @@ public final class GlyphCorePlugin extends JavaPlugin {
                     this, economyRepository, playerRepository);
         }
 
-        MoneyHud moneyHud = new MoneyHud(schedulerAdapter, settings.economy());
+        GlyphEventPublisher eventPublisher = new GlyphEventPublisher(redisManager);
+
+        PostgresGlyphsRepository glyphsRepository = new PostgresGlyphsRepository(
+                databaseManager::dataSource);
+        GlyphAchievementService glyphAchievements = new GlyphAchievementService(
+                glyphsRepository,
+                settings.glyphs(),
+                schedulerAdapter,
+                getSLF4JLogger());
+        this.glyphsService = new GlyphsService(
+                glyphsRepository,
+                glyphAchievements,
+                settings.glyphs(),
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger(),
+                eventPublisher);
+
+        DiscordLinkService discordLinkService = new DiscordLinkService(
+                new PostgresDiscordLinkRepository(databaseManager::dataSource),
+                databaseManager::isReady,
+                ioExecutor,
+                getSLF4JLogger());
+        registerCommand("linkdiscord", new LinkDiscordCommand(
+                discordLinkService, settings.discord(), schedulerAdapter), null);
+        registerCommand("unlinkdiscord", new UnlinkDiscordCommand(
+                discordLinkService, schedulerAdapter), null);
+
+        getServer().getPluginManager().registerEvents(
+                new ItemChatListener(settings.chat(), schedulerAdapter), this);
+        registerCommand("item", new ItemCommand(), null);
+
+        MoneyHud moneyHud = new MoneyHud(
+                schedulerAdapter, settings.economy(), settings.glyphs(), glyphsService);
         economyService.addBalanceListener(moneyHud::updateBalance);
         getServer().getPluginManager().registerEvents(moneyHud, this);
+
+        GlyphShopService glyphShopService = new GlyphShopService(
+                glyphsService, getSLF4JLogger());
+        glyphsService.addBalanceListener(moneyHud::updateGlyphs);
+        glyphsService.addHudListener(moneyHud::onHudPreferenceChanged);
+        GlyphsCommand glyphsCommand = new GlyphsCommand(
+                glyphsService, glyphShopService, schedulerAdapter);
+        registerCommand("glyphs", glyphsCommand, glyphsCommand);
+        GlyphAdminCommand glyphAdminCommand = new GlyphAdminCommand(
+                glyphsService, discordLinkService, playerService, schedulerAdapter);
+        registerCommand("glyphadmin", glyphAdminCommand, glyphAdminCommand);
+        getServer().getPluginManager().registerEvents(
+                new DeathMessageListener(glyphsService), this);
 
         GlyphApiProvider.register(new GlyphApiImpl(
                 settings.serverId(), healthService, playerService, economyService));
@@ -189,9 +250,10 @@ public final class GlyphCorePlugin extends JavaPlugin {
         ActivityTracker activityTracker = new ActivityTracker();
         getServer().getPluginManager().registerEvents(
                 new StatsListener(statsService, activityTracker), this);
-        auctionService.addPurchaseListener((buyer, seller) -> {
-            statsService.increment(buyer, StatType.AUCTION_PURCHASES);
-            statsService.increment(seller, StatType.AUCTION_SALES);
+        auctionService.addPurchaseListener(sale -> {
+            statsService.increment(sale.buyerUuid(), StatType.AUCTION_PURCHASES);
+            statsService.increment(sale.sellerUuid(), StatType.AUCTION_SALES);
+            glyphsService.noteAuctionSale(sale.sellerUuid(), sale.priceDollars());
         });
         registerCommand("stats", new StatsCommand(
                 statsService, playerService, schedulerAdapter), null);
@@ -203,9 +265,14 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 schedulerAdapter,
                 settings.tab(),
                 settings.economy(),
+                settings.glyphs(),
+                glyphsService,
                 statsService,
                 getSLF4JLogger());
         economyService.addBalanceListener(tabList::updateBalance);
+        glyphsService.addBalanceListener(tabList::updateGlyphs);
+        glyphsService.addColorListener(tabList::onColorChanged);
+        glyphsService.addTitleListener(tabList::onTitleChanged);
         getServer().getPluginManager().registerEvents(tabList, this);
 
         WelcomeListener welcomeListener = new WelcomeListener(schedulerAdapter, settings.economy());
@@ -213,6 +280,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new PlayerJoinListener(playerService, (uuid, firstJoin) -> {
                     economyService.resyncBalance(uuid);
+                    glyphsService.resyncOnJoin(uuid);
                     tabList.onJoinPersisted(uuid);
                     welcomeListener.onPersisted(uuid, firstJoin);
                 }, getSLF4JLogger()),
@@ -237,7 +305,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 ioExecutor,
                 getSLF4JLogger());
         getServer().getPluginManager().registerEvents(
-                new CombatListener(bountyService, statsService, schedulerAdapter,
+                new CombatListener(bountyService, statsService, glyphsService, schedulerAdapter,
                         settings.economy(), getSLF4JLogger()), this);
         BountyCommand bountyCommand = new BountyCommand(
                 bountyService, playerService, schedulerAdapter, settings.economy());

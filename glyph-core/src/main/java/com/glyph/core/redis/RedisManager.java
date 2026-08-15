@@ -77,6 +77,21 @@ public final class RedisManager implements HealthCheck, AutoCloseable {
         return current;
     }
 
+    /**
+     * Best-effort pub/sub publish. Never throws to callers — Redis outages must
+     * not break gameplay. No-ops when Redis is not ready.
+     */
+    public void publish(String channel, String message) {
+        if (!ready) {
+            return;
+        }
+        try {
+            connection().sync().publish(channel, message);
+        } catch (Exception e) {
+            logger.warn("Redis publish failed on channel {}: {}", channel, e.toString());
+        }
+    }
+
     @Override
     public String componentName() {
         return "redis";

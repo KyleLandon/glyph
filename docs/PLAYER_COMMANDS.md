@@ -83,7 +83,62 @@ Minimum bounty: **$100**. Kill the target to claim the pot (anti-farm cooldowns 
 | `/playtime` | Your accumulated online time |
 | `/top <category>` | Leaderboards: `money`, `kills`, `deaths`, `playtime`, `bounty` |
 
-Tab list also shows each online player’s **money** and **death count**.
+Tab list also shows each online player’s **money**, **Glyphs** (✦), and **death count**.
+
+---
+
+## Glyphs (prestige currency)
+
+**✦ Glyphs** are account-bound prestige — permanent cosmetics only, never combat
+power or `$` conversion. Not tradable; no `/glyphpay`.
+
+| Command | What it does |
+| --- | --- |
+| `/glyphs` | Balance, lifetime earned, Discord tier, equipped flair |
+| `/glyphs shop` | Catalog (name colors, titles, death messages) |
+| `/glyphs buy <id>` | Purchase a product |
+| `/glyphs color <id\|none>` | Equip an unlocked name color (white is free) |
+| `/glyphs title <id\|none>` | Equip an unlocked title (shop or achievement) |
+| `/glyphs death <id\|none>` | Equip a custom death message style |
+| `/glyphs unlocks` | What you own |
+| `/glyphs hud on\|off` | Toggle sidebar HUD ($ + ✦ lines) |
+
+**How you earn ✦**
+
+- **3 ✦** on your first bounty claim (one-time)
+- **Unique player kills** — milestones at 10 / 25 / 50 / 100 unique victims
+- **Bounty claims** — milestones at 10 and 25 claims; title at 25
+- **$1M lifetime AH sales** — unlocks Broker title
+- Staff `/glyphadmin` (ops)
+
+**Discord tiers** (Initiate → Legend) follow lifetime Glyphs earned — shown in
+`/glyphs` and synced to Discord roles when linked.
+
+Tab list: `[Title] Name  $12.4K  ✦13  ☠29`. Sidebar HUD is opt-in via
+`/glyphs hud on`.
+
+---
+
+## Discord link
+
+| Command | What it does |
+| --- | --- |
+| `/linkdiscord` | Get a 10-minute code to bind Discord |
+| `/unlinkdiscord` | Remove the Discord link |
+
+In Discord: `/link GLYPH-XXXXXX` (ephemeral). Details: `docs/DISCORD.md`.
+Codes and the `/link …` line are **click-to-copy**.
+
+---
+
+## Chat
+
+| Feature | What it does |
+| --- | --- |
+| Type `[i]` or `[item]` in chat | Shows your held item — **hover** for the full tooltip, **click** to copy a short summary |
+| `/item` | Announce your held item the same way |
+
+Example: `WTS [item] 5k` while holding an elytra.
 
 ---
 
@@ -118,6 +173,11 @@ Not for normal players:
 | `/eco set <player> <amount>` | Set balance |
 | `/eco add <player> <amount>` | Add money |
 | `/eco remove <player> <amount>` | Remove money |
+| `/glyphadmin get <player>` | Inspect Glyph balance |
+| `/glyphadmin set <player> <amount>` | Set Glyphs |
+| `/glyphadmin add <player> <amount>` | Add Glyphs |
+| `/glyphadmin remove <player> <amount>` | Remove Glyphs |
+| `/glyphadmin unlinkdiscord <player>` | Force-unlink Discord |
 | `/glyph status` | Infrastructure health |
 | `/glyph version` | Plugin version |
 | `/tps` | Region tick health (ops) |
@@ -144,6 +204,9 @@ Bounties
 
 Stats
  /stats  ·  /stats <player>  ·  /playtime  ·  /top <money|kills|deaths|playtime|bounty>
+
+Discord link
+ /linkdiscord  ·  then /link <code> in Discord
 
 Voice: Simple Voice Chat (optional) — pack: github.com/KyleLandon/glyph-clientmods
 

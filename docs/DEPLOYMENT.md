@@ -90,6 +90,19 @@ docker exec -i glyph-postgres pg_restore -U glyph_app -d glyph \
 Live-copy world backups are almost always fine, but take one with the
 server stopped before anything risky (migrations, version bumps).
 
+## Discord companion bot
+
+`glyph-discord` is a separate JVM process (not a Folia/Velocity plugin). Build
+with `:glyph-discord:jar`, set `GLYPH_DISCORD_*` + DB/Redis env vars, then:
+
+```powershell
+java -jar glyph-discord\build\libs\glyph-discord-0.1.0.jar
+```
+
+Closed-alpha whitelist (optional): set `GLYPH_DISCORD_WHITELIST=true` on the
+Velocity host so GlyphProxy requires `player_access.alpha`. Full setup:
+`docs/DISCORD.md`.
+
 ## Firewall
 
 Only two ports face the internet: **25565/tcp** (velocity) and

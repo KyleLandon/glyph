@@ -15,8 +15,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
-import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import org.bukkit.inventory.ItemStack;
 import org.slf4j.Logger;
 
@@ -33,8 +33,8 @@ public final class AuctionService {
     private final Executor ioExecutor;
     private final Logger logger;
 
-    /** Notified with (buyerUuid, sellerUuid) after each committed sale. */
-    private final List<BiConsumer<UUID, UUID>> purchaseListeners = new CopyOnWriteArrayList<>();
+    /** Notified after each committed sale. */
+    private final List<Consumer<AuctionSale>> purchaseListeners = new CopyOnWriteArrayList<>();
 
     public AuctionService(
             AuctionRepository repository,
@@ -53,7 +53,7 @@ public final class AuctionService {
         return settings;
     }
 
-    public void addPurchaseListener(BiConsumer<UUID, UUID> listener) {
+    public void addPurchaseListener(Consumer<AuctionSale> listener) {
         purchaseListeners.add(listener);
     }
 
@@ -110,9 +110,11 @@ public final class AuctionService {
                         AuctionListing sold = result.listing().orElseThrow();
                         logger.info("Auction sold: {} to {} for {}",
                                 listingId, buyerUuid, sold.price());
-                        for (BiConsumer<UUID, UUID> listener : purchaseListeners) {
+                        AuctionSale sale = new AuctionSale(
+                                buyerUuid, sold.sellerUuid(), sold.price());
+                        for (Consumer<AuctionSale> listener : purchaseListeners) {
                             try {
-                                listener.accept(buyerUuid, sold.sellerUuid());
+                                listener.accept(sale);
                             } catch (Exception e) {
                                 logger.error("Auction purchase listener failed", e);
                             }

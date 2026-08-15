@@ -60,3 +60,21 @@ rewards:
     # Activity required in the window before it pays: 1 unit = one block
     # broken/placed or one meter moved. AFK players earn nothing.
     min-activity: 20
+
+glyphs:
+  enabled: true
+  # U+2726 FOUR-POINTED BLACK STAR (the Glyph "diamond"). Use \u escape so
+  # Windows editors can't corrupt it to "?".
+  symbol: "\u2726"
+  first-bounty-reward: 3
+
+# Discord companion (bot runs as glyph-discord; token never lives here).
+discord:
+  # Shown in /linkdiscord. Override: GLYPH_DISCORD_INVITE_URL
+  invite-url: "https://discord.gg/htkQHR4gdf"
+
+# Chat helpers (keep simple — GDD section 32).
+chat:
+  # Type [i] or [item] in chat while holding something to show a hoverable
+  # preview. Click the item name to copy a short summary. Also: /item
+  item-placeholders: true

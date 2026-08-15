@@ -148,3 +148,58 @@ now $1:
   deposits/withdrawals from third-party plugins half-up to whole dollars.
 - Auction fee percentages remain basis points; `ceilDiv` keeps every nonzero
   fee at least $1, so fees are never free.
+
+## ADR-011: Glyphs prestige currency (✦)
+
+**Status:** accepted (2026-08-09), revised (prestige v2)
+
+Glyphs are a separate, non-convertible, account-bound prestige currency stored
+on `accounts.glyphs_balance` with their own `glyph_ledger` and `glyph_unlocks`
+tables (migrations V7, V8). They cannot be traded, dropped, auctioned,
+transferred, converted to `$`, or withdrawn as items. There is no `/glyphpay`.
+
+**Spend:** permanent account cosmetics only — name colors, titles, and custom
+death messages via `/glyphs shop`. If it helps you survive, fight, build, craft,
+travel, or make `$`, Glyphs cannot buy it. Soft `$` remains the sole player
+economy. Removed from v1: smithing trim templates and purchasable Discord roles.
+
+**Earn:** achievement milestones, not kill farming. Unique player kills
+(`glyph_unique_kills`), bounty claims, and lifetime auction-house sales unlock
+Glyph credits and titles. First bounty pays 3 ✦ (configurable). Repeat kills
+of the same victim do not count.
+
+**Discord tiers** (Initiate → Legend) derive from `glyphs_lifetime_earned`, not
+shop purchases. Synced by GlyphDiscord when the account is linked (ADR-012).
+
+**Display:** tab rows `[Title] Name  $12.4K  ✦13  ☠29`; sidebar HUD is
+per-player opt-in (`players.glyph_hud_enabled`, `/glyphs hud on|off`) with
+`economy.hud.enabled` as the global kill-switch.
+
+See `docs/GLYPHS.md`.
+
+## ADR-012: Glyph Discord companion
+
+**Status:** accepted (2026-08-09)
+
+Discord is a companion surface on the same Glyph identity, not a generic chat
+mirror. A separate process (`glyph-discord`, JDA) shares PostgreSQL with
+GlyphCore and consumes Redis pub/sub events. JDA is never loaded inside Folia.
+
+**Identity:** `/linkdiscord` issues a short-lived single-use code; Discord
+`/link <code>` binds `minecraft_uuid` ↔ `discord_user_id` (`discord_links`,
+migration V9). Codes live in `discord_link_codes` (10-minute TTL).
+
+**Role sync:** Verified on link; prestige roles from lifetime ✦ earned
+(Initiate → Legend). Spending Glyphs never demotes a Discord tier.
+
+**Whitelist path:** Discord role **Glyph Alpha** (or `/alpha grant`) sets
+`player_access.alpha`. GlyphProxy may deny login when
+`GLYPH_DISCORD_WHITELIST=true` unless `alpha` is true. Default off.
+
+**Redis channel** `glyph.events`: `glyph.lifetime`, `discord.linked` (more
+types later for bounties/status). Postgres remains authoritative.
+
+**Out of v1:** global chat bridge, Discord economy mutations, server-status /
+market / bounty feeds, tickets, companies, website OAuth.
+
+See `docs/DISCORD.md`.

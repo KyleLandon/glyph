@@ -75,9 +75,22 @@ public final class SettingsLoader {
                 longVal(config, "rewards.playtime.amount", null, 10L),
                 intVal(config, "rewards.playtime.min-activity", null, 20));
 
+        GlyphCurrencySettings glyphSettings = new GlyphCurrencySettings(
+                boolVal(config, "glyphs.enabled", true),
+                glyphSymbol(config),
+                longVal(config, "glyphs.first-bounty-reward", null, 3L));
+
+        DiscordSettings discordSettings = new DiscordSettings(
+                str(config, "discord.invite-url", "GLYPH_DISCORD_INVITE_URL",
+                        "https://discord.gg/htkQHR4gdf"));
+
+        ChatSettings chatSettings = new ChatSettings(
+                boolVal(config, "chat.item-placeholders", true));
+
         return new GlyphSettings(
                 serverId, databaseSettings, redisSettings, economySettings, tabSettings,
-                auctionSettings, bountySettings, rewardSettings);
+                auctionSettings, bountySettings, rewardSettings, glyphSettings, discordSettings,
+                chatSettings);
     }
 
     /**
@@ -102,6 +115,19 @@ public final class SettingsLoader {
             throw new IllegalArgumentException(path + " must be between 0 and 100: " + percent);
         }
         return (int) Math.round(percent * 100);
+    }
+
+    /** Glyph mark: ✦ (U+2726). Rejects mojibake/`?` from broken Windows saves. */
+    private String glyphSymbol(ConfigurationSection config) {
+        String fromEnv = envValue("GLYPH_GLYPHS_SYMBOL");
+        if (fromEnv != null) {
+            return fromEnv;
+        }
+        String raw = config != null ? config.getString("glyphs.symbol", "✦") : "✦";
+        if (raw == null || raw.isBlank() || "?".equals(raw) || "�".equals(raw)) {
+            return "✦";
+        }
+        return raw;
     }
 
     private String str(ConfigurationSection section, String path, String envKey, String def) {

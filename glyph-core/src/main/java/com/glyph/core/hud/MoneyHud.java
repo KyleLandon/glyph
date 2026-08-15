@@ -2,8 +2,11 @@ package com.glyph.core.hud;
 
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
+import com.glyph.core.config.GlyphCurrencySettings;
+import com.glyph.core.glyphs.GlyphsService;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import fr.mrmicky.fastboard.adventure.FastBoard;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,77 +23,135 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
- * Right-side cash HUD (DonutSMP-style): packet scoreboard sidebar with the
- * server name as the title and a single green money line under it.
- *
- * <p>Uses FastBoard instead of Bukkit {@code ScoreboardManager} — Folia throws
- * {@code UnsupportedOperationException} on {@code getNewScoreboard()}.</p>
- *
- * <p>Updates are event-driven from
- * {@link com.glyph.core.economy.EconomyService#addBalanceListener} — including
- * a post-join {@code resyncBalance} after the starting-balance mint. Folia
- * safety: boards are only touched on the owning player's entity scheduler.</p>
- *
- * <p>Client minimaps default to the top-right and can cover this. Players
- * should park Xaero (etc.) on the left: {@code Y → Change Position}.</p>
+ * Right-side scoreboard sidebar: server title, green money line, light-purple Glyphs line.
+ * Shown only when {@code economy.hud.enabled} and the player's {@code glyph_hud_enabled} flag.
  */
 public final class MoneyHud implements Listener {
 
     private final SchedulerAdapter scheduler;
-    private final EconomySettings settings;
+    private final EconomySettings economy;
+    private final GlyphCurrencySettings glyphSettings;
+    private final GlyphsService glyphs;
 
     private final Map<UUID, FastBoard> boards = new ConcurrentHashMap<>();
+    private final Map<UUID, Money> balances = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> glyphBalances = new ConcurrentHashMap<>();
 
-    public MoneyHud(SchedulerAdapter scheduler, EconomySettings settings) {
+    public MoneyHud(
+            SchedulerAdapter scheduler,
+            EconomySettings economy,
+            GlyphCurrencySettings glyphSettings,
+            GlyphsService glyphs) {
         this.scheduler = scheduler;
-        this.settings = settings;
+        this.economy = economy;
+        this.glyphSettings = glyphSettings;
+        this.glyphs = glyphs;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
-        if (!settings.hudEnabled()) {
+        if (!shouldShow(event.getPlayer().getUniqueId())) {
             return;
         }
-        Player player = event.getPlayer();
-        // Placeholder until join persistence finishes and EconomyService resyncs.
-        scheduler.runForEntity(player, () -> render(player, null), null);
+        scheduler.runForEntity(event.getPlayer(), () -> render(event.getPlayer()), null);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        FastBoard board = boards.remove(event.getPlayer().getUniqueId());
+        UUID uuid = event.getPlayer().getUniqueId();
+        FastBoard board = boards.remove(uuid);
+        balances.remove(uuid);
+        glyphBalances.remove(uuid);
         if (board != null) {
             board.delete();
         }
     }
 
-    /** Called from any thread; also registered as an EconomyService balance listener. */
+    /** Called from any thread; registered as an EconomyService balance listener. */
     public void updateBalance(UUID uuid, Money balance) {
-        if (!settings.hudEnabled()) {
+        if (!economy.hudEnabled()) {
+            return;
+        }
+        balances.put(uuid, balance);
+        refresh(uuid);
+    }
+
+    /** Called from any thread; registered as a GlyphsService balance listener. */
+    public void updateGlyphs(UUID uuid, Long balance) {
+        if (!economy.hudEnabled() || !glyphSettings.enabled()) {
+            return;
+        }
+        glyphBalances.put(uuid, balance);
+        refresh(uuid);
+    }
+
+    /** Called when the player's HUD preference changes — any thread. */
+    public void onHudPreferenceChanged(UUID uuid) {
+        if (!economy.hudEnabled()) {
+            return;
+        }
+        if (!glyphs.hudEnabled(uuid)) {
+            hide(uuid);
+            return;
+        }
+        refresh(uuid);
+    }
+
+    private void hide(UUID uuid) {
+        Player player = Bukkit.getPlayer(uuid);
+        FastBoard board = boards.remove(uuid);
+        if (board != null) {
+            board.delete();
+        }
+        if (player != null) {
+            scheduler.runForEntity(player, () -> {
+                FastBoard lingering = boards.remove(uuid);
+                if (lingering != null) {
+                    lingering.delete();
+                }
+            }, null);
+        }
+    }
+
+    private boolean shouldShow(UUID uuid) {
+        return economy.hudEnabled() && glyphSettings.enabled() && glyphs.hudEnabled(uuid);
+    }
+
+    private void refresh(UUID uuid) {
+        if (!shouldShow(uuid)) {
+            hide(uuid);
             return;
         }
         Player player = Bukkit.getPlayer(uuid);
         if (player == null) {
             return;
         }
-        scheduler.runForEntity(player, () -> render(player, balance), null);
+        scheduler.runForEntity(player, () -> render(player), null);
     }
 
     /** Must run on the player's entity scheduler. */
-    private void render(Player player, Money balance) {
-        if (!player.isOnline()) {
+    private void render(Player player) {
+        if (!player.isOnline() || !shouldShow(player.getUniqueId())) {
+            hide(player.getUniqueId());
             return;
         }
-        FastBoard board = boards.computeIfAbsent(player.getUniqueId(), id -> new FastBoard(player));
-        board.updateTitle(Component.text(settings.hudTitle(), NamedTextColor.WHITE));
+        UUID uuid = player.getUniqueId();
+        FastBoard board = boards.computeIfAbsent(uuid, id -> new FastBoard(player));
+        board.updateTitle(Component.text(economy.hudTitle(), NamedTextColor.WHITE));
 
-        String line = balance == null
-                ? settings.currencySymbol() + " —"
-                : formatHud(balance, settings.currencySymbol());
-        // Blank custom scores so the red digits on the right don't show.
-        board.updateLines(
-                List.of(Component.text(line, NamedTextColor.GREEN)),
-                List.of(Component.empty()));
+        Money balance = balances.get(uuid);
+        String cashLine = balance == null
+                ? economy.currencySymbol() + " —"
+                : formatHud(balance, economy.currencySymbol());
+
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.text(cashLine, NamedTextColor.GREEN));
+        Long glyphBalance = glyphBalances.get(uuid);
+        String glyphLine = glyphBalance == null
+                ? glyphSettings.symbol() + " —"
+                : formatGlyphs(glyphBalance, glyphSettings.symbol());
+        lines.add(Component.text(glyphLine, NamedTextColor.LIGHT_PURPLE));
+        board.updateLines(lines, List.of(Component.empty()));
     }
 
     /**
@@ -106,10 +167,13 @@ public final class MoneyHud implements Listener {
             return symbol + " " + compact(dollars / 1_000_000.0) + "M";
         }
         if (dollars >= 10_000L) {
-            // Start abbreviating at 10K so four-digit balances stay readable.
             return symbol + " " + compact(dollars / 1_000.0) + "K";
         }
         return symbol + " " + String.format(Locale.US, "%,d", dollars);
+    }
+
+    static String formatGlyphs(long amount, String symbol) {
+        return symbol + " " + String.format(Locale.US, "%,d", amount);
     }
 
     /** {@code 1.6} not {@code 1.60}; whole numbers drop the decimal. */

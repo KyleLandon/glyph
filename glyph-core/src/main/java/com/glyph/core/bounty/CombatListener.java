@@ -2,6 +2,7 @@ package com.glyph.core.bounty;
 
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
+import com.glyph.core.glyphs.GlyphsService;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import com.glyph.core.stats.StatType;
 import com.glyph.core.stats.StatsService;
@@ -24,14 +25,16 @@ public final class CombatListener implements Listener {
 
     private final BountyService bounties;
     private final StatsService stats;
+    private final GlyphsService glyphs;
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
     private final Logger logger;
 
-    public CombatListener(BountyService bounties, StatsService stats,
+    public CombatListener(BountyService bounties, StatsService stats, GlyphsService glyphs,
                           SchedulerAdapter scheduler, EconomySettings economy, Logger logger) {
         this.bounties = bounties;
         this.stats = stats;
+        this.glyphs = glyphs;
         this.scheduler = scheduler;
         this.economy = economy;
         this.logger = logger;
@@ -55,6 +58,8 @@ public final class CombatListener implements Listener {
         String killerName = killer.getName();
         String victimName = victim.getName();
 
+        glyphs.recordUniqueKill(killer.getUniqueId(), victim.getUniqueId());
+
         bounties.recordKill(
                         killer.getUniqueId(), victim.getUniqueId(),
                         location.getWorld().getName(),
@@ -64,6 +69,7 @@ public final class CombatListener implements Listener {
                     if (outcome.bountyPaid() <= 0) {
                         return;
                     }
+                    glyphs.noteBountyClaim(killer.getUniqueId());
                     stats.increment(killer.getUniqueId(), StatType.BOUNTIES_CLAIMED,
                             outcome.bountiesClaimed());
                     String amount = Money.of(outcome.bountyPaid())

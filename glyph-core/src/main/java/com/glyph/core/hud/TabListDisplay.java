@@ -2,7 +2,9 @@ package com.glyph.core.hud;
 
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
+import com.glyph.core.config.GlyphCurrencySettings;
 import com.glyph.core.config.TabSettings;
+import com.glyph.core.glyphs.GlyphsService;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import com.glyph.core.stats.StatsService;
 import java.util.Map;
@@ -24,17 +26,15 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.slf4j.Logger;
 
 /**
- * Tab list rows: {@code Name  $100  3☠} plus a branded header/footer.
- *
- * <p>Money updates ride {@link com.glyph.core.economy.EconomyService} balance
- * listeners. Deaths load a join snapshot (DB + unflushed buffer), then only
- * count deaths that happen after that baseline is applied.</p>
+ * Tab list rows: {@code [Title] Name  $12.4k  ✦13  ☠29} plus a branded header/footer.
  */
 public final class TabListDisplay implements Listener {
 
     private final SchedulerAdapter scheduler;
     private final TabSettings tab;
     private final EconomySettings economy;
+    private final GlyphCurrencySettings glyphSettings;
+    private final GlyphsService glyphs;
     private final StatsService stats;
     private final Logger logger;
 
@@ -44,11 +44,15 @@ public final class TabListDisplay implements Listener {
             SchedulerAdapter scheduler,
             TabSettings tab,
             EconomySettings economy,
+            GlyphCurrencySettings glyphSettings,
+            GlyphsService glyphs,
             StatsService stats,
             Logger logger) {
         this.scheduler = scheduler;
         this.tab = tab;
         this.economy = economy;
+        this.glyphSettings = glyphSettings;
+        this.glyphs = glyphs;
         this.stats = stats;
         this.logger = logger;
     }
@@ -68,7 +72,7 @@ public final class TabListDisplay implements Listener {
 
     /**
      * Called after join persistence / starting-balance mint. Loads death
-     * baseline; money arrives via {@link #updateBalance}.
+     * baseline; money and glyphs arrive via listeners.
      */
     public void onJoinPersisted(UUID uuid) {
         if (!tab.enabled()) {
@@ -115,6 +119,26 @@ public final class TabListDisplay implements Listener {
         apply(uuid);
     }
 
+    /** Glyphs balance listener — any thread. */
+    public void updateGlyphs(UUID uuid, Long balance) {
+        if (!tab.enabled() || !glyphSettings.enabled()) {
+            return;
+        }
+        Row row = rows.computeIfAbsent(uuid, id -> new Row());
+        row.glyphs = balance;
+        apply(uuid);
+    }
+
+    /** Glyphs color listener — any thread. */
+    public void onColorChanged(UUID uuid) {
+        apply(uuid);
+    }
+
+    /** Glyphs title listener — any thread. */
+    public void onTitleChanged(UUID uuid) {
+        apply(uuid);
+    }
+
     private void apply(UUID uuid) {
         Player player = Bukkit.getPlayer(uuid);
         if (player == null) {
@@ -135,42 +159,67 @@ public final class TabListDisplay implements Listener {
             return;
         }
         Row row = rows.get(player.getUniqueId());
+        NamedTextColor nameColor = glyphs.nameColor(player.getUniqueId())
+                .orElse(NamedTextColor.WHITE);
         Component name = formatRow(
                 player.getName(),
+                nameColor,
+                glyphs.equippedTitleText(player.getUniqueId()).orElse(null),
                 row == null ? null : row.money,
+                row == null ? null : row.glyphs,
+                glyphSettings.symbol(),
+                glyphSettings.enabled(),
                 row == null ? 0L : row.deaths(),
                 economy.currencySymbol());
         player.playerListName(name);
     }
 
     /**
-     * {@code Name  $100  3☠} — compact so wide tabs stay readable.
+     * {@code [Title] Name  $12.4k  ✦13  ☠29} — compact so wide tabs stay readable.
      */
-    static Component formatRow(String username, Money money, long deaths, String symbol) {
+    static Component formatRow(
+            String username,
+            NamedTextColor nameColor,
+            String titleText,
+            Money money,
+            Long glyphs,
+            String glyphSymbol,
+            boolean showGlyphs,
+            long deaths,
+            String cashSymbol) {
+        Component row = Component.empty();
+        if (titleText != null && !titleText.isBlank()) {
+            row = row.append(Component.text("[", NamedTextColor.GRAY))
+                    .append(Component.text(titleText, NamedTextColor.GRAY))
+                    .append(Component.text("] ", NamedTextColor.GRAY));
+        }
         String cash = money == null
-                ? symbol + " —"
-                : MoneyHud.formatHud(money, symbol);
-        return Component.text(username, NamedTextColor.WHITE)
+                ? cashSymbol + " —"
+                : MoneyHud.formatHud(money, cashSymbol);
+        row = row.append(Component.text(username, nameColor))
                 .append(Component.text("  ", NamedTextColor.DARK_GRAY))
-                .append(Component.text(cash, NamedTextColor.GREEN))
-                .append(Component.text("  ", NamedTextColor.DARK_GRAY))
-                .append(Component.text(deaths + "☠", NamedTextColor.RED));
+                .append(Component.text(cash, NamedTextColor.GREEN));
+        if (showGlyphs) {
+            String glyphText = glyphs == null
+                    ? glyphSymbol + "—"
+                    : glyphSymbol + glyphs;
+            row = row.append(Component.text("  ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(glyphText, NamedTextColor.LIGHT_PURPLE));
+        }
+        return row.append(Component.text("  ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("☠", NamedTextColor.RED))
+                .append(Component.text(deaths, NamedTextColor.RED));
     }
 
-    /**
-     * Baseline replaces the total (snapshot already has buffered deaths).
-     * Only deaths after {@link #applyBaseline} increment further — deaths
-     * during the load window are ignored here because they are in the peek.
-     */
     private static final class Row {
         volatile Money money;
+        volatile Long glyphs;
         private final AtomicLong totalDeaths = new AtomicLong(0);
         private final AtomicBoolean baselineReady = new AtomicBoolean(false);
 
         /** @return true when the visible total changed */
         boolean noteDeath() {
             if (!baselineReady.get()) {
-                // Still loading — snapshot peek will include this death.
                 return false;
             }
             totalDeaths.incrementAndGet();

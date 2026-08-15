@@ -6,12 +6,74 @@ server:
   id: glyph-01
 
 economy:
-  # $100 first-join grant (whole dollars — the economy has no cents).
-  # One-time per player, so alt accounts are not worth farming.
+  # All amounts are WHOLE DOLLARS — the economy has no cents.
+  # Balance granted when a player's account is created. $100 gives new
+  # players instant market liquidity — enough for the minimum bounty or a
+  # cheap auction buy. One-time per player, so alt accounts are not worth
+  # farming.
   starting-balance: 100
+  # Prefix used when formatting amounts.
+  currency-symbol: "$"
+  # Right-side cash HUD (scoreboard sidebar): title on top, green $ line
+  # under it. Client minimaps sit on the same edge — move Xaero to the left
+  # (Y → Change Position) so it does not cover the balance.
+  hud:
+    enabled: true
+    title: "GLYPH"
 
+# Tab list (player list): header/footer + per-player money and death count.
 tab:
   enabled: true
   header: "GLYPH"
   footer: "play.glyphmc.net"
 
+auction:
+  enabled: true
+  # Charged when a listing is created, percent of the asking price. Burned
+  # as a money sink (GDD section 17).
+  listing-fee-percent: 1.0
+  # Deducted from the seller's proceeds when a listing sells. Also burned.
+  sale-fee-percent: 5.0
+  # Concurrent ACTIVE listings per player.
+  max-listings-per-player: 10
+  # Listing lifetime; expired items return via /claim.
+  duration-hours: 48
+
+bounties:
+  enabled: true
+  # Smallest bounty, in whole dollars. GDD section 63.
+  minimum: 100
+  # Killing the same player again within this window still records the kill
+  # but withholds the bounty payout (anti-farming, GDD section 25).
+  same-victim-cooldown-minutes: 60
+
+rewards:
+  # Active-playtime earnings: the launch money faucet (GDD section 16).
+  # Minted as SYSTEM_REWARD ledger entries, so supply growth is measurable.
+  playtime:
+    enabled: true
+    # Payout window length.
+    interval-minutes: 15
+    # Payment per active window, in whole dollars ($10 -> ~$40/hour of
+    # genuinely active play).
+    amount: 10
+    # Activity required in the window before it pays: 1 unit = one block
+    # broken/placed or one meter moved. AFK players earn nothing.
+    min-activity: 20
+
+glyphs:
+  enabled: true
+  # U+2726 FOUR-POINTED BLACK STAR (the Glyph "diamond").
+  symbol: "\u2726"
+  first-bounty-reward: 3
+
+# Discord companion (bot runs as glyph-discord; token never lives here).
+discord:
+  # Shown in /linkdiscord. Override: GLYPH_DISCORD_INVITE_URL
+  invite-url: "https://discord.gg/htkQHR4gdf"
+
+# Chat helpers (keep simple — GDD section 32).
+chat:
+  # Type [i] or [item] in chat while holding something to show a hoverable
+  # preview. Click the item name to copy a short summary. Also: /item
+  item-placeholders: true

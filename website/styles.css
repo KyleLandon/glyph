@@ -218,8 +218,8 @@ body.modal-open {
 .modal {
   position: fixed;
   inset: 0;
-  z-index: 10;
-  display: grid;
+  z-index: 100;
+  display: none;
   place-items: center;
   padding: 1.25rem;
   opacity: 0;
@@ -227,12 +227,14 @@ body.modal-open {
   transition: opacity 0.22s var(--ease);
 }
 
+/* Open state wins over [hidden] / display:none quirks across browsers. */
 .modal.is-open {
+  display: grid;
   opacity: 1;
   pointer-events: auto;
 }
 
-.modal[hidden] {
+.modal[hidden]:not(.is-open) {
   display: none !important;
 }
 

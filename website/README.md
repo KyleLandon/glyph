@@ -1,7 +1,7 @@
 # Glyph website
 
 Landing page for [glyphmc.net](https://glyphmc.net): logo hero, **Join Server**
-(copies `play.glyphmc.net`), and **Discord**.
+(opens join modal with address + steps + client mods), and **Discord**.
 
 **Live**
 

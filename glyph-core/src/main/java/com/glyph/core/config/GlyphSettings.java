@@ -16,7 +16,10 @@ public record GlyphSettings(
         TabSettings tab,
         AuctionSettings auction,
         BountySettings bounties,
-        PlaytimeRewardSettings rewards) {
+        PlaytimeRewardSettings rewards,
+        GlyphCurrencySettings glyphs,
+        DiscordSettings discord,
+        ChatSettings chat) {
 
     /**
      * Saves default config files if missing, then loads them applying

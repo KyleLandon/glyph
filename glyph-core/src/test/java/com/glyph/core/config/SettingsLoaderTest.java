@@ -44,6 +44,12 @@ class SettingsLoaderTest {
                 interval-minutes: 10
                 amount: 5
                 min-activity: 40
+            glyphs:
+              enabled: false
+              symbol: "✦"
+              first-bounty-reward: 3
+            discord:
+              invite-url: "https://discord.gg/test"
             """;
 
     private static final String DATABASE_YML = """
@@ -118,6 +124,14 @@ class SettingsLoaderTest {
         assertThat(rewards.amount()).isEqualTo(5);
         assertThat(rewards.minActivity()).isEqualTo(40);
         assertThat(rewards.minActivityUnits()).isEqualTo(4000);
+
+        GlyphCurrencySettings glyphs = settings.glyphs();
+        assertThat(glyphs.enabled()).isFalse();
+        assertThat(glyphs.symbol()).isEqualTo("✦");
+        assertThat(glyphs.firstBountyReward()).isEqualTo(3);
+
+        assertThat(settings.discord().inviteUrl()).isEqualTo("https://discord.gg/test");
+        assertThat(settings.chat().itemPlaceholders()).isTrue();
     }
 
     @Test
@@ -179,6 +193,11 @@ class SettingsLoaderTest {
         assertThat(settings.rewards().intervalMinutes()).isEqualTo(15);
         assertThat(settings.rewards().amount()).isEqualTo(10);
         assertThat(settings.rewards().minActivity()).isEqualTo(20);
+        assertThat(settings.glyphs().enabled()).isTrue();
+        assertThat(settings.glyphs().symbol()).isEqualTo("✦");
+        assertThat(settings.glyphs().firstBountyReward()).isEqualTo(3);
+        assertThat(settings.discord().inviteUrl()).isEqualTo("https://discord.gg/htkQHR4gdf");
+        assertThat(settings.chat().itemPlaceholders()).isTrue();
     }
 
     @Test

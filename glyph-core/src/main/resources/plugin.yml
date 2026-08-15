@@ -70,6 +70,27 @@ commands:
     description: Show leaderboards.
     usage: /top <money|kills|deaths|playtime|bounty>
     permission: glyph.stats
+  glyphs:
+    description: Prestige currency balance and shop.
+    usage: /glyphs [shop | buy <id> | color <id|none> | unlocks]
+    permission: glyph.glyphs
+  glyphadmin:
+    description: Administrative Glyph balance control.
+    usage: /glyphadmin <get|set|add|remove|unlinkdiscord> <player> [amount]
+    permission: glyph.glyphs.admin
+  linkdiscord:
+    description: Link your Minecraft account to Discord.
+    usage: /linkdiscord
+    permission: glyph.discord
+  unlinkdiscord:
+    description: Unlink Discord from your Minecraft account.
+    usage: /unlinkdiscord
+    permission: glyph.discord
+  item:
+    description: Show your held item in chat (hover + click to copy).
+    usage: /item
+    aliases: [showitem, whatamiholding]
+    permission: glyph.chat.item
 
 permissions:
   glyph.admin:
@@ -89,4 +110,16 @@ permissions:
     default: true
   glyph.stats:
     description: Access to statistics (/stats, /playtime, /top).
+    default: true
+  glyph.glyphs:
+    description: Access to Glyphs prestige currency (/glyphs).
+    default: true
+  glyph.glyphs.admin:
+    description: Access to /glyphadmin.
+    default: op
+  glyph.discord:
+    description: Access to Discord account linking (/linkdiscord, /unlinkdiscord).
+    default: true
+  glyph.chat.item:
+    description: Share held items in chat (/item and [i] placeholders).
     default: true

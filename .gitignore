@@ -9,6 +9,8 @@ bin/
 # Secrets / environment
 .env
 *.env.local
+**/secrets.env
+secrets.env
 
 # playit.gg agent secrets / claim scratch (never commit)
 .playit*
