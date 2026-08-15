@@ -16,7 +16,8 @@ public record GlyphSettings(
         TabSettings tab,
         AuctionSettings auction,
         BountySettings bounties,
-        PlaytimeRewardSettings rewards) {
+        PlaytimeRewardSettings rewards,
+        StarterSettings starter) {
 
     /**
      * Saves default config files if missing, then loads them applying

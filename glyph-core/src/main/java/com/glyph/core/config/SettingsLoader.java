@@ -1,5 +1,6 @@
 package com.glyph.core.config;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.bukkit.configuration.ConfigurationSection;
@@ -75,9 +76,21 @@ public final class SettingsLoader {
                 longVal(config, "rewards.playtime.amount", null, 10L),
                 intVal(config, "rewards.playtime.min-activity", null, 20));
 
+        StarterSettings starterSettings = new StarterSettings(
+                boolVal(config, "starter.enabled", true),
+                starterItems(config));
+
         return new GlyphSettings(
                 serverId, databaseSettings, redisSettings, economySettings, tabSettings,
-                auctionSettings, bountySettings, rewardSettings);
+                auctionSettings, bountySettings, rewardSettings, starterSettings);
+    }
+
+    private List<StarterSettings.StarterItem> starterItems(ConfigurationSection config) {
+        List<String> raw = config != null ? config.getStringList("starter.items") : List.of();
+        if (raw.isEmpty()) {
+            return StarterSettings.defaults();
+        }
+        return raw.stream().map(StarterSettings::parseItem).toList();
     }
 
     /**

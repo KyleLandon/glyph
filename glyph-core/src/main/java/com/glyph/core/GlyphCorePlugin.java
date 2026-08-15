@@ -34,7 +34,9 @@ import com.glyph.core.player.PlayerQuitListener;
 import com.glyph.core.player.PlayerService;
 import com.glyph.core.player.PlayerSessionService;
 import com.glyph.core.player.PostgresPlayerRepository;
+import com.glyph.core.player.StarterKitService;
 import com.glyph.core.player.WelcomeListener;
+import com.glyph.core.player.command.RulesCommand;
 import com.glyph.core.redis.RedisManager;
 import com.glyph.core.rewards.ActivityTracker;
 import com.glyph.core.rewards.PlaytimeRewardService;
@@ -208,7 +210,10 @@ public final class GlyphCorePlugin extends JavaPlugin {
         economyService.addBalanceListener(tabList::updateBalance);
         getServer().getPluginManager().registerEvents(tabList, this);
 
-        WelcomeListener welcomeListener = new WelcomeListener(schedulerAdapter, settings.economy());
+        StarterKitService starterKit = new StarterKitService(this, settings.starter());
+        WelcomeListener welcomeListener = new WelcomeListener(
+                schedulerAdapter, settings.economy(), starterKit);
+        registerCommand("rules", new RulesCommand(), null);
         // After account + starting-balance mint: HUD/tab money, death baseline, welcome.
         getServer().getPluginManager().registerEvents(
                 new PlayerJoinListener(playerService, (uuid, firstJoin) -> {

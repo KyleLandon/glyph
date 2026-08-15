@@ -70,6 +70,10 @@ commands:
     description: Show leaderboards.
     usage: /top <money|kills|deaths|playtime|bounty>
     permission: glyph.stats
+  rules:
+    description: Read the Glyph rules book.
+    usage: /rules
+    permission: glyph.rules
 
 permissions:
   glyph.admin:
@@ -89,4 +93,7 @@ permissions:
     default: true
   glyph.stats:
     description: Access to statistics (/stats, /playtime, /top).
+    default: true
+  glyph.rules:
+    description: Access to /rules.
     default: true

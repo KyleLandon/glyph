@@ -15,3 +15,13 @@ tab:
   header: "GLYPH"
   footer: "play.glyphmc.net"
 
+starter:
+  enabled: true
+  items:
+    - STONE_SWORD
+    - STONE_PICKAXE
+    - STONE_AXE
+    - STONE_SHOVEL
+    - BREAD:16
+    - TORCH:16
+

@@ -44,6 +44,11 @@ class SettingsLoaderTest {
                 interval-minutes: 10
                 amount: 5
                 min-activity: 40
+            starter:
+              enabled: false
+              items:
+                - stone_hoe
+                - apple:8
             """;
 
     private static final String DATABASE_YML = """
@@ -118,6 +123,12 @@ class SettingsLoaderTest {
         assertThat(rewards.amount()).isEqualTo(5);
         assertThat(rewards.minActivity()).isEqualTo(40);
         assertThat(rewards.minActivityUnits()).isEqualTo(4000);
+
+        StarterSettings starter = settings.starter();
+        assertThat(starter.enabled()).isFalse();
+        assertThat(starter.items()).extracting(StarterSettings.StarterItem::material)
+                .containsExactly(org.bukkit.Material.STONE_HOE, org.bukkit.Material.APPLE);
+        assertThat(starter.items().get(1).amount()).isEqualTo(8);
     }
 
     @Test
@@ -179,6 +190,8 @@ class SettingsLoaderTest {
         assertThat(settings.rewards().intervalMinutes()).isEqualTo(15);
         assertThat(settings.rewards().amount()).isEqualTo(10);
         assertThat(settings.rewards().minActivity()).isEqualTo(20);
+        assertThat(settings.starter().enabled()).isTrue();
+        assertThat(settings.starter().items()).isEqualTo(StarterSettings.defaults());
     }
 
     @Test

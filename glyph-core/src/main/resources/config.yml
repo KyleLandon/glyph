@@ -60,3 +60,15 @@ rewards:
     # Activity required in the window before it pays: 1 unit = one block
     # broken/placed or one meter moved. AFK players earn nothing.
     min-activity: 20
+
+# First-join starter pack (GDD section 7). Granted once per playerdata —
+# a world wipe re-issues tools, but starter cash is still one-time.
+starter:
+  enabled: true
+  items:
+    - STONE_SWORD
+    - STONE_PICKAXE
+    - STONE_AXE
+    - STONE_SHOVEL
+    - BREAD:16
+    - TORCH:16

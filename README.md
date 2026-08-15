@@ -30,6 +30,14 @@ with a self-updating install script.
 - **JDK 25** (Temurin or equivalent; GDD requires Java 21+)
 - **Docker** (for local PostgreSQL/Redis and integration tests) — optional but recommended
 
+## Start the network
+
+Double-click **`start.bat`** at the repo root (Windows desktop). It starts
+Docker, PostgreSQL, Redis, Folia, Velocity, and playit. Already-running
+pieces are left alone.
+
+Connect to `localhost` or `play.glyphmc.net`.
+
 ## Quick start (new machine)
 
 ```powershell
