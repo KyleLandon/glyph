@@ -25,6 +25,24 @@ Trust carefully. Build smart. Make money.
 
 ---
 
+## First join
+
+New players get:
+
+- **$100** cash (one-time, kept even if the world is wiped)
+- Stone sword, pickaxe, axe, shovel
+- 16 bread and 16 torches
+- A **rules book** (also readable anytime with `/rules`)
+
+The book and tools are granted once per world playerdata — a map reset
+re-issues them; starter cash does not.
+
+| Command | What it does |
+| --- | --- |
+| `/rules` | Open the Glyph rules book |
+
+---
+
 ## Money
 
 | Command | What it does |
@@ -154,7 +172,7 @@ Tip: move Xaero’s minimap to the **left** (`Y` → Change Position) so it does
 
 ## Quick start
 
-1. Join `play.glyphmc.net` — you start with **$100**.
+1. Join `play.glyphmc.net` — you start with **$100**, stone tools, and a rules book (`/rules`).
 2. Leave spawn, gather gear, make a hidden base (nothing protects it but distance and secrecy).
 3. `/ah sell <price>` to list loot; `/ah` to browse and buy.
 4. `/claim` when you have mail.
@@ -204,6 +222,7 @@ Bounties
 
 Stats
  /stats  ·  /stats <player>  ·  /playtime  ·  /top <money|kills|deaths|playtime|bounty>
+ /rules
 
 Discord link
  /linkdiscord  ·  then /link <code> in Discord

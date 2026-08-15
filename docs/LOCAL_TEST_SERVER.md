@@ -140,15 +140,17 @@ back with errors at startup.
 
 ## Daily use
 
+Double-click **`start.bat`** in the repo root — Docker, PostgreSQL, Redis,
+Folia, Velocity, and playit. Already-running pieces are skipped.
+
 ```powershell
-scripts\dev-up.ps1        # PostgreSQL + Redis (Docker)
-scripts\deploy-local.ps1  # build + deploy both plugins
+.\start.ps1                 # same thing from a shell
+scripts\deploy-local.ps1    # after code changes: build + copy plugin jars
 ```
 
-Then start `glyph-folia\start.bat` (backend) and `glyph-velocity\start.bat`
-(proxy) — order does not matter; Velocity retries the backend on join.
-Connect to `localhost` in Minecraft. (`.bat` wrappers exist because
-double-clicked `.ps1` files open in an editor instead of running.)
+Connect to `localhost` in Minecraft (or `play.glyphmc.net` from outside).
+(`.bat` wrappers exist because double-clicked `.ps1` files open in an editor
+instead of running.)
 
 In game (or console): `/glyph status` shows PostgreSQL/Redis health,
 `/glyph version` shows build info. Without local PostgreSQL/Redis running,

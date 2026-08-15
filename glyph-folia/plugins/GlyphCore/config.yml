@@ -27,6 +27,7 @@ tab:
   header: "GLYPH"
   footer: "play.glyphmc.net"
 
+<<<<<<< HEAD
 auction:
   enabled: true
   # Charged when a listing is created, percent of the asking price. Burned
@@ -77,3 +78,15 @@ chat:
   # Type [i] or [item] in chat while holding something to show a hoverable
   # preview. Click the item name to copy a short summary. Also: /item
   item-placeholders: true
+=======
+starter:
+  enabled: true
+  items:
+    - STONE_SWORD
+    - STONE_PICKAXE
+    - STONE_AXE
+    - STONE_SHOVEL
+    - BREAD:16
+    - TORCH:16
+
+>>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943

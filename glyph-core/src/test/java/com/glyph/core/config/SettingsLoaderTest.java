@@ -44,12 +44,20 @@ class SettingsLoaderTest {
                 interval-minutes: 10
                 amount: 5
                 min-activity: 40
+<<<<<<< HEAD
             glyphs:
               enabled: false
               symbol: "✦"
               first-bounty-reward: 3
             discord:
               invite-url: "https://discord.gg/test"
+=======
+            starter:
+              enabled: false
+              items:
+                - stone_hoe
+                - apple:8
+>>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
             """;
 
     private static final String DATABASE_YML = """
@@ -125,6 +133,7 @@ class SettingsLoaderTest {
         assertThat(rewards.minActivity()).isEqualTo(40);
         assertThat(rewards.minActivityUnits()).isEqualTo(4000);
 
+<<<<<<< HEAD
         GlyphCurrencySettings glyphs = settings.glyphs();
         assertThat(glyphs.enabled()).isFalse();
         assertThat(glyphs.symbol()).isEqualTo("✦");
@@ -132,6 +141,13 @@ class SettingsLoaderTest {
 
         assertThat(settings.discord().inviteUrl()).isEqualTo("https://discord.gg/test");
         assertThat(settings.chat().itemPlaceholders()).isTrue();
+=======
+        StarterSettings starter = settings.starter();
+        assertThat(starter.enabled()).isFalse();
+        assertThat(starter.items()).extracting(StarterSettings.StarterItem::material)
+                .containsExactly(org.bukkit.Material.STONE_HOE, org.bukkit.Material.APPLE);
+        assertThat(starter.items().get(1).amount()).isEqualTo(8);
+>>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
     }
 
     @Test
@@ -193,11 +209,16 @@ class SettingsLoaderTest {
         assertThat(settings.rewards().intervalMinutes()).isEqualTo(15);
         assertThat(settings.rewards().amount()).isEqualTo(10);
         assertThat(settings.rewards().minActivity()).isEqualTo(20);
+<<<<<<< HEAD
         assertThat(settings.glyphs().enabled()).isTrue();
         assertThat(settings.glyphs().symbol()).isEqualTo("✦");
         assertThat(settings.glyphs().firstBountyReward()).isEqualTo(3);
         assertThat(settings.discord().inviteUrl()).isEqualTo("https://discord.gg/htkQHR4gdf");
         assertThat(settings.chat().itemPlaceholders()).isTrue();
+=======
+        assertThat(settings.starter().enabled()).isTrue();
+        assertThat(settings.starter().items()).isEqualTo(StarterSettings.defaults());
+>>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
     }
 
     @Test

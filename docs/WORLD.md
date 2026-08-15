@@ -4,33 +4,32 @@ Production world settings for Glyph. Borders and spawn protection match
 GDD sections 8–11. Pregeneration uses [Chunky](https://hangar.papermc.io/pop4959/Chunky)
 (Folia-compatible, Java 25 / MC 26.1).
 
-## Status (desktop staging, 2026-08-09)
+## Status (desktop, 2026-08-14)
 
-- Borders applied and verified via Chunky (`world` ±50k, `world_nether`
-  ±6.25k, `world_the_end` ±50k).
-- Chunky 1.5.3 installed; smoke pregen (`radius 2500` around spawn) started.
-- Production seed `glyphmc-2026` is set in `server.properties` for the next
-  world creation (current world keeps its original seed until wiped).
-- **Closed alpha decision:** keep the current staging world (no wipe). Wipe +
-  full border pregen is a pre–public-launch maintenance window, not an alpha
-  blocker. Spawn protection remains vanilla `spawn-protection=96`.
+- Seed **`6944174826991112`** in `server.properties`. Regenerating requires
+  stopping Folia and deleting `glyph-folia/world*` (`scripts/reset-world.ps1`).
+- Overworld spawn **`-184 70 45`** (`setworldspawn`, `spawnRadius 0`) via
+  `scripts/apply-world-settings.ps1`.
+- Borders: `world` ±50k, `world_nether` ±6.25k, `world_the_end` ±50k.
+- Spawn protection remains vanilla `spawn-protection=96` around world spawn.
+- Full border pregen is still a pre–public-launch maintenance window.
 
 ## Settings
 
 | Setting | Value | Notes |
 |---------|-------|-------|
-| Seed | `glyphmc-2026` | Fixed string seed in `server.properties` (`level-seed`) |
-| Overworld border | ±50,000 (diameter 100,000) | GDD §9 |
+| Seed | `6944174826991112` | `level-seed` in `server.properties` |
+| Overworld spawn | `-184 70 45` | Exact block; `spawnRadius 0` |
+| Overworld border | ±50,000 (diameter 100,000) | GDD §9, centered at 0,0 |
 | Nether border | ±6,250 (diameter 12,500) | GDD §9 |
 | End border | ±50,000 (diameter 100,000) | GDD §9 |
 | Spawn protection | 96 blocks | Vanilla until GlyphCore spawn module; GDD §8 |
 | `max-world-size` | 50000 | Hard cap matching overworld border |
 
-Seed only applies when a world is **first created**. The current desktop
-world already exists — regenerating for the production seed means stopping
-the backend, deleting `glyph-folia/world*`, and starting again. Do that when
-you are ready for a clean production map; keep the current world for staging
-playtests until then.
+Seed only applies when a world is **first created**. To regenerate: stop the
+backend, run `scripts\reset-world.ps1`, start Folia, then
+`scripts\apply-world-settings.ps1`. That wipes playerdata (inventories) but
+not PostgreSQL (balances / stats). The starter kit re-grants on next join.
 
 ## Apply borders + confirm
 
@@ -40,8 +39,8 @@ With the backend running (RCON enabled on localhost):
 scripts\apply-world-settings.ps1
 ```
 
-That sets the three world borders and prints `worldborder get` for each.
-Safe to re-run.
+That sets the three world borders, world spawn at `-184 70 45`, and prints
+Chunky selection. Safe to re-run.
 
 ## Pregeneration
 
@@ -55,6 +54,7 @@ After Chunky loads:
 
 ```
 chunky world world
+chunky center -184 45
 chunky radius 2500
 chunky start
 ```

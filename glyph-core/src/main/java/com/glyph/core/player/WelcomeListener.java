@@ -14,9 +14,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 /**
- * First-join welcome copy (GDD section 7): anarchy expectations and starter
- * economy pointers. Invoked from {@link PlayerJoinListener} once join
- * persistence completes with {@code firstJoin=true}.
+ * First-join welcome copy (GDD section 7) plus the starter pack. Kit grant
+ * runs immediately on the entity thread; chat + rules book open after a short
+ * delay so the login motd is not covered.
  */
 public final class WelcomeListener {
 
@@ -24,14 +24,21 @@ public final class WelcomeListener {
 
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
+    private final StarterKitService starterKit;
 
-    public WelcomeListener(SchedulerAdapter scheduler, EconomySettings economy) {
+    public WelcomeListener(
+            SchedulerAdapter scheduler, EconomySettings economy, StarterKitService starterKit) {
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
         this.economy = Objects.requireNonNull(economy, "economy");
+        this.starterKit = Objects.requireNonNull(starterKit, "starterKit");
     }
 
     /** Called on the async join-completion thread after persistence. */
     public void onPersisted(UUID uuid, boolean firstJoin) {
+        Player online = Bukkit.getPlayer(uuid);
+        if (online != null && online.isOnline()) {
+            scheduler.runForEntity(online, () -> starterKit.grantIfNeeded(online, firstJoin), null);
+        }
         if (!firstJoin) {
             return;
         }
@@ -40,7 +47,10 @@ public final class WelcomeListener {
             if (player == null || !player.isOnline()) {
                 return;
             }
-            scheduler.runForEntity(player, () -> messages().forEach(player::sendMessage), null);
+            scheduler.runForEntity(player, () -> {
+                messages().forEach(player::sendMessage);
+                player.openBook(RulesBook.create());
+            }, null);
         }, MESSAGE_DELAY);
     }
 
@@ -59,8 +69,8 @@ public final class WelcomeListener {
                 Component.empty(),
                 Component.text("Starter cash: ", NamedTextColor.GRAY)
                         .append(Component.text(starter, NamedTextColor.GREEN))
-                        .append(Component.text(" — use /bal, /ah, /bounty, /stats", NamedTextColor.GRAY)),
-                Component.text("More: see Discord / website commands list", NamedTextColor.DARK_GRAY),
+                        .append(Component.text(" — stone tools are in your inventory", NamedTextColor.GRAY)),
+                Component.text("Read the rules book, or type /rules anytime.", NamedTextColor.DARK_GRAY),
                 Component.empty());
     }
 }
