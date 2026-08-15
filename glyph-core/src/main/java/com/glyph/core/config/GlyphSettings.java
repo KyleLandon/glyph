@@ -17,13 +17,10 @@ public record GlyphSettings(
         AuctionSettings auction,
         BountySettings bounties,
         PlaytimeRewardSettings rewards,
-<<<<<<< HEAD
         GlyphCurrencySettings glyphs,
         DiscordSettings discord,
-        ChatSettings chat) {
-=======
+        ChatSettings chat,
         StarterSettings starter) {
->>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
 
     /**
      * Saves default config files if missing, then loads them applying

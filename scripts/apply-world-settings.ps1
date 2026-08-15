@@ -17,8 +17,7 @@ Invoke-Mc "execute in minecraft:the_nether run worldborder set 12500"
 Invoke-Mc "execute in minecraft:the_end run worldborder center 0 0"
 Invoke-Mc "execute in minecraft:the_end run worldborder set 100000"
 
-# Chosen overworld spawn (docs/WORLD.md). spawnRadius 0 lands on the block.
-Invoke-Mc "execute in minecraft:overworld run gamerule spawnRadius 0"
+# Chosen overworld spawn (docs/WORLD.md). Exact block via setworldspawn.
 Invoke-Mc "execute in minecraft:overworld run setworldspawn -184 70 45"
 
 Write-Output ""

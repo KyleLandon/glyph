@@ -76,7 +76,6 @@ public final class SettingsLoader {
                 longVal(config, "rewards.playtime.amount", null, 10L),
                 intVal(config, "rewards.playtime.min-activity", null, 20));
 
-<<<<<<< HEAD
         GlyphCurrencySettings glyphSettings = new GlyphCurrencySettings(
                 boolVal(config, "glyphs.enabled", true),
                 glyphSymbol(config),
@@ -89,18 +88,14 @@ public final class SettingsLoader {
         ChatSettings chatSettings = new ChatSettings(
                 boolVal(config, "chat.item-placeholders", true));
 
-        return new GlyphSettings(
-                serverId, databaseSettings, redisSettings, economySettings, tabSettings,
-                auctionSettings, bountySettings, rewardSettings, glyphSettings, discordSettings,
-                chatSettings);
-=======
         StarterSettings starterSettings = new StarterSettings(
                 boolVal(config, "starter.enabled", true),
                 starterItems(config));
 
         return new GlyphSettings(
                 serverId, databaseSettings, redisSettings, economySettings, tabSettings,
-                auctionSettings, bountySettings, rewardSettings, starterSettings);
+                auctionSettings, bountySettings, rewardSettings, glyphSettings, discordSettings,
+                chatSettings, starterSettings);
     }
 
     private List<StarterSettings.StarterItem> starterItems(ConfigurationSection config) {
@@ -109,7 +104,6 @@ public final class SettingsLoader {
             return StarterSettings.defaults();
         }
         return raw.stream().map(StarterSettings::parseItem).toList();
->>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
     }
 
     /**

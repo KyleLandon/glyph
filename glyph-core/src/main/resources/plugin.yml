@@ -70,7 +70,6 @@ commands:
     description: Show leaderboards.
     usage: /top <money|kills|deaths|playtime|bounty>
     permission: glyph.stats
-<<<<<<< HEAD
   glyphs:
     description: Prestige currency balance and shop.
     usage: /glyphs [shop | buy <id> | color <id|none> | unlocks]
@@ -92,12 +91,10 @@ commands:
     usage: /item
     aliases: [showitem, whatamiholding]
     permission: glyph.chat.item
-=======
   rules:
     description: Read the Glyph rules book.
     usage: /rules
     permission: glyph.rules
->>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
 
 permissions:
   glyph.admin:
@@ -118,7 +115,6 @@ permissions:
   glyph.stats:
     description: Access to statistics (/stats, /playtime, /top).
     default: true
-<<<<<<< HEAD
   glyph.glyphs:
     description: Access to Glyphs prestige currency (/glyphs).
     default: true
@@ -130,8 +126,7 @@ permissions:
     default: true
   glyph.chat.item:
     description: Share held items in chat (/item and [i] placeholders).
-=======
+    default: true
   glyph.rules:
     description: Access to /rules.
->>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
     default: true

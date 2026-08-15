@@ -18,7 +18,7 @@ $root = Split-Path $PSScriptRoot -Parent
 $folia = Join-Path $root "glyph-folia"
 
 if (Get-NetTCPConnection -LocalPort 25566 -State Listen -ErrorAction SilentlyContinue) {
-    Write-Error "Folia is still listening on :25566 — stop the backend first."
+    Write-Error "Folia is still listening on :25566 - stop the backend first."
 }
 
 $worlds = @(

@@ -61,7 +61,6 @@ rewards:
     # broken/placed or one meter moved. AFK players earn nothing.
     min-activity: 20
 
-<<<<<<< HEAD
 glyphs:
   enabled: true
   # U+2726 FOUR-POINTED BLACK STAR (the Glyph "diamond"). Use \u escape so
@@ -79,7 +78,7 @@ chat:
   # Type [i] or [item] in chat while holding something to show a hoverable
   # preview. Click the item name to copy a short summary. Also: /item
   item-placeholders: true
-=======
+
 # First-join starter pack (GDD section 7). Granted once per playerdata —
 # a world wipe re-issues tools, but starter cash is still one-time.
 starter:
@@ -91,4 +90,3 @@ starter:
     - STONE_SHOVEL
     - BREAD:16
     - TORCH:16
->>>>>>> 574a7304ba67e3ae4812a67094cd56fc4d296943
