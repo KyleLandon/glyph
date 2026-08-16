@@ -4,6 +4,7 @@ import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.economy.LedgerEntry;
 import com.glyph.api.economy.Money;
 import com.glyph.api.economy.TopBalance;
+import com.glyph.api.economy.TransactionType;
 import com.glyph.api.economy.TransferResult;
 import java.util.List;
 import java.util.Objects;
@@ -138,6 +139,38 @@ public final class EconomyService implements EconomyApi {
         int capped = Math.clamp(limit, 1, 50);
         return CompletableFuture.supplyAsync(
                 () -> repository.history(playerUuid, capped), ioExecutor);
+    }
+
+    /**
+     * Mint ({@link AdminOperation#ADD}) or burn ({@link AdminOperation#REMOVE})
+     * through the ledger as {@code SYSTEM_REWARD} / {@code SYSTEM_SINK}.
+     * Used by Forever World warps, claim-block packs, and similar sinks.
+     */
+    public CompletableFuture<TransferResult> systemAdjust(
+            UUID playerUuid, AdminOperation operation, Money amount,
+            TransactionType type, String reason) {
+        if (amount == null || !amount.isPositive()) {
+            return CompletableFuture.completedFuture(
+                    TransferResult.failure(TransferResult.Status.INVALID_AMOUNT));
+        }
+        if (!databaseReady.getAsBoolean()) {
+            return CompletableFuture.completedFuture(
+                    TransferResult.failure(TransferResult.Status.FAILED));
+        }
+        return CompletableFuture
+                .supplyAsync(() -> repository.externalAdjust(
+                        playerUuid, operation, amount.dollars(), type, reason), ioExecutor)
+                .thenApply(outcome -> {
+                    if (outcome.result().isSuccess()) {
+                        notifyBalance(playerUuid, outcome.sourceBalanceAfter());
+                    }
+                    return outcome.result();
+                })
+                .exceptionally(error -> {
+                    logger.error("System adjust failed: {} {} on {} ({})",
+                            operation, amount, playerUuid, reason, error);
+                    return TransferResult.failure(TransferResult.Status.FAILED);
+                });
     }
 
     @Override

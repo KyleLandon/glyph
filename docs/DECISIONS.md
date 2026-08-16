@@ -243,3 +243,20 @@ on port 25565 (no playit). `/server smp` still works after login.
 LuckPerms uses the same Postgres with `server: smp`.
 
 Do not put both rule-sets in one Folia. See `docs/LOCAL_TEST_SERVER.md`.
+
+## ADR-014: Forever World hang-out loop
+
+**Status:** accepted (2026-08-15)
+
+Forever World is the build/hang-out backend, so GlyphCore owns the social
+loop that anarchy refuses: `/spawn`, `/wild`, `/tpa`, `/sit`, `/warp`,
+`/shop`, `/trade`, `/claimblocks`, `/mapimage`, one-player sleep, and an
+armor-stand editor. Money movement (warp listing, claim-block packs, shops,
+trades) goes through the Glyph ledger (`SYSTEM_SINK` / player transfers).
+GriefPrevention stays the claim plugin; GlyphCore talks to it by reflection.
+
+**Not reimplemented:** CoreProtect (staff rollback) and BlueMap (web map).
+Those stay third-party, SMP-only, never on Folia anarchy.
+
+**Spawn market** is an admin command (`/glyph market build`), not a generated
+world. Staff still assign stalls with GP trust.

@@ -4,6 +4,7 @@ import com.glyph.api.health.ComponentHealth;
 import com.glyph.api.health.HealthReport;
 import com.glyph.api.health.HealthStatus;
 import com.glyph.core.GlyphCorePlugin;
+import com.glyph.core.smp.market.MarketBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,7 +24,7 @@ import org.bukkit.entity.Player;
  */
 public final class GlyphCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBCOMMANDS = List.of("status", "version", "restart");
+    private static final List<String> SUBCOMMANDS = List.of("status", "version", "restart", "setspawn", "market");
 
     private final GlyphCorePlugin plugin;
     private final RestartCommand restart;
@@ -40,10 +41,42 @@ public final class GlyphCommand implements CommandExecutor, TabCompleter {
             case "status" -> status(sender);
             case "version" -> version(sender);
             case "restart" -> restart.startCountdown(sender);
+            case "setspawn" -> setSpawn(sender);
+            case "market" -> market(sender, args);
             default -> sender.sendMessage(Component.text(
-                    "Usage: /" + label + " <status|version|restart>", NamedTextColor.RED));
+                    "Usage: /" + label + " <status|version|restart|setspawn|market>",
+                    NamedTextColor.RED));
         }
         return true;
+    }
+
+    private void setSpawn(CommandSender sender) {
+        if (!plugin.settings().role().isSmp()) {
+            sender.sendMessage(Component.text("Set spawn on the Forever World.", NamedTextColor.RED));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Stand where spawn should be.", NamedTextColor.RED));
+            return;
+        }
+        player.getWorld().setSpawnLocation(player.getLocation());
+        player.sendMessage(Component.text("World spawn set here. /spawn uses this.", NamedTextColor.GREEN));
+    }
+
+    private void market(CommandSender sender, String[] args) {
+        if (!plugin.settings().role().isSmp()) {
+            sender.sendMessage(Component.text("The market street is Forever World only.", NamedTextColor.RED));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Stand near spawn to build the market.", NamedTextColor.RED));
+            return;
+        }
+        if (args.length < 2 || !args[1].equalsIgnoreCase("build")) {
+            sender.sendMessage(Component.text("Usage: /glyph market build", NamedTextColor.RED));
+            return;
+        }
+        MarketBuilder.build(player);
     }
 
     private void version(CommandSender sender) {
@@ -101,6 +134,10 @@ public final class GlyphCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
             return SUBCOMMANDS.stream().filter(s -> s.startsWith(prefix)).toList();
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("market")
+                && "build".startsWith(args[1].toLowerCase(Locale.ROOT))) {
+            return List.of("build");
         }
         return List.of();
     }

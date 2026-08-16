@@ -95,10 +95,26 @@ public final class SettingsLoader {
                 boolVal(config, "starter.enabled", true),
                 starterItems(config));
 
+        SmpSettings smpSettings = new SmpSettings(
+                intVal(config, "smp.wild.min-radius", null, 500),
+                intVal(config, "smp.wild.max-radius", null, 15_000),
+                intVal(config, "smp.wild.cooldown-seconds", null, 300),
+                intVal(config, "smp.wild.max-attempts", null, 24),
+                intVal(config, "smp.tpa.timeout-seconds", null, 60),
+                boolVal(config, "smp.sleep.one-player", true),
+                longVal(config, "smp.warps.create-cost", null, 250L),
+                intVal(config, "smp.warps.max-per-player", null, 3),
+                longVal(config, "smp.claim-blocks.pack-price", null, 50L),
+                intVal(config, "smp.claim-blocks.pack-size", null, 100),
+                boolVal(config, "smp.sit", true),
+                boolVal(config, "smp.shops", true),
+                boolVal(config, "smp.trade", true),
+                boolVal(config, "smp.image-maps", true));
+
         return new GlyphSettings(
                 serverId, role, databaseSettings, redisSettings, economySettings, tabSettings,
                 auctionSettings, bountySettings, rewardSettings, glyphSettings, discordSettings,
-                chatSettings, starterSettings);
+                chatSettings, starterSettings, smpSettings);
     }
 
     private List<StarterSettings.StarterItem> starterItems(ConfigurationSection config) {

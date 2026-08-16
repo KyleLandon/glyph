@@ -46,18 +46,31 @@ Copy-SharedJar "LuckPerms-Bukkit-*.jar" "LuckPerms"
 Copy-SharedJar "VaultUnlocked-*.jar" "VaultUnlocked"
 Copy-SharedJar "voicechat-bukkit-*.jar" "voicechat"
 
-$gp = Get-ChildItem -Path $smpPlugins -Filter "GriefPrevention*.jar" -File -ErrorAction SilentlyContinue |
-    Select-Object -First 1
-if (-not $gp) {
-    $gpUrl = "https://cdn.modrinth.com/data/O4o4mKaq/versions/dGfCZHqk/GriefPrevention.jar"
-    Write-Host "Downloading GriefPrevention 16.18.7..."
-    Invoke-WebRequest -Uri $gpUrl -OutFile (Join-Path $smpPlugins "GriefPrevention-16.18.7.jar") -Headers @{
+function Get-PluginJar([string]$pattern, [string]$url, [string]$destName, [string]$label) {
+    $existing = Get-ChildItem -Path $smpPlugins -Filter $pattern -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($existing) {
+        Write-Host "$label already present: $($existing.Name)"
+        return
+    }
+    Write-Host "Downloading $label..."
+    Invoke-WebRequest -Uri $url -OutFile (Join-Path $smpPlugins $destName) -Headers @{
         "User-Agent" = "glyph-setup-smp/0.1 (https://glyphmc.net)"
     }
-    Write-Host "Saved GriefPrevention-16.18.7.jar"
-} else {
-    Write-Host "GriefPrevention already present: $($gp.Name)"
+    Write-Host "Saved $destName"
 }
+
+Get-PluginJar "GriefPrevention*.jar" `
+    "https://cdn.modrinth.com/data/O4o4mKaq/versions/dGfCZHqk/GriefPrevention.jar" `
+    "GriefPrevention-16.18.7.jar" "GriefPrevention 16.18.7"
+
+Get-PluginJar "CoreProtect*.jar" `
+    "https://cdn.modrinth.com/data/Lu3KuzdV/versions/Kma0kBsY/CoreProtect-CE-24.0.jar" `
+    "CoreProtect-CE-24.0.jar" "CoreProtect 24.0"
+
+Get-PluginJar "bluemap*.jar" `
+    "https://cdn.modrinth.com/data/swbUV1cr/versions/K5U1ASjn/bluemap-5.23-paper.jar" `
+    "bluemap-5.23-paper.jar" "BlueMap 5.23"
 
 $gpConfig = Join-Path $smpPlugins "GriefPreventionData\config.yml"
 if (Test-Path $gpConfig) {
@@ -65,6 +78,8 @@ if (Test-Path $gpConfig) {
     $gpc = $gpc -replace '(?m)^    InitialBlocks: \d+\s*$', '    InitialBlocks: 10000'
     $gpc = $gpc -replace '(?m)(Claim Blocks Accrued Per Hour:\r?\n      Default: )\d+', '${1}500'
     $gpc = $gpc -replace '(?m)(Max Accrued Claim Blocks:\r?\n      Default: )\d+', '${1}100000'
+    $gpc = $gpc -replace '(?m)^    HoppersRequireBuildTrust: false\s*$', '    HoppersRequireBuildTrust: true'
+    $gpc = $gpc -replace '(?m)^    BlockedSlashCommands: .*$', '    BlockedSlashCommands: /home;/vanish;/spawn;/tpa;/tpahere;/tpaccept;/wild;/warp;/warps'
     Set-Content -Path $gpConfig -Value $gpc -Encoding UTF8 -NoNewline
     Write-Host "GriefPrevention: 10000 starting claim blocks, 500 / hour, max 100000"
 }
@@ -101,6 +116,10 @@ if (Test-Path $vcSrc) {
     Set-Content -Path $vcDest -Value $vc -Encoding UTF8
     Write-Host "voicechat UDP 24455 (Folia keeps 24454)"
 }
+
+Write-Host "CoreProtect: staff /co inspect and /co rollback (SMP only)."
+Write-Host "BlueMap: first start generates plugins/BlueMap; web map defaults to port 8100."
+Write-Host "After spawn exists: /glyph setspawn and /glyph market build"
 
 Write-Host "Next: scripts\build_glyphcore.ps1"
 Write-Host "Then start Paper once (glyph-smp\start.ps1), stop it, scripts\sync-forwarding-secret.ps1"

@@ -21,7 +21,8 @@ public record GlyphSettings(
         GlyphCurrencySettings glyphs,
         DiscordSettings discord,
         ChatSettings chat,
-        StarterSettings starter) {
+        StarterSettings starter,
+        SmpSettings smp) {
 
     /**
      * Saves default config files if missing, then loads them applying

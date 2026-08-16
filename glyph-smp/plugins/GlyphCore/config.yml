@@ -61,3 +61,24 @@ starter:
     - STONE_SHOVEL
     - BREAD:16
     - TORCH:16
+
+smp:
+  wild:
+    min-radius: 500
+    max-radius: 15000
+    cooldown-seconds: 300
+    max-attempts: 24
+  tpa:
+    timeout-seconds: 60
+  sleep:
+    one-player: true
+  warps:
+    create-cost: 250
+    max-per-player: 3
+  claim-blocks:
+    pack-price: 50
+    pack-size: 100
+  sit: true
+  shops: true
+  trade: true
+  image-maps: true

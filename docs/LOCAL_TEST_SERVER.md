@@ -129,13 +129,17 @@ op <your-name>
 | spark | ✔ | — | Profiling (GDD section 74). |
 | Chunky | ✔ | — | World pregeneration (GDD Phase 9). Folia-safe Bukkit jar. Anarchy only. |
 | LuckPerms / Vault / voicechat | also on Paper SMP | — | Copied by `scripts\setup-smp.ps1`. Same Postgres; LuckPerms `server: smp`. |
+| GriefPrevention | Paper SMP | — | Land claims. |
+| CoreProtect | Paper SMP | — | Staff inspect/rollback. Downloaded by `setup-smp.ps1`. |
+| BlueMap | Paper SMP | — | Web map (port 8100). Anarchy stays unmapped. |
 
 # Paper SMP backend (`glyph-smp/`)
 
 Independent Paper 26.1.2 process. GlyphCore `server.role: smp` turns off
-`/bounty` combat, playtime pay, and the anarchy starter kit. `/ah` is on
-(its own market — items never cross). `/bal`, `/pay`, `/glyphs`, `/stats`,
-`/top` still hit the shared database.
+`/bounty` combat. Playtime pay is **$5 / 15m**. `/ah` is on (its own market
+— items never cross). `/bal`, `/pay`, `/glyphs`, `/stats`, `/top` still hit
+the shared database. Homes, claims, `/spawn`, `/wild`, `/tpa`, warps, chest
+shops, `/trade`, `/sit`, and `/claimblocks` are SMP-only.
 
 ```powershell
 scripts\setup-smp.ps1            # download Paper + copy LuckPerms/Vault/voicechat

@@ -78,6 +78,27 @@ import com.glyph.core.stats.StatsService;
 import com.glyph.core.stats.command.PlaytimeCommand;
 import com.glyph.core.stats.command.StatsCommand;
 import com.glyph.core.stats.command.TopCommand;
+import com.glyph.core.smp.SmpWorldListener;
+import com.glyph.core.smp.armorstand.ArmorStandEditor;
+import com.glyph.core.smp.command.ClaimBlocksCommand;
+import com.glyph.core.smp.command.MapImageCommand;
+import com.glyph.core.smp.command.ShopCommand;
+import com.glyph.core.smp.command.SitCommand;
+import com.glyph.core.smp.command.SpawnCommand;
+import com.glyph.core.smp.command.TpaCommand;
+import com.glyph.core.smp.command.TradeCommand;
+import com.glyph.core.smp.command.WarpCommand;
+import com.glyph.core.smp.command.WildCommand;
+import com.glyph.core.smp.imagemap.ImageMapService;
+import com.glyph.core.smp.shop.ChestShopService;
+import com.glyph.core.smp.shop.PostgresChestShopRepository;
+import com.glyph.core.smp.shop.ShopListener;
+import com.glyph.core.smp.sit.SitService;
+import com.glyph.core.smp.sleep.OnePlayerSleepListener;
+import com.glyph.core.smp.tpa.TpaService;
+import com.glyph.core.smp.trade.TradeGui;
+import com.glyph.core.smp.warp.PostgresWarpRepository;
+import com.glyph.core.smp.warp.WarpService;
 import com.glyph.core.world.CreeperGriefListener;
 import java.time.Duration;
 import java.util.List;
@@ -119,6 +140,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
     private GlyphsService glyphsService;
     private StatsService statsService;
     private PlaytimeRewardService playtimeRewardService;
+    private SitService sitService;
     private final AtomicBoolean sweeperRunning = new AtomicBoolean();
 
     @Override
@@ -317,6 +339,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(tabList, this);
 
         final NicknameService nicknameService;
+        final ChestShopService chestShops;
         if (settings.role().isSmp()) {
             HomeCommand homeCommand = new HomeCommand(
                     new HomeService(
@@ -352,8 +375,85 @@ public final class GlyphCorePlugin extends JavaPlugin {
             registerCommand("nickname", nicknameCommand, nicknameCommand);
             registerCommand("me", new MeCommand(nicknameService, settings.chat()), null);
             getServer().getPluginManager().registerEvents(new CreeperGriefListener(), this);
+            getServer().getPluginManager().registerEvents(
+                    new SmpWorldListener(this, settings.smp()), this);
+            if (settings.smp().onePlayerSleep()) {
+                getServer().getPluginManager().registerEvents(
+                        new OnePlayerSleepListener(this), this);
+            }
+
+            registerCommand("spawn", new SpawnCommand(schedulerAdapter), null);
+            registerCommand("wild", new WildCommand(settings.smp(), schedulerAdapter), null);
+
+            TpaCommand tpaCommand = new TpaCommand(
+                    new TpaService(), settings.smp(), schedulerAdapter);
+            getServer().getPluginManager().registerEvents(tpaCommand, this);
+            registerCommand("tpa", tpaCommand, tpaCommand);
+            registerCommand("tpahere", tpaCommand, tpaCommand);
+            registerCommand("tpaccept", tpaCommand, tpaCommand);
+            registerCommand("tpdeny", tpaCommand, tpaCommand);
+
+            this.sitService = new SitService();
+            if (settings.smp().sitEnabled()) {
+                getServer().getPluginManager().registerEvents(sitService, this);
+                registerCommand("sit", new SitCommand(sitService), null);
+            } else {
+                registerCommand("sit", new SmpOnlyCommand("Sitting"), null);
+            }
+
+            ClaimBlocksCommand claimBlocks = new ClaimBlocksCommand(
+                    economyService, settings.smp(), settings.economy(), schedulerAdapter);
+            registerCommand("claimblocks", claimBlocks, claimBlocks);
+
+            WarpService warpService = new WarpService(
+                    new PostgresWarpRepository(
+                            databaseManager::dataSource, settings.role().marketId()),
+                    databaseManager::isReady,
+                    settings.smp().maxWarpsPerPlayer(),
+                    getSLF4JLogger());
+            WarpCommand warpCommand = new WarpCommand(
+                    warpService, economyService, settings.smp(), settings.economy(),
+                    schedulerAdapter);
+            registerCommand("warp", warpCommand, warpCommand);
+            registerCommand("warps", warpCommand, warpCommand);
+
+            chestShops = new ChestShopService(
+                    new PostgresChestShopRepository(
+                            databaseManager::dataSource, settings.role().marketId()),
+                    databaseManager::isReady,
+                    getSLF4JLogger());
+            if (settings.smp().shopsEnabled()) {
+                ShopCommand shopCommand = new ShopCommand(
+                        chestShops, settings.economy(), schedulerAdapter);
+                registerCommand("shop", shopCommand, shopCommand);
+                getServer().getPluginManager().registerEvents(
+                        new ShopListener(chestShops, economyService, settings.economy(),
+                                schedulerAdapter, getSLF4JLogger()), this);
+            } else {
+                registerCommand("shop", new SmpOnlyCommand("Chest shops"), null);
+            }
+
+            if (settings.smp().tradeEnabled()) {
+                TradeGui tradeGui = new TradeGui(
+                        economyService, settings.economy(), schedulerAdapter);
+                getServer().getPluginManager().registerEvents(tradeGui, this);
+                TradeCommand tradeCommand = new TradeCommand(tradeGui);
+                registerCommand("trade", tradeCommand, tradeCommand);
+            } else {
+                registerCommand("trade", new SmpOnlyCommand("Trading"), null);
+            }
+
+            getServer().getPluginManager().registerEvents(new ArmorStandEditor(), this);
+
+            if (settings.smp().imageMapsEnabled()) {
+                MapImageCommand mapImage = new MapImageCommand(new ImageMapService(schedulerAdapter));
+                registerCommand("mapimage", mapImage, mapImage);
+            } else {
+                registerCommand("mapimage", new SmpOnlyCommand("Image maps"), null);
+            }
         } else {
             nicknameService = null;
+            chestShops = null;
             CommandExecutor noHomes = new SmpOnlyCommand("Homes");
             registerCommand("home", noHomes, null);
             registerCommand("sethome", noHomes, null);
@@ -362,6 +462,20 @@ public final class GlyphCorePlugin extends JavaPlugin {
             CommandExecutor noNicks = new SmpOnlyCommand("Nicknames");
             registerCommand("nickname", noNicks, null);
             registerCommand("me", new SmpOnlyCommand("Emotes"), null);
+            CommandExecutor forever = new SmpOnlyCommand("This");
+            registerCommand("spawn", forever, null);
+            registerCommand("wild", forever, null);
+            registerCommand("tpa", forever, null);
+            registerCommand("tpahere", forever, null);
+            registerCommand("tpaccept", forever, null);
+            registerCommand("tpdeny", forever, null);
+            registerCommand("sit", forever, null);
+            registerCommand("claimblocks", forever, null);
+            registerCommand("warp", forever, null);
+            registerCommand("warps", forever, null);
+            registerCommand("shop", forever, null);
+            registerCommand("trade", forever, null);
+            registerCommand("mapimage", forever, null);
         }
 
         StarterKitService starterKit = new StarterKitService(this, settings.starter(), settings.role());
@@ -429,6 +543,10 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 getSLF4JLogger().error(
                         "PostgreSQL initialization failed — economy features will be unavailable "
                                 + "until the database is reachable", error);
+                return;
+            }
+            if (chestShops != null) {
+                chestShops.loadCache();
             }
         });
         redisManager.initAsync().whenComplete((ignored, error) -> {
@@ -525,6 +643,9 @@ public final class GlyphCorePlugin extends JavaPlugin {
             } catch (Exception e) {
                 getSLF4JLogger().error("Final stats flush failed", e);
             }
+        }
+        if (sitService != null) {
+            sitService.standAll();
         }
         GlyphApiProvider.unregister();
         getServer().getServicesManager().unregisterAll(this);

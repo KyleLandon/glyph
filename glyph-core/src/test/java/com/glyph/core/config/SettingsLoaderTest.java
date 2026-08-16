@@ -218,6 +218,12 @@ class SettingsLoaderTest {
         assertThat(settings.chat().localRadius()).isEqualTo(100);
         assertThat(settings.starter().enabled()).isTrue();
         assertThat(settings.starter().items()).isEqualTo(StarterSettings.defaults());
+        assertThat(settings.smp().wildMinRadius()).isEqualTo(500);
+        assertThat(settings.smp().warpCreateCost()).isEqualTo(250);
+        assertThat(settings.smp().claimBlockPackPrice()).isEqualTo(50);
+        assertThat(settings.smp().claimBlockPackSize()).isEqualTo(100);
+        assertThat(settings.smp().onePlayerSleep()).isTrue();
+        assertThat(settings.smp().shopsEnabled()).isTrue();
     }
 
     @Test

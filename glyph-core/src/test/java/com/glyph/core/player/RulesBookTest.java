@@ -32,13 +32,16 @@ class RulesBookTest {
                 .map(PLAIN::serialize)
                 .reduce("", (a, b) -> a + "\n" + b);
 
-        assertThat(RulesBook.smpPages()).hasSize(1);
+        assertThat(RulesBook.smpPages()).hasSize(2);
         assertThat(all).contains("FOREVER WORLD");
         assertThat(all).contains("This world stays");
         assertThat(all).contains("Golden shovel");
         assertThat(all).contains("/sethome");
         assertThat(all).contains("/nickname");
         assertThat(all).contains("/me");
+        assertThat(all).contains("/wild");
+        assertThat(all).contains("/tpa");
+        assertThat(all).contains("/shop");
         assertThat(all).contains("same wallet");
         assertThat(all).contains("/server anarchy");
     }

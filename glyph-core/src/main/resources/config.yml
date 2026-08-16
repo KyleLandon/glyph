@@ -4,8 +4,8 @@
 server:
   # Unique identifier of this backend server. Override: GLYPH_SERVER_ID
   id: glyph-01
-  # anarchy | smp — same $ / Glyphs wallet; SMP turns off bounties and
-  # playtime faucet. Homes and claims are Forever World only. Override: GLYPH_SERVER_ROLE
+  # anarchy | smp — same $ / Glyphs wallet; SMP turns off bounties.
+  # Homes, claims, warps, shops, and /tpa are Forever World only. Override: GLYPH_SERVER_ROLE
   role: anarchy
 
 economy:
@@ -96,3 +96,25 @@ starter:
     - STONE_SHOVEL
     - BREAD:16
     - TORCH:16
+
+# Forever World only (ignored on anarchy).
+smp:
+  wild:
+    min-radius: 500
+    max-radius: 15000
+    cooldown-seconds: 300
+    max-attempts: 24
+  tpa:
+    timeout-seconds: 60
+  sleep:
+    one-player: true
+  warps:
+    create-cost: 250
+    max-per-player: 3
+  claim-blocks:
+    pack-price: 50
+    pack-size: 100
+  sit: true
+  shops: true
+  trade: true
+  image-maps: true

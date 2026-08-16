@@ -100,8 +100,37 @@ Only on `smp.glyphmc.net` / `/server smp`. Anarchy has neither.
 | `/abandonclaim` | Drop the claim you are standing in |
 
 Everyone starts with **10,000** claim blocks (about 100×100). Active play
-earns **500** more per hour, up to **100,000**. Land claims use the golden
-shovel and `/claim`. Auction mail is `/ah mail`.
+earns **500** more per hour, up to **100,000**. Extra packs: **100 blocks
+for $50** via `/claimblocks buy`. Land claims use the golden shovel and
+`/claim`. Auction mail is `/ah mail`.
+
+### Getting around and hanging out
+
+| Command | What it does |
+| --- | --- |
+| `/spawn` | Teleport to world spawn |
+| `/wild` | Random unclaimed overworld (5 min cooldown) |
+| `/tpa <player>` | Ask to teleport to them |
+| `/tpahere <player>` | Ask them to teleport to you |
+| `/tpaccept` / `/tpdeny` | Answer a request (60s) |
+| `/sit` | Sit. Right-click stairs/slabs too. Sneak to stand |
+| `/warp <name>` | Go to a public player warp |
+| `/warp set <name>` | List a warp here (**$250**, max 3, on land you can build) |
+| `/warp delete <name>` | Remove your warp |
+| `/warps` | List public warps |
+| `/shop sell <price>` | Chest shop: others buy the held item from this chest |
+| `/shop buy <price>` | Chest shop: others sell that item to this chest |
+| `/shop remove` | Delete the shop you are looking at |
+| `/trade <player>` | Secure item + money trade (within 10 blocks) |
+| `/claimblocks` | Remaining claim blocks |
+| `/claimblocks buy [packs]` | Buy 100 blocks for $50 per pack |
+| `/mapimage <https url>` | Paint a held map from an image |
+
+One player sleeping skips the night. Sneak + right-click an armor stand
+on your land to pose it. Shop owners sneak + right-click to open the chest.
+
+Staff: `/glyph setspawn` and `/glyph market build` (five stalls south of
+spawn). CoreProtect (`/co`) and BlueMap (web map, port 8100) are SMP-only.
 
 ---
 
@@ -252,6 +281,8 @@ Not for normal players:
 | `/starter <player>` | Force-give the starter pack (player must be online) |
 | `/glyph status` | Infrastructure health |
 | `/glyph version` | Plugin version |
+| `/glyph setspawn` | Forever World: set world spawn here |
+| `/glyph market build` | Forever World: build the 5-stall street south of spawn |
 | `/restart` | 10-second chat countdown, then restart Folia |
 | `/glyph restart` | Same as `/restart` |
 | `/tps` | Region tick health (ops) |
@@ -282,6 +313,10 @@ Stats
 
 Discord link
  /linkdiscord  ·  then /link <code> in Discord
+
+Forever World (smp.glyphmc.net)
+ /spawn  /wild  /tpa  /home  /warp  /shop  /trade  /sit  /claimblocks
+ Claims, homes, chest shops. Same $ / Glyphs. Own /ah.
 
 Voice: Simple Voice Chat (optional) — pack: github.com/KyleLandon/glyph-clientmods
 

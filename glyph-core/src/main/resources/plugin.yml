@@ -7,7 +7,7 @@ description: Core platform plugin for the Glyph anarchy-economy network.
 authors: [Glyph]
 # VaultUnlocked registers under the plugin name "Vault"; load after it so the
 # economy bridge can register (GlyphCore works fine without it).
-softdepend: [Vault]
+softdepend: [Vault, GriefPrevention, CoreProtect, BlueMap]
 
 # Downloaded by the server from Maven Central at startup; keep versions in
 # sync with gradle/libs.versions.toml (they are injected at build time).
@@ -21,7 +21,7 @@ libraries:
 commands:
   glyph:
     description: Glyph platform administration.
-    usage: /glyph <status|version|restart>
+    usage: /glyph <status|version|restart|setspawn|market>
     permission: glyph.admin
   restart:
     description: Restart this backend after a 10-second countdown.
@@ -135,6 +135,63 @@ commands:
     description: Nearby roleplay emote.
     usage: /me <action>
     permission: glyph.me
+  spawn:
+    description: Teleport to Forever World spawn.
+    usage: /spawn
+    permission: glyph.spawn
+  wild:
+    description: Random unclaimed overworld teleport.
+    usage: /wild
+    aliases: [rtp]
+    permission: glyph.wild
+  tpa:
+    description: Request to teleport to a player.
+    usage: /tpa <player>
+    permission: glyph.tpa
+  tpahere:
+    description: Request a player to teleport to you.
+    usage: /tpahere <player>
+    permission: glyph.tpa
+  tpaccept:
+    description: Accept a teleport request.
+    usage: /tpaccept
+    aliases: [tpyes]
+    permission: glyph.tpa
+  tpdeny:
+    description: Deny a teleport request.
+    usage: /tpdeny
+    aliases: [tpno]
+    permission: glyph.tpa
+  sit:
+    description: Sit down. Sneak to stand.
+    usage: /sit
+    permission: glyph.sit
+  claimblocks:
+    description: View or buy extra claim blocks.
+    usage: /claimblocks [buy [packs]]
+    aliases: [blocks, buyclaimblocks]
+    permission: glyph.claimblocks
+  warp:
+    description: Forever World player warps.
+    usage: /warp [name | set <name> | delete <name> | list]
+    permission: glyph.warp
+  warps:
+    description: List Forever World player warps.
+    usage: /warps
+    permission: glyph.warp
+  shop:
+    description: Chest shops on claimed land.
+    usage: /shop sell <price> | buy <price> | remove
+    permission: glyph.shop
+  trade:
+    description: Secure two-player trade.
+    usage: /trade <player>
+    permission: glyph.trade
+  mapimage:
+    description: Paint a map from an HTTPS image URL.
+    usage: /mapimage <https-url>
+    aliases: [imagemap]
+    permission: glyph.mapimage
 
 permissions:
   glyph.admin:
@@ -190,4 +247,31 @@ permissions:
     default: true
   glyph.me:
     description: Access to /me emotes on the Forever World.
+    default: true
+  glyph.spawn:
+    description: Access to /spawn on the Forever World.
+    default: true
+  glyph.wild:
+    description: Access to /wild on the Forever World.
+    default: true
+  glyph.tpa:
+    description: Access to /tpa, /tpahere, /tpaccept, /tpdeny.
+    default: true
+  glyph.sit:
+    description: Access to /sit on the Forever World.
+    default: true
+  glyph.claimblocks:
+    description: Access to /claimblocks.
+    default: true
+  glyph.warp:
+    description: Access to /warp and /warps.
+    default: true
+  glyph.shop:
+    description: Access to /shop chest shops.
+    default: true
+  glyph.trade:
+    description: Access to /trade.
+    default: true
+  glyph.mapimage:
+    description: Access to /mapimage.
     default: true

@@ -12,7 +12,7 @@ GriefPrevention:
       world: Survival
     PreventGlobalMonsterEggs: true
     PreventTheft: true
-    HoppersRequireBuildTrust: false
+    HoppersRequireBuildTrust: true
     ProtectCreatures: true
     PreventButtonsSwitches: true
     LockWoodenDoors: false
@@ -81,7 +81,7 @@ GriefPrevention:
     PunishLogout: true
     CombatTimeoutSeconds: 15
     AllowCombatItemDrop: false
-    BlockedSlashCommands: /home;/vanish;/spawn;/tpa
+    BlockedSlashCommands: /home;/vanish;/spawn;/tpa;/tpahere;/tpaccept;/wild;/warp;/warps
     ProtectPlayersInLandClaims:
       PlayerOwnedClaims: true
       AdministrativeClaims: true
