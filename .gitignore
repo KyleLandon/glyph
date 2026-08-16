@@ -67,6 +67,7 @@ glyph-smp/plugins/.paper-remapped/
 glyph-smp/plugins/bStats/
 glyph-smp/plugins/Vault/
 glyph-smp/plugins/BlueMap/
+glyph-smp/bluemap/
 glyph-smp/plugins/CoreProtect/
 # Fetched/copied by scripts/setup-smp.ps1 — do not duplicate Folia jars.
 glyph-smp/*.jar

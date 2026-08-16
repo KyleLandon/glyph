@@ -34,6 +34,7 @@ Voice: UDP 24454 (anarchy) / 24455 (SMP) on the desktop NIC
 | SMP | **`smp.glyphmc.net`** |
 | Default / alias | **`play.glyphmc.net`** (anarchy) |
 | Voice | UDP 24454 anarchy, UDP 24455 SMP |
+| Forever World map | **https://map.glyphmc.net** (Cloudflare Tunnel → BlueMap `127.0.0.1:8100`) |
 
 No Minecraft SRV records. Default port 25565. Forced hosts see the name
 the player typed, so `smp.glyphmc.net` lands on Paper.
@@ -88,7 +89,9 @@ scripts\cloudflare-ddns.ps1
 ```
 
 Do not put `glyphmc.net` (apex) in `GLYPH_DNS_RECORD` — that CNAME is the
-Pages site.
+Pages site. Do not put `map.glyphmc.net` there either — Cloudflare Tunnel
+`glyph-map` owns that hostname (`scripts\setup-bluemap-tunnel.ps1`). BlueMap
+listens on `127.0.0.1:8100` only; do not forward port 8100.
 
 Scheduled task "Glyph DDNS" every 5 minutes.
 
@@ -96,7 +99,7 @@ Scheduled task "Glyph DDNS" every 5 minutes.
 
 Run `scripts\setup-firewall.ps1` **as Administrator** on the desktop.
 Opens TCP 25565 and UDP 24454/24455. Backend ports 25566/25567 stay closed
-(localhost bind only, GDD section 38).
+(localhost bind only, GDD section 38). Do not open 8100; BlueMap is tunneled.
 
 ### 5. Verify
 

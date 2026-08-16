@@ -154,9 +154,27 @@ body.modal-open {
   cursor: pointer;
 }
 
-.world .btn-copy {
+.world .btn-copy,
+.world .btn-map-card {
   width: 100%;
   padding: 0.7rem 1rem;
+}
+
+.world .btn-map-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.55rem;
+  background: transparent;
+  color: var(--cyan);
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  font-size: 0.85rem;
+}
+
+.world .btn-map-card:hover {
+  transform: translateY(-1px);
+  background: rgba(34, 211, 238, 0.12);
+  box-shadow: 0 10px 28px rgba(34, 211, 238, 0.16);
 }
 
 .join-addresses {
@@ -261,6 +279,7 @@ body.modal-open {
     0 16px 48px rgba(168, 85, 247, 0.22);
 }
 
+.btn-map,
 .btn-discord {
   display: inline-flex;
   align-items: center;
@@ -271,6 +290,17 @@ body.modal-open {
   color: var(--ink);
   border: 1px solid rgba(242, 244, 248, 0.28);
   font-size: 1.05rem;
+}
+
+.btn-map {
+  border-color: rgba(34, 211, 238, 0.4);
+  color: var(--cyan);
+}
+
+.btn-map:hover {
+  transform: translateY(-2px);
+  background: rgba(34, 211, 238, 0.14);
+  box-shadow: 0 12px 36px rgba(34, 211, 238, 0.18);
 }
 
 .btn-discord:hover {
@@ -572,6 +602,7 @@ body.modal-open {
   }
 
   .btn-join,
+  .btn-map,
   .btn-discord {
     width: 100%;
     min-width: 0;

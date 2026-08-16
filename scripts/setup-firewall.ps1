@@ -2,8 +2,10 @@
 # Run as Administrator. Idempotent: removes old rules with the same name first.
 #
 #   TCP 25565 -> Velocity proxy (Minecraft)
-#   UDP 24454 -> Simple Voice Chat
+#   UDP 24454 -> Simple Voice Chat (anarchy)
+#   UDP 24455 -> Simple Voice Chat (Forever World)
 #
+# BlueMap is localhost + Cloudflare Tunnel (map.glyphmc.net). Do not open 8100.
 # The Folia backend (25566) stays closed: it binds 127.0.0.1 only and must
 # never be reachable from outside (GDD section 38).
 
