@@ -42,7 +42,12 @@ if (-not $zoneId) {
     exit 1
 }
 
+$ddnsSkip = @("glyphmc.net", "www.glyphmc.net", "map.glyphmc.net")
 foreach ($name in ($record -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })) {
+    if ($ddnsSkip -contains $name) {
+        Write-Output "$(Get-Date -Format s) skipping $name (Pages or BlueMap tunnel — not a Minecraft A record)"
+        continue
+    }
     $existing = (Invoke-RestMethod "$api/zones/$zoneId/dns_records?type=A&name=$name" -Headers $headers).result
 
     if (-not $existing) {

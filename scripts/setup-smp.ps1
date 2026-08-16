@@ -118,7 +118,8 @@ if (Test-Path $vcSrc) {
 }
 
 Write-Host "CoreProtect: staff /co inspect and /co rollback (SMP only)."
-Write-Host "BlueMap: first start generates plugins/BlueMap; web map defaults to port 8100."
+Write-Host "BlueMap: first start generates plugins/BlueMap; web map listens on 127.0.0.1:8100."
+Write-Host "Public map: scripts\setup-bluemap-tunnel.ps1 then https://glyphmc.net/map/"
 Write-Host "After spawn exists: /glyph setspawn and /glyph market build"
 
 Write-Host "Next: scripts\build_glyphcore.ps1"

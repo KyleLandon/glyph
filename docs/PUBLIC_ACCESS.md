@@ -34,6 +34,7 @@ Voice: UDP 24454 (anarchy) / 24455 (SMP) on the desktop NIC
 | SMP | **`smp.glyphmc.net`** |
 | Default / alias | **`play.glyphmc.net`** (anarchy) |
 | Voice | UDP 24454 anarchy, UDP 24455 SMP |
+| Forever World map | **https://glyphmc.net/map/** (iframe of `map.glyphmc.net`) |
 
 No Minecraft SRV records. Default port 25565. Forced hosts see the name
 the player typed, so `smp.glyphmc.net` lands on Paper.
@@ -51,7 +52,29 @@ Desktop LAN IP is **192.168.4.24** (reserve it in DHCP).
 | 24454         | UDP      | 192.168.4.24:24454       | Anarchy voice |
 | 24455         | UDP      | 192.168.4.24:24455       | SMP voice  |
 
-Never forward 25566 or 25567.
+Never forward 25566, 25567, or BlueMap 8100. The map is HTTPS via Cloudflare
+Tunnel, not a router port.
+
+### Forever World map (BlueMap)
+
+Live tiles cannot live on Cloudflare Pages. The site at
+**https://glyphmc.net/map/** is a full-page iframe of
+**https://map.glyphmc.net**, which a Cloudflare Tunnel on the desktop
+forwards to BlueMap at `127.0.0.1:8100`.
+
+One-time on the desktop (Admin to install the Windows service):
+
+```powershell
+scripts\setup-bluemap-tunnel.ps1
+```
+
+That logs into Cloudflare in a browser, creates tunnel `glyph-map`, points
+`map.glyphmc.net` at it (proxied CNAME), binds BlueMap to localhost, and
+installs `cloudflared` so the tunnel survives reboot. `start-all.ps1` will
+start the service if it is down.
+
+Do not orange-cloud Minecraft hostnames. Do not add `map.glyphmc.net` to
+`GLYPH_DNS_RECORD`.
 
 Sanity check: the router's WAN address should match
 `https://api.ipify.org`. If it is `100.64.x.x` again, set
@@ -87,8 +110,8 @@ template **"Edit zone DNS"** → scope: zone `glyphmc.net`.
 scripts\cloudflare-ddns.ps1
 ```
 
-Do not put `glyphmc.net` (apex) in `GLYPH_DNS_RECORD` — that CNAME is the
-Pages site.
+Do not put `glyphmc.net` (apex) or `map.glyphmc.net` in `GLYPH_DNS_RECORD`.
+Apex is the Pages site. `map` is a Cloudflare Tunnel CNAME to BlueMap.
 
 Scheduled task "Glyph DDNS" every 5 minutes.
 
@@ -112,12 +135,15 @@ Opens TCP 25565 and UDP 24454/24455. Backend ports 25566/25567 stay closed
 - Folia backend: binds `127.0.0.1:25566`, refuses connections without the
   Velocity forwarding secret. Never port-forward 25566.
 - Paper SMP: binds `127.0.0.1:25567`. Same rule — never port-forward it.
+- BlueMap: binds `127.0.0.1:8100` after the tunnel script; public HTTPS is
+  `map.glyphmc.net` only. Never port-forward 8100.
 - Dev PostgreSQL/Redis bind `127.0.0.1` only (docker-compose).
 - Keep the Windows account password-protected.
 - Auto-start: the "Glyph Servers" scheduled task runs `scripts/start-all.ps1`
   at logon — Docker engine, PostgreSQL + Redis, backends, proxy, Discord
   bot (java hidden; open `start.bat` for the local ops page).
   playit is not started unless `GLYPH_USE_PLAYIT=1`.
+  `cloudflared` is started if the BlueMap tunnel was installed.
   Server start scripts prefer `JAVA_HOME` (User env, JDK 25 on the desktop).
 - Auto-pull: `scripts\auto-pull.ps1 -Register` creates "Glyph Auto Pull"
   (every 2 minutes). Pulls do not restart the game servers.
@@ -134,3 +160,4 @@ Opens TCP 25565 and UDP 24454/24455. Backend ports 25566/25567 stay closed
       to 192.168.4.24
 - [ ] Outside-LAN connection verified on native public IP
 - [ ] Re-run `setup-firewall.ps1` as Admin after adding UDP 24455
+- [ ] BlueMap tunnel: `scripts\setup-bluemap-tunnel.ps1` (map.glyphmc.net)
