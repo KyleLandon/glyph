@@ -3,54 +3,102 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Forever World map — Glyph</title>
+    <title>Glyph — Forever World map</title>
     <meta
       name="description"
-      content="Live 3D map of Glyph Forever World. Hang out, build, stay."
+      content="Live 3D map of Glyph Forever World."
     />
-    <meta property="og:title" content="Forever World map — Glyph" />
-    <meta
-      property="og:description"
-      content="Live BlueMap of smp.glyphmc.net."
-    />
-    <link rel="icon" href="/assets/glyph-logo.png" type="image/png" />
+    <link rel="icon" href="../assets/glyph-logo.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css?v=4" />
+    <link rel="stylesheet" href="../styles.css?v=4" />
+    <style>
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .map-shell {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100svh;
+      }
+
+      .map-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem 1rem;
+        padding: 0.65rem 1rem;
+        background: rgba(5, 5, 8, 0.92);
+        border-bottom: 1px solid rgba(34, 211, 238, 0.22);
+      }
+
+      .map-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        color: var(--ink);
+        text-decoration: none;
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .map-brand img {
+        width: 1.7rem;
+        height: 1.7rem;
+      }
+
+      .map-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+      }
+
+      .map-links .btn {
+        min-width: 0;
+        padding: 0.55rem 0.9rem;
+        font-size: 0.78rem;
+      }
+
+      .map-frame {
+        flex: 1;
+        width: 100%;
+        border: 0;
+        background: #050508;
+      }
+    </style>
   </head>
-  <body class="map-page">
-    <header class="map-bar">
-      <a class="map-brand" href="/">
-        <img src="/assets/glyph-logo.png" width="36" height="36" alt="" />
-        Glyph
-      </a>
-      <span class="map-title">Forever World</span>
-      <a
-        class="map-open"
-        href="https://map.glyphmc.net"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Open map only
-      </a>
-    </header>
-    <iframe
-      class="map-frame"
-      title="Forever World live map"
-      src="https://map.glyphmc.net"
-      allow="fullscreen"
-      referrerpolicy="no-referrer-when-downgrade"
-    ></iframe>
-    <noscript>
-      <p class="map-fallback">
-        JavaScript is not required. Open
-        <a href="https://map.glyphmc.net">map.glyphmc.net</a>
-        if this page is blank.
-      </p>
-    </noscript>
+  <body>
+    <div class="map-shell">
+      <header class="map-bar">
+        <a class="map-brand" href="/">
+          <img src="../assets/glyph-logo.png" width="32" height="32" alt="" />
+          Forever World map
+        </a>
+        <nav class="map-links">
+          <a class="btn btn-map" href="https://map.glyphmc.net" target="_blank" rel="noopener noreferrer">
+            Open map only
+          </a>
+          <a class="btn btn-discord" href="/">Back</a>
+        </nav>
+      </header>
+      <iframe
+        class="map-frame"
+        src="https://map.glyphmc.net"
+        title="Forever World live map"
+        allow="fullscreen"
+      ></iframe>
+    </div>
   </body>
 </html>

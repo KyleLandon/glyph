@@ -1,128 +1,201 @@
-# Public HTTPS for BlueMap: https://map.glyphmc.net -> http://127.0.0.1:8100
+# One-time: expose Forever World BlueMap at https://map.glyphmc.net
+# via Cloudflare Tunnel. HTTPS, no router port 8100, no DDNS for "map".
 #
-# Cloudflare Pages cannot host a live 3D map. The marketing site at
-# https://glyphmc.net/map iframes this hostname. The tunnel is the HTTPS
-# front door so we never port-forward 8100 and never orange-cloud Minecraft.
+# First run opens a browser for Cloudflare login. Service install needs
+# Administrator (the script re-launches itself with UAC for that step).
 #
-# One-time, on the desktop (Admin for the Windows service):
 #   scripts\setup-bluemap-tunnel.ps1
 #
-# Do not add map.glyphmc.net to GLYPH_DNS_RECORD. The tunnel owns that CNAME.
+# Creates tunnel glyph-map, binds BlueMap to 127.0.0.1:8100, installs the
+# cloudflared Windows service so it survives reboot.
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
-$cfDir = Join-Path $env:USERPROFILE ".cloudflared"
-$tunnelName = "glyph-map"
 $hostname = "map.glyphmc.net"
+$tunnelName = "glyph-map"
 $origin = "http://127.0.0.1:8100"
-$webserverConf = Join-Path $root "glyph-smp\plugins\BlueMap\webserver.conf"
+$logFile = Join-Path $env:TEMP "glyph-bluemap-tunnel.log"
 
-function Find-Cloudflared {
+function Test-IsAdmin {
+    $id = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($id)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Write-Log([string]$message) {
+    $line = "$(Get-Date -Format s) $message"
+    Add-Content -Path $logFile -Value $line
+    Write-Host $message
+}
+
+function Get-Cloudflared {
     $cmd = Get-Command cloudflared -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
-    $guesses = @(
-        "$env:ProgramFiles\cloudflared\cloudflared.exe",
-        "${env:ProgramFiles(x86)}\cloudflared\cloudflared.exe",
-        "$env:LOCALAPPDATA\Microsoft\WinGet\Links\cloudflared.exe"
-    )
-    foreach ($g in $guesses) {
-        if (Test-Path $g) { return $g }
+    foreach ($candidate in @(
+            "${env:ProgramFiles}\cloudflared\cloudflared.exe",
+            "${env:ProgramFiles(x86)}\cloudflared\cloudflared.exe",
+            (Join-Path $env:LOCALAPPDATA "cloudflared\cloudflared.exe")
+        )) {
+        if (Test-Path $candidate) { return $candidate }
     }
     return $null
 }
 
-$cloudflared = Find-Cloudflared
+Write-Log "Starting setup-bluemap-tunnel.ps1 (admin=$(Test-IsAdmin))"
+
+$cloudflared = Get-Cloudflared
 if (-not $cloudflared) {
-    Write-Host "Installing Cloudflare Tunnel (cloudflared) via winget..."
-    winget install --id Cloudflare.cloudflared --accept-package-agreements --accept-source-agreements
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
-                [System.Environment]::GetEnvironmentVariable("Path", "User")
-    $cloudflared = Find-Cloudflared
-}
-if (-not $cloudflared) {
-    Write-Error "cloudflared is not on PATH. Install from https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/ then re-run."
+    Write-Log "Installing cloudflared..."
+    $destDir = if (Test-IsAdmin) {
+        Join-Path $env:ProgramFiles "cloudflared"
+    } else {
+        Join-Path $env:LOCALAPPDATA "cloudflared"
+    }
+    New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+    $exe = Join-Path $destDir "cloudflared.exe"
+    Invoke-WebRequest -Uri "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe" `
+        -OutFile $exe -Headers @{ "User-Agent" = "glyph-setup-bluemap/0.1" }
+    $env:PATH = "$destDir;" + $env:PATH
+    $cloudflared = Get-Cloudflared
+    if (-not $cloudflared) {
+        Write-Error "cloudflared download failed. See $logFile"
+    }
 }
 
-Write-Host "Using $cloudflared"
+Write-Log "Using $cloudflared"
 
-$cert = Join-Path $cfDir "cert.pem"
+$userCf = Join-Path $env:USERPROFILE ".cloudflared"
+$systemCf = "C:\Windows\System32\config\systemprofile\.cloudflared"
+New-Item -ItemType Directory -Force -Path $userCf | Out-Null
+
+$cert = Join-Path $userCf "cert.pem"
 if (-not (Test-Path $cert)) {
-    Write-Host ""
-    Write-Host "A browser will open so you can authorize this machine on Cloudflare (zone glyphmc.net)."
-    Write-Host "Pick the glyphmc.net account, then come back here."
-    Write-Host ""
+    Write-Log "A browser will open. Log into Cloudflare and authorize zone glyphmc.net."
     & $cloudflared tunnel login
-}
-
-if (-not (Test-Path $cert)) {
-    Write-Error "cloudflared tunnel login did not write $cert"
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $cert)) {
+        Write-Error "cloudflared login did not write $cert"
+    }
 }
 
 $existing = & $cloudflared tunnel list --output json 2>$null | ConvertFrom-Json
 $tunnel = @($existing) | Where-Object { $_.name -eq $tunnelName } | Select-Object -First 1
 if (-not $tunnel) {
-    Write-Host "Creating tunnel $tunnelName"
+    Write-Log "Creating tunnel $tunnelName..."
     & $cloudflared tunnel create $tunnelName
+    if ($LASTEXITCODE -ne 0) { Write-Error "Failed to create tunnel $tunnelName" }
     $existing = & $cloudflared tunnel list --output json 2>$null | ConvertFrom-Json
     $tunnel = @($existing) | Where-Object { $_.name -eq $tunnelName } | Select-Object -First 1
 }
-if (-not $tunnel) {
-    Write-Error "Could not create or find tunnel $tunnelName"
+if (-not $tunnel) { Write-Error "Tunnel $tunnelName was not found after create." }
+
+$tunnelId = [string]$tunnel.id
+Write-Log "Tunnel $tunnelName id=$tunnelId"
+
+$credName = "$tunnelId.json"
+$userCred = Join-Path $userCf $credName
+if (-not (Test-Path $userCred)) {
+    Write-Error "Missing credentials file $userCred"
 }
 
-$tunnelId = $tunnel.id
-$cred = Join-Path $cfDir "$tunnelId.json"
-if (-not (Test-Path $cred)) {
-    Write-Error "Missing credentials file $cred"
-}
-
-New-Item -ItemType Directory -Force -Path $cfDir | Out-Null
-$configPath = Join-Path $cfDir "config.yml"
-@"
+$userConfigBody = @"
 tunnel: $tunnelId
-credentials-file: $cred
+credentials-file: $userCred
 
 ingress:
   - hostname: $hostname
     service: $origin
   - service: http_status:404
-"@ | Set-Content -Path $configPath -Encoding ascii
-Write-Host "Wrote $configPath"
+"@
+$userConfig = Join-Path $userCf "config.yml"
+Set-Content -Path $userConfig -Value $userConfigBody -Encoding UTF8
+Write-Log "Wrote $userConfig"
 
-Write-Host "Routing DNS $hostname -> tunnel (proxied CNAME). Leave this out of DDNS."
-& $cloudflared tunnel route dns --overwrite-dns $tunnelName $hostname
+Write-Log "Routing DNS $hostname -> $tunnelName (do not add this name to DDNS)..."
+& $cloudflared tunnel route dns $tunnelName $hostname
+if ($LASTEXITCODE -ne 0) {
+    Write-Log "DNS route command returned $LASTEXITCODE (record may already exist). Continuing."
+}
 
-if (Test-Path $webserverConf) {
-    $raw = Get-Content $webserverConf -Raw
-    if ($raw -match '(?m)^ip:') {
-        $raw = [regex]::Replace($raw, '(?m)^ip:.*$', 'ip: "127.0.0.1"')
+$webserver = Join-Path $root "glyph-smp\plugins\BlueMap\webserver.conf"
+if (Test-Path $webserver) {
+    $conf = Get-Content $webserver -Raw
+    if ($conf -notmatch '(?m)^ip:\s*"127\.0\.0\.1"') {
+        $conf = $conf -replace '(?m)^port:\s*8100\s*$', "ip: `"127.0.0.1`"`r`nport: 8100"
+        Set-Content -Path $webserver -Value $conf -Encoding UTF8 -NoNewline
+        Write-Log "Bound BlueMap to 127.0.0.1:8100"
     } else {
-        $raw = $raw.TrimEnd() + "`r`n`r`nip: `"127.0.0.1`"`r`n"
+        Write-Log "BlueMap already bound to 127.0.0.1:8100"
     }
-    Set-Content -Path $webserverConf -Value $raw -Encoding utf8
-    Write-Host "BlueMap webserver bound to 127.0.0.1:8100 (restart Paper SMP to apply)."
-} else {
-    Write-Host "BlueMap config not generated yet. After the first SMP start, re-run this script so the webserver binds localhost only."
 }
 
-$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).
-    IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-if ($isAdmin) {
-    $svc = Get-Service cloudflared -ErrorAction SilentlyContinue
-    if (-not $svc) {
-        & $cloudflared service install
-        Write-Host "Installed Windows service cloudflared (starts at boot)."
+$rcon = Join-Path $PSScriptRoot "rcon.ps1"
+if (Test-Path $rcon) {
+    try {
+        & $rcon -Target smp "bluemap reload"
+        Write-Log "Reloaded BlueMap"
+    } catch {
+        Write-Log "Could not reload BlueMap via RCON. Restart Forever World later."
     }
-    Start-Service cloudflared -ErrorAction SilentlyContinue
-    Write-Host "cloudflared service is running."
-} else {
-    Write-Host ""
-    Write-Host "Re-run this script as Administrator to install the cloudflared Windows service."
-    Write-Host "Until then, start the tunnel with:"
-    Write-Host "  cloudflared tunnel run $tunnelName"
 }
 
-Write-Host ""
-Write-Host "Map URLs once SMP + BlueMap + tunnel are up:"
-Write-Host "  https://$hostname"
-Write-Host "  https://glyphmc.net/map/"
+if (-not (Test-IsAdmin)) {
+    Write-Log "Requesting Administrator to install the cloudflared service..."
+    $script = Join-Path $PSScriptRoot "setup-bluemap-tunnel.ps1"
+    Start-Process powershell -Verb RunAs -Wait -ArgumentList @(
+        "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $script
+    )
+    $svc = Get-Service -Name "Cloudflared" -ErrorAction SilentlyContinue
+    if ($svc) {
+        Write-Log "Cloudflared service: $($svc.Status)"
+        Write-Log "Done. Map URL: https://$hostname"
+        Write-Log "Site viewer: https://glyphmc.net/map/"
+        return
+    }
+    Write-Log "Service not installed. Starting a user-session tunnel until you re-run as Admin."
+    Start-Process -FilePath $cloudflared -ArgumentList @("tunnel", "--config", $userConfig, "run") -WindowStyle Hidden
+    Write-Log "User tunnel started. Map URL: https://$hostname"
+    return
+}
+
+New-Item -ItemType Directory -Force -Path $systemCf | Out-Null
+Copy-Item $userCred -Destination (Join-Path $systemCf $credName) -Force
+Copy-Item $cert -Destination (Join-Path $systemCf "cert.pem") -Force
+
+$systemConfigBody = @"
+tunnel: $tunnelId
+credentials-file: $systemCf\$credName
+
+ingress:
+  - hostname: $hostname
+    service: $origin
+  - service: http_status:404
+"@
+$systemConfig = Join-Path $systemCf "config.yml"
+Set-Content -Path $systemConfig -Value $systemConfigBody -Encoding UTF8
+Write-Log "Wrote $systemConfig"
+
+$svc = Get-Service -Name "Cloudflared" -ErrorAction SilentlyContinue
+if (-not $svc) {
+    Write-Log "Installing cloudflared Windows service..."
+    & $cloudflared service install
+    if ($LASTEXITCODE -ne 0) { Write-Error "cloudflared service install failed" }
+} else {
+    Write-Log "Cloudflared service already installed"
+}
+
+$bin = "$cloudflared --config $systemConfig tunnel run"
+sc.exe config Cloudflared binPath= $bin | Out-Null
+Write-Log "Set Cloudflared binPath to tunnel run with system config"
+
+Restart-Service -Name "Cloudflared" -Force -ErrorAction SilentlyContinue
+Start-Service -Name "Cloudflared" -ErrorAction SilentlyContinue
+$svc = Get-Service -Name "Cloudflared" -ErrorAction SilentlyContinue
+if ($svc) {
+    Write-Log "Cloudflared service: $($svc.Status)"
+} else {
+    Write-Error "Cloudflared service is not present after install."
+}
+
+Write-Log "Done. Map URL: https://$hostname"
+Write-Log "Site viewer: https://glyphmc.net/map/"
+Write-Log "Do not add 'map' to GLYPH_DNS_RECORD. The tunnel owns that hostname."

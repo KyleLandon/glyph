@@ -1,8 +1,9 @@
 # Glyph website
 
 Landing page for [glyphmc.net](https://glyphmc.net): logo hero, Anarchy +
-Forever World cards (rules + copy-address), **How to join**, **Discord**,
-and a **Map** page that iframes the live BlueMap.
+Forever World cards (rules + copy-address), **How to join**, **Map**, and
+**Discord**. `/map/` is a full-page viewer that loads the live BlueMap at
+[map.glyphmc.net](https://map.glyphmc.net) (Cloudflare Tunnel, not Pages).
 
 **Live**
 

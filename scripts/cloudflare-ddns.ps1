@@ -11,6 +11,7 @@
 #   GLYPH_DNS_RECORD      record name(s), comma separated, e.g.
 #                         "play.glyphmc.net,anarchy.glyphmc.net,smp.glyphmc.net"
 #                         Do not include the apex (glyphmc.net) — that is the site.
+#                         Do not include map.glyphmc.net — the Cloudflare Tunnel owns it.
 
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
