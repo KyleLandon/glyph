@@ -131,7 +131,7 @@ op <your-name>
 | LuckPerms / Vault / voicechat | also on Paper SMP | — | Copied by `scripts\setup-smp.ps1`. Same Postgres; LuckPerms `server: smp`. |
 | GriefPrevention | Paper SMP | — | Land claims. |
 | CoreProtect | Paper SMP | — | Staff inspect/rollback. Downloaded by `setup-smp.ps1`. |
-| BlueMap | Paper SMP | — | Web map (port 8100). Anarchy stays unmapped. |
+| BlueMap | Paper SMP | — | Web map. Local `127.0.0.1:8100`; public https://glyphmc.net/map/. Anarchy stays unmapped. |
 
 # Paper SMP backend (`glyph-smp/`)
 

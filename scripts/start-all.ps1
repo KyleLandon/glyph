@@ -61,3 +61,38 @@ if ($smpJar) {
 }
 Start-ServerIfDown 25565 (Join-Path $root "glyph-velocity")
 & "$PSScriptRoot\start-discord.ps1"
+
+# BlueMap HTTPS: Cloudflare Tunnel map.glyphmc.net -> 127.0.0.1:8100
+# (scripts\setup-bluemap-tunnel.ps1). Prefer the Windows service; fall back
+# to a hidden user-mode process if the config exists.
+$cfSvc = Get-Service cloudflared -ErrorAction SilentlyContinue
+if ($cfSvc) {
+    if ($cfSvc.Status -ne "Running") {
+        try {
+            Start-Service cloudflared
+            Write-Output "Started cloudflared service"
+        } catch {
+            Write-Output "cloudflared service present but could not start (run setup-bluemap-tunnel.ps1 as Admin)"
+        }
+    } else {
+        Write-Output "cloudflared service already running"
+    }
+} elseif (Test-Path (Join-Path $env:USERPROFILE ".cloudflared\config.yml")) {
+    if (-not (Get-Process cloudflared -ErrorAction SilentlyContinue)) {
+        $cfExe = Get-Command cloudflared -ErrorAction SilentlyContinue
+        if (-not $cfExe) {
+            foreach ($g in @(
+                "$env:ProgramFiles\cloudflared\cloudflared.exe",
+                "$env:LOCALAPPDATA\Microsoft\WinGet\Links\cloudflared.exe"
+            )) {
+                if (Test-Path $g) { $cfExe = $g; break }
+            }
+        } else {
+            $cfExe = $cfExe.Source
+        }
+        if ($cfExe) {
+            Start-Process $cfExe -ArgumentList "tunnel","run" -WindowStyle Hidden
+            Write-Output "Started cloudflared tunnel (user-mode)"
+        }
+    }
+}

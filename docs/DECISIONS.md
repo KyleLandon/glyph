@@ -256,7 +256,8 @@ trades) goes through the Glyph ledger (`SYSTEM_SINK` / player transfers).
 GriefPrevention stays the claim plugin; GlyphCore talks to it by reflection.
 
 **Not reimplemented:** CoreProtect (staff rollback) and BlueMap (web map).
-Those stay third-party, SMP-only, never on Folia anarchy.
+Those stay third-party, SMP-only, never on Folia anarchy. Public URL:
+https://glyphmc.net/map/ via Cloudflare Tunnel to `127.0.0.1:8100`.
 
 **Spawn market** is an admin command (`/glyph market build`), not a generated
 world. Staff still assign stalls with GP trust.

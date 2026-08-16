@@ -35,6 +35,7 @@ on both worlds: **$25 / 15 min** on anarchy, **$5 / 15 min** on Forever World.
 | `smp.glyphmc.net` | Forever World (claims, homes, own `/ah`, same `$` / Glyphs) |
 | `play.glyphmc.net` | Anarchy (alias) |
 | `/server anarchy` / `/server smp` | Switch while already online |
+| https://glyphmc.net/map/ | Forever World live map (BlueMap) |
 
 ---
 
@@ -130,7 +131,8 @@ One player sleeping skips the night. Sneak + right-click an armor stand
 on your land to pose it. Shop owners sneak + right-click to open the chest.
 
 Staff: `/glyph setspawn` and `/glyph market build` (five stalls south of
-spawn). CoreProtect (`/co`) and BlueMap (web map, port 8100) are SMP-only.
+spawn). CoreProtect (`/co`) is SMP-only. Live map:
+**https://glyphmc.net/map/** (BlueMap, Forever World only).
 
 ---
 
@@ -322,4 +324,5 @@ Voice: Simple Voice Chat (optional) — pack: github.com/KyleLandon/glyph-client
 
 Discord: https://discord.gg/htkQHR4gdf
 Site: https://glyphmc.net
+Map:  https://glyphmc.net/map
 ```

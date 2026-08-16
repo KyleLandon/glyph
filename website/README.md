@@ -11,6 +11,8 @@ Forever World cards (rules + copy-address), **How to join**, **Map**, and
 | --- | --- |
 | https://glyphmc.net | Production custom domain |
 | https://www.glyphmc.net | www → same Pages project |
+| https://glyphmc.net/map/ | Forever World viewer (iframe of map.glyphmc.net) |
+| https://map.glyphmc.net | BlueMap origin (Cloudflare Tunnel, not Pages) |
 | https://glyph-5ev.pages.dev | Cloudflare Pages default |
 
 ## Local preview
@@ -31,5 +33,7 @@ npx --yes wrangler pages deploy website --project-name=glyph --commit-dirty=true
 ```
 
 Static HTML/CSS/JS only — no build step. Apex DNS is a proxied CNAME to
-`glyph-5ev.pages.dev`. Keep `GLYPH_DNS_RECORD=play.glyphmc.net` only so DDNS
-never overwrites the site apex.
+`glyph-5ev.pages.dev`. Keep `GLYPH_DNS_RECORD=play.glyphmc.net` (plus
+anarchy/smp) so DDNS never overwrites the site apex or the map tunnel.
+BlueMap itself is not in this folder: `scripts\setup-bluemap-tunnel.ps1`
+on the desktop, then https://map.glyphmc.net.
