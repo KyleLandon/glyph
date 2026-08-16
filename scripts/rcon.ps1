@@ -1,17 +1,23 @@
-# Minimal Minecraft RCON client for the local Folia backend.
-# Requires enable-rcon=true and rcon.password in glyph-folia/server.properties.
+# Minimal Minecraft RCON client for the local backends.
+# Folia anarchy: port 25575. Paper SMP: port 25576. Same password.
 #
 # Usage:
 #   .\rcon.ps1 "list"
+#   .\rcon.ps1 -Target smp "list"
 #   .\rcon.ps1 "worldborder get"
 
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Command,
+    [ValidateSet("folia", "anarchy", "smp")]
+    [string]$Target = "folia",
     [string]$HostName = "127.0.0.1",
-    [int]$Port = 25575,
+    [int]$Port = 0,
     [string]$Password = "glyph-dev-rcon"
 )
+if ($Port -le 0) {
+    $Port = if ($Target -eq "smp") { 25576 } else { 25575 }
+}
 
 $ErrorActionPreference = "Stop"
 

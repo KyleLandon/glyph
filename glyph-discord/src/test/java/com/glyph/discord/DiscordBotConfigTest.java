@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.glyph.api.discord.DiscordTier;
+import com.glyph.api.glyphs.GlyphTitle;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ class DiscordBotConfigTest {
         env.put("GLYPH_DISCORD_ROLE_VERIFIED", "222");
         env.put("GLYPH_DISCORD_ROLE_ALPHA", "333");
         env.put("GLYPH_DISCORD_ROLE_SCOUT", "444");
+        env.put("GLYPH_DISCORD_ROLE_TITLE_HUNTER", "555");
         env.put("GLYPH_DB_HOST", "db.example");
         env.put("GLYPH_DB_PORT", "5433");
 
@@ -27,6 +29,7 @@ class DiscordBotConfigTest {
         assertThat(config.verifiedRoleId()).isEqualTo(222L);
         assertThat(config.alphaRoleId()).isEqualTo(333L);
         assertThat(config.tierRoleIds()).containsEntry(DiscordTier.SCOUT, 444L);
+        assertThat(config.titleRoleIds()).containsEntry(GlyphTitle.HUNTER, 555L);
         assertThat(config.jdbcUrl()).isEqualTo("jdbc:postgresql://db.example:5433/glyph");
     }
 
@@ -38,6 +41,7 @@ class DiscordBotConfigTest {
         assertThat(config.verifiedRoleId()).isZero();
         assertThat(config.alphaRoleId()).isZero();
         assertThat(config.tierRoleIds()).isEmpty();
+        assertThat(config.titleRoleIds()).isEmpty();
     }
 
     @Test

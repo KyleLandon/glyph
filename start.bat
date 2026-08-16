@@ -1,6 +1,4 @@
 @echo off
-rem Double-clickable launcher for the full Glyph network:
-rem Docker, PostgreSQL, Redis, Folia, Velocity, and playit.
+rem Opens the local Glyph ops page and brings the stack up if needed.
 cd /d "%~dp0"
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0start.ps1"
-pause
+start "" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\dashboard.ps1"

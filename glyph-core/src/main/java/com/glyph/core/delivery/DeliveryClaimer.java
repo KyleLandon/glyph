@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 
 /**
  * Hands pending deliveries to a player (GDD sections 22-23), shared by
- * {@code /claim} and the post-purchase auto-claim.
+ * {@code /ah mail} and the post-purchase auto-claim.
  *
  * <p>Protocol: count free inventory slots on the entity thread, claim that
  * many rows in the database, then give the items back on the entity thread.
@@ -50,7 +50,7 @@ public final class DeliveryClaimer {
             deliveries.pendingCount(uuid).thenAccept(pending -> {
                 if (pending > 0) {
                     message(player, Component.text(
-                            "Your inventory is full — free up space and run /claim.",
+                            "Your inventory is full — free up space and run /ah mail.",
                             NamedTextColor.RED));
                 }
             });
@@ -106,7 +106,7 @@ public final class DeliveryClaimer {
                     NamedTextColor.GREEN);
             if (remaining > 0) {
                 message = message.append(Component.text(
-                        " " + remaining + " more waiting — run /claim again.",
+                        " " + remaining + " more waiting — run /ah mail again.",
                         NamedTextColor.GRAY));
             }
             message(player, message);

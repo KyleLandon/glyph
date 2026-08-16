@@ -73,6 +73,7 @@ velocity-ping-save: true
 velocity-servers:
   default: 393
   anarchy: 775
+  smp: 775
 #
 #----------------------------------------------------------#
 #                  GLOBAL PACKET LIMITER                   #

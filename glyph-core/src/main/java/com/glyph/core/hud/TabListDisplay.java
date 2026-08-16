@@ -4,11 +4,13 @@ import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.config.GlyphCurrencySettings;
 import com.glyph.core.config.TabSettings;
+import com.glyph.core.glyphs.GlyphTitles;
 import com.glyph.core.glyphs.GlyphsService;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import com.glyph.core.stats.StatsService;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -26,7 +28,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.slf4j.Logger;
 
 /**
- * Tab list rows: {@code [Title] Name  $12.4k  ✦13  ☠29} plus a branded header/footer.
+ * Tab list rows: title (if any), name, money, glyphs, and deaths.
  */
 public final class TabListDisplay implements Listener {
 
@@ -39,6 +41,7 @@ public final class TabListDisplay implements Listener {
     private final Logger logger;
 
     private final Map<UUID, Row> rows = new ConcurrentHashMap<>();
+    private volatile Function<UUID, String> visibleNameLookup = uuid -> null;
 
     public TabListDisplay(
             SchedulerAdapter scheduler,
@@ -55,6 +58,15 @@ public final class TabListDisplay implements Listener {
         this.glyphs = glyphs;
         this.stats = stats;
         this.logger = logger;
+    }
+
+    public void setVisibleNameLookup(Function<UUID, String> lookup) {
+        this.visibleNameLookup = lookup == null ? uuid -> null : lookup;
+    }
+
+    /** Re-apply the tab row after a nickname or cosmetic change. */
+    public void refreshName(UUID uuid) {
+        apply(uuid);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -161,10 +173,12 @@ public final class TabListDisplay implements Listener {
         Row row = rows.get(player.getUniqueId());
         NamedTextColor nameColor = glyphs.nameColor(player.getUniqueId())
                 .orElse(NamedTextColor.WHITE);
+        String lookup = visibleNameLookup.apply(player.getUniqueId());
+        String shown = (lookup == null || lookup.isBlank()) ? player.getName() : lookup;
         Component name = formatRow(
-                player.getName(),
+                shown,
                 nameColor,
-                glyphs.equippedTitleText(player.getUniqueId()).orElse(null),
+                glyphs.visibleTitleText(player.getUniqueId()),
                 row == null ? null : row.money,
                 row == null ? null : row.glyphs,
                 glyphSettings.symbol(),
@@ -175,7 +189,8 @@ public final class TabListDisplay implements Listener {
     }
 
     /**
-     * {@code [Title] Name  $12.4k  ✦13  ☠29} — compact so wide tabs stay readable.
+     * Compact left-to-right row. Reserved columns look right-justified in
+     * the tab list (spaces are thin / collapsed; empty title pads indent the name).
      */
     static Component formatRow(
             String username,
@@ -187,28 +202,24 @@ public final class TabListDisplay implements Listener {
             boolean showGlyphs,
             long deaths,
             String cashSymbol) {
-        Component row = Component.empty();
-        if (titleText != null && !titleText.isBlank()) {
-            row = row.append(Component.text("[", NamedTextColor.GRAY))
-                    .append(Component.text(titleText, NamedTextColor.GRAY))
-                    .append(Component.text("] ", NamedTextColor.GRAY));
-        }
+        String title = (titleText != null && !titleText.isBlank())
+                ? titleText
+                : GlyphTitles.DEFAULT_DISPLAY;
+        Component row = Component.text("[" + title + "] ", NamedTextColor.GRAY)
+                .append(Component.text(username, nameColor));
+
         String cash = money == null
                 ? cashSymbol + " —"
                 : MoneyHud.formatHud(money, cashSymbol);
-        row = row.append(Component.text(username, nameColor))
-                .append(Component.text("  ", NamedTextColor.DARK_GRAY))
+        row = row.append(Component.text(" ", NamedTextColor.DARK_GRAY))
                 .append(Component.text(cash, NamedTextColor.GREEN));
         if (showGlyphs) {
-            String glyphText = glyphs == null
-                    ? glyphSymbol + "—"
-                    : glyphSymbol + glyphs;
-            row = row.append(Component.text("  ", NamedTextColor.DARK_GRAY))
-                    .append(Component.text(glyphText, NamedTextColor.LIGHT_PURPLE));
+            String glyphCount = glyphs == null ? "—" : Long.toString(glyphs);
+            row = row.append(Component.text(" ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(glyphSymbol + glyphCount, NamedTextColor.LIGHT_PURPLE));
         }
-        return row.append(Component.text("  ", NamedTextColor.DARK_GRAY))
-                .append(Component.text("☠", NamedTextColor.RED))
-                .append(Component.text(deaths, NamedTextColor.RED));
+        return row.append(Component.text(" ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("☠" + deaths, NamedTextColor.RED));
     }
 
     private static final class Row {

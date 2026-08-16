@@ -5,7 +5,10 @@ import com.glyph.api.player.PlayerApi;
 import com.glyph.core.bounty.BountyRepository.PlaceResult;
 import com.glyph.core.bounty.BountyRepository.TargetTotal;
 import com.glyph.core.bounty.BountyService;
+import com.glyph.core.bounty.WantedPoster;
+import com.glyph.core.bounty.gui.WantedBoardGui;
 import com.glyph.core.config.EconomySettings;
+import com.glyph.core.economy.EconomyService;
 import com.glyph.core.economy.command.PlayerNameResolver;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import java.util.ArrayList;
@@ -23,12 +26,15 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * {@code /bounty} (GDD sections 25, 66):
  *
  * <ul>
- *   <li>{@code /bounty} — top wanted players</li>
+ *   <li>{@code /bounty} — wanted board GUI (chat list for console)</li>
+ *   <li>{@code /bounty list} — chat most-wanted list</li>
+ *   <li>{@code /bounty poster [player]} — written wanted poster</li>
  *   <li>{@code /bounty <player>} — active bounty on a player</li>
  *   <li>{@code /bounty add <player> <amount>} — place a bounty (escrowed)</li>
  * </ul>
@@ -39,15 +45,20 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
     private final PlayerApi players;
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
+    private final WantedBoardGui board;
+    private final EconomyService balances;
 
     private final Set<UUID> inFlight = ConcurrentHashMap.newKeySet();
 
     public BountyCommand(BountyService bounties, PlayerApi players,
-                         SchedulerAdapter scheduler, EconomySettings economy) {
+                         SchedulerAdapter scheduler, EconomySettings economy,
+                         WantedBoardGui board, EconomyService balances) {
         this.bounties = bounties;
         this.players = players;
         this.scheduler = scheduler;
         this.economy = economy;
+        this.board = board;
+        this.balances = balances;
     }
 
     @Override
@@ -57,7 +68,19 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         if (args.length == 0) {
+            if (sender instanceof Player player) {
+                board.open(player);
+            } else {
+                showTop(sender);
+            }
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("list")) {
             showTop(sender);
+            return true;
+        }
+        if (args[0].equalsIgnoreCase("poster")) {
+            givePoster(sender, args);
             return true;
         }
         if (args[0].equalsIgnoreCase("add")) {
@@ -69,7 +92,8 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         sender.sendMessage(Component.text(
-                "Usage: /" + label + " [<player> | add <player> <amount>]", NamedTextColor.RED));
+                "Usage: /" + label + " [list | poster [player] | <player> | add <player> <amount>]",
+                NamedTextColor.RED));
         return true;
     }
 
@@ -124,6 +148,80 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
                 .whenComplete((message, error) -> deliver(sender, List.of(error != null
                         ? Component.text("Bounties are unavailable right now.", NamedTextColor.RED)
                         : message)));
+    }
+
+    private void givePoster(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can take wanted posters.",
+                    NamedTextColor.RED));
+            return;
+        }
+        String symbol = economy.currencySymbol();
+        if (args.length == 1) {
+            bounties.topTargets(12).whenComplete((top, error) -> {
+                if (error != null) {
+                    deliver(player, List.of(Component.text(
+                            "Bounties are unavailable right now.", NamedTextColor.RED)));
+                    return;
+                }
+                giveItem(player, WantedPoster.listBook(top, symbol),
+                        Component.text("Wanted list printed.", NamedTextColor.GREEN));
+            });
+            return;
+        }
+        if (args.length != 2) {
+            player.sendMessage(Component.text("Usage: /bounty poster [player]", NamedTextColor.RED));
+            return;
+        }
+        PlayerNameResolver.resolve(players, args[1])
+                .thenCompose(target -> {
+                    if (target.isEmpty()) {
+                        return CompletableFuture.completedFuture(new PosterOutcome(null, null));
+                    }
+                    return bounties.topTargets(25).thenApply(top -> {
+                        TargetTotal match = top.stream()
+                                .filter(row -> row.targetUuid().equals(target.get().uuid()))
+                                .findFirst()
+                                .orElse(null);
+                        return new PosterOutcome(target.get(), match);
+                    });
+                })
+                .whenComplete((outcome, error) -> {
+                    if (error != null) {
+                        deliver(player, List.of(Component.text(
+                                "Bounties are unavailable right now.", NamedTextColor.RED)));
+                        return;
+                    }
+                    if (outcome.target() == null) {
+                        deliver(player, List.of(Component.text(
+                                "Unknown player: " + args[1], NamedTextColor.RED)));
+                        return;
+                    }
+                    if (outcome.row() == null) {
+                        deliver(player, List.of(Component.text(
+                                "No active bounty on " + outcome.target().name() + ".",
+                                NamedTextColor.GRAY)));
+                        return;
+                    }
+                    giveItem(player, WantedPoster.posterBook(
+                                    outcome.target().name(),
+                                    outcome.row().total(),
+                                    outcome.row().count(),
+                                    symbol),
+                            Component.text("Wanted poster printed for "
+                                    + outcome.target().name() + ".", NamedTextColor.GREEN));
+                });
+    }
+
+    private record PosterOutcome(PlayerNameResolver.PlayerRef target, TargetTotal row) { }
+
+    private void giveItem(Player player, ItemStack item, Component ok) {
+        scheduler.runForEntity(player, () -> {
+            var leftover = player.getInventory().addItem(item);
+            leftover.values().forEach(rest ->
+                    player.getWorld().dropItemNaturally(player.getLocation(), rest));
+            player.sendMessage(ok);
+        }, null);
     }
 
     private void placeBounty(CommandSender sender, String label, String[] args) {
@@ -199,6 +297,7 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
         }
         switch (outcome.result().status()) {
             case SUCCESS -> {
+                balances.resyncBalance(creator.getUniqueId());
                 deliver(creator, List.of(Component.text("Bounty of " + amount.format(symbol)
                                 + " placed on " + outcome.target().name() + ".",
                         NamedTextColor.GREEN)));
@@ -233,9 +332,21 @@ public final class BountyCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command,
                                       String alias, String[] args) {
+        String prefix = args[args.length - 1].toLowerCase(Locale.ROOT);
         if (args.length == 1) {
-            return List.of("add").stream()
-                    .filter(option -> option.startsWith(args[0].toLowerCase(Locale.ROOT)))
+            List<String> options = new ArrayList<>(List.of("add", "list", "poster"));
+            for (Player online : sender.getServer().getOnlinePlayers()) {
+                options.add(online.getName());
+            }
+            return options.stream()
+                    .filter(option -> option.toLowerCase(Locale.ROOT).startsWith(prefix))
+                    .toList();
+        }
+        if (args.length == 2 && (args[0].equalsIgnoreCase("add")
+                || args[0].equalsIgnoreCase("poster"))) {
+            return sender.getServer().getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
                     .toList();
         }
         return List.of();

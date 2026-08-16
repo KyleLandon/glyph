@@ -5,6 +5,7 @@ import java.util.Optional;
 
 public enum GlyphEventType {
     GLYPH_LIFETIME("glyph.lifetime"),
+    GLYPH_TITLE("glyph.title"),
     DISCORD_LINKED("discord.linked");
 
     private final String wireName;

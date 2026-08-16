@@ -29,7 +29,7 @@ public final class DeliveryJoinNotifier implements Listener {
         deliveries.pendingCount(player.getUniqueId()).thenAccept(pending -> {
             if (pending > 0) {
                 scheduler.runForEntity(player, () -> player.sendMessage(Component.text(
-                        "You have " + pending + " item(s) waiting — run /claim.",
+                        "You have " + pending + " item(s) waiting — run /ah mail.",
                         NamedTextColor.GOLD)), null);
             }
         });

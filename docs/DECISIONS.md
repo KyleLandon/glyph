@@ -171,9 +171,10 @@ of the same victim do not count.
 **Discord tiers** (Initiate → Legend) derive from `glyphs_lifetime_earned`, not
 shop purchases. Synced by GlyphDiscord when the account is linked (ADR-012).
 
-**Display:** tab rows `[Title] Name  $12.4K  ✦13  ☠29`; sidebar HUD is
-per-player opt-in (`players.glyph_hud_enabled`, `/glyphs hud on|off`) with
-`economy.hud.enabled` as the global kill-switch.
+**Display:** tab rows `[Title] Name $12.4K ✦13 ☠29`. Untitled players show
+`[Peasant]` (display-only; not unlocked, not Discord-synced). Cash sidebar always
+shows when `economy.hud.enabled`. The ✦ sidebar line is per-player opt-in
+(`players.glyph_hud_enabled`, `/glyphs hud on|off`).
 
 See `docs/GLYPHS.md`.
 
@@ -190,16 +191,55 @@ GlyphCore and consumes Redis pub/sub events. JDA is never loaded inside Folia.
 migration V9). Codes live in `discord_link_codes` (10-minute TTL).
 
 **Role sync:** Verified on link; prestige roles from lifetime ✦ earned
-(Initiate → Legend). Spending Glyphs never demotes a Discord tier.
+(Initiate → Legend); unlocked titles as matching Discord roles. Spending
+Glyphs never demotes a Discord tier. Unequipping a title in-game does not
+remove the Discord title role — unlocks are permanent badges.
 
 **Whitelist path:** Discord role **Glyph Alpha** (or `/alpha grant`) sets
 `player_access.alpha`. GlyphProxy may deny login when
 `GLYPH_DISCORD_WHITELIST=true` unless `alpha` is true. Default off.
 
-**Redis channel** `glyph.events`: `glyph.lifetime`, `discord.linked` (more
-types later for bounties/status). Postgres remains authoritative.
+**Redis channel** `glyph.events`: `glyph.lifetime`, `glyph.title`,
+`discord.linked` (more types later for bounties/status). Postgres remains
+authoritative.
 
 **Out of v1:** global chat bridge, Discord economy mutations, server-status /
 market / bounty feeds, tickets, companies, website OAuth.
 
 See `docs/DISCORD.md`.
+
+## ADR-013: Two backends — Folia anarchy + Paper SMP
+
+**Status:** accepted (2026-08-15)
+
+Anarchy and SMP are **separate Minecraft processes**, not two worlds in one
+Folia. One process cannot honestly run two rule-sets (claims vs no claims,
+bounty combat vs none) without leaking inventory, playerdata, and gamerules.
+
+| Shared (same UUID, same Postgres) | Split |
+| --- | --- |
+| Cash (`accounts`) | Worlds, inventory, ender chest, playerdata |
+| Glyphs + unlocks + equipped title/color | Homes (`/sethome`) and claims (GriefPrevention) |
+| Discord link | Combat, `/bounty` |
+| `/bal` `/pay` `/glyphs` `/stats` `/top` | Playtime faucet, anarchy starter kit |
+| Two `/ah` markets (same fees, same `$`) | Listings and `/ah mail` — items never cross |
+
+**Anarchy** stays Folia (`glyph-folia`, `:25566`, `server.role: anarchy`) so
+existing Folia plugins (Chunky, voicechat, etc.) keep working.
+
+**SMP** (player-facing: **Forever World**) is Paper (`glyph-smp`, `:25567`,
+`server.role: smp`) — a hang-out / build world, not a second anarchy. The
+usual claim/home plugin pack can load later. GlyphCore uses Bukkit schedulers when Folia
+region APIs are absent. Bounties stay anarchy-only. Playtime pay is on both
+worlds ($25 / 15m anarchy, $5 / 15m Forever World) so building is not broke
+and anarchy stays the real faucet. Each backend
+has its own auction house (`auction_listings.market` / `deliveries.market`);
+browse, buy, expire, and `/ah mail` are scoped so anarchy items cannot appear
+on SMP and the other way around.
+
+Velocity `try = ["anarchy"]`. Forced hosts: `anarchy.glyphmc.net` and
+`play.glyphmc.net` → anarchy, `smp.glyphmc.net` → smp. Public A records
+on port 25565 (no playit). `/server smp` still works after login.
+LuckPerms uses the same Postgres with `server: smp`.
+
+Do not put both rule-sets in one Folia. See `docs/LOCAL_TEST_SERVER.md`.

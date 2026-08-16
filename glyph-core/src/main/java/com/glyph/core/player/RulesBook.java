@@ -53,11 +53,11 @@ public final class RulesBook {
                         Component.empty(),
                         Component.text("/bal  /pay  /baltop", NamedTextColor.DARK_BLUE),
                         Component.text("/ah   /ah sell <price>", NamedTextColor.DARK_BLUE),
-                        Component.text("/claim", NamedTextColor.DARK_BLUE),
+                        Component.text("/ah mail", NamedTextColor.DARK_BLUE),
                         Component.text("/bounty add <player> $", NamedTextColor.DARK_BLUE),
                         Component.empty(),
                         Component.text("Active play pays about", NamedTextColor.BLACK),
-                        Component.text("$10 every 15 minutes.", NamedTextColor.BLACK),
+                        Component.text("$25 every 15 minutes.", NamedTextColor.BLACK),
                         Component.text("AFK does not pay.", NamedTextColor.DARK_GRAY)),
                 page(
                         title("COMMANDS"),
@@ -95,6 +95,34 @@ public final class RulesBook {
     }
 
     public static ItemStack create() {
+        return book(pages());
+    }
+
+    public static List<Component> smpPages() {
+        return List.of(
+                page(
+                        title("FOREVER WORLD"),
+                        Component.text("This world stays.", NamedTextColor.BLACK),
+                        Component.text("Hang out. Build. Stay.", NamedTextColor.BLACK),
+                        Component.empty(),
+                        Component.text("Golden shovel claims land.", NamedTextColor.BLACK),
+                        Component.text("Stick inspects a claim.", NamedTextColor.BLACK),
+                        Component.text("/sethome  /nickname  /me", NamedTextColor.DARK_BLUE),
+                        Component.text("Active play pays $5 / 15 min.", NamedTextColor.BLACK),
+                        Component.empty(),
+                        Component.text("Your $ and Glyphs are", NamedTextColor.DARK_GREEN),
+                        Component.text("the same wallet as anarchy.", NamedTextColor.DARK_GREEN),
+                        Component.text("Inventory is not.", NamedTextColor.BLACK),
+                        Component.empty(),
+                        Component.text("/server anarchy", NamedTextColor.DARK_PURPLE, TextDecoration.BOLD),
+                        Component.text("switches worlds.", NamedTextColor.BLACK)));
+    }
+
+    public static ItemStack createSmp() {
+        return book(smpPages());
+    }
+
+    private static ItemStack book(List<Component> bookPages) {
         ItemStack item = new ItemStack(Material.WRITTEN_BOOK);
         BookMeta meta = (BookMeta) item.getItemMeta();
         if (meta == null) {
@@ -103,7 +131,7 @@ public final class RulesBook {
         meta.title(Component.text(TITLE));
         meta.author(Component.text(AUTHOR));
         meta.setGeneration(BookMeta.Generation.ORIGINAL);
-        meta.pages(pages());
+        meta.pages(bookPages);
         item.setItemMeta(meta);
         return item;
     }

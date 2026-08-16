@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public final class PostgresDeliveryRepository implements DeliveryRepository {
             SET status = 'CLAIMED', claimed_at = now()
             WHERE id IN (
                 SELECT id FROM deliveries
-                WHERE recipient_uuid = ? AND status = 'PENDING'
+                WHERE recipient_uuid = ? AND status = 'PENDING' AND market = ?
                 ORDER BY created_at
                 LIMIT ?
                 FOR UPDATE SKIP LOCKED
@@ -34,17 +35,35 @@ public final class PostgresDeliveryRepository implements DeliveryRepository {
             """;
 
     private static final String PENDING_COUNT =
-            "SELECT count(*) FROM deliveries WHERE recipient_uuid = ? AND status = 'PENDING'";
+            "SELECT count(*) FROM deliveries"
+                    + " WHERE recipient_uuid = ? AND status = 'PENDING' AND market = ?";
 
     private static final String INSERT = """
-            INSERT INTO deliveries (id, recipient_uuid, type, payload, metadata, status)
-            VALUES (?, ?, ?, ?, ?::jsonb, 'PENDING')
+            INSERT INTO deliveries (id, recipient_uuid, type, payload, metadata, status, market)
+            VALUES (?, ?, ?, ?, ?::jsonb, 'PENDING', ?)
             """;
 
     private final Supplier<DataSource> dataSource;
+    private final String market;
 
     public PostgresDeliveryRepository(Supplier<DataSource> dataSource) {
+        this(dataSource, "anarchy");
+    }
+
+    public PostgresDeliveryRepository(Supplier<DataSource> dataSource, String market) {
         this.dataSource = dataSource;
+        this.market = requireMarket(market);
+    }
+
+    private static String requireMarket(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "anarchy";
+        }
+        String normalized = raw.trim().toLowerCase(Locale.ROOT);
+        if (!normalized.equals("anarchy") && !normalized.equals("smp")) {
+            throw new IllegalArgumentException("unknown delivery market: " + raw);
+        }
+        return normalized;
     }
 
     @Override
@@ -56,6 +75,7 @@ public final class PostgresDeliveryRepository implements DeliveryRepository {
             statement.setString(3, type);
             statement.setBytes(4, payload);
             statement.setString(5, metadataJson);
+            statement.setString(6, market);
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new DeliveryPersistenceException("create failed for " + recipientUuid, e);
@@ -67,7 +87,8 @@ public final class PostgresDeliveryRepository implements DeliveryRepository {
         try (Connection connection = dataSource.get().getConnection();
              PreparedStatement statement = connection.prepareStatement(CLAIM)) {
             statement.setObject(1, recipientUuid);
-            statement.setInt(2, limit);
+            statement.setString(2, market);
+            statement.setInt(3, limit);
             try (ResultSet row = statement.executeQuery()) {
                 List<Delivery> claimed = new ArrayList<>();
                 while (row.next()) {
@@ -108,6 +129,7 @@ public final class PostgresDeliveryRepository implements DeliveryRepository {
         try (Connection connection = dataSource.get().getConnection();
              PreparedStatement statement = connection.prepareStatement(PENDING_COUNT)) {
             statement.setObject(1, recipientUuid);
+            statement.setString(2, market);
             try (ResultSet row = statement.executeQuery()) {
                 row.next();
                 return row.getInt(1);

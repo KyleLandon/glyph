@@ -33,7 +33,7 @@ Velocity :25565  →  Folia :25566  →  Postgres + Redis
 | 8 | Combat / deaths | join with 2 clients, fight, confirm `/stats` + bounty if set | **manual** (alpha gate) |
 | 9 | Voice chat | join with 2 clients + Simple Voice Chat mod, hear each other | **manual** (alpha gate) |
 | 10 | Restart with players online | reconnect after backend restart | **manual** (alpha gate) |
-| 11 | Outside connect | `play.glyphmc.net` via playit from non-LAN | **manual** (alpha gate) |
+| 11 | Outside connect | `anarchy.glyphmc.net` / `smp.glyphmc.net` from non-LAN | **manual** (alpha gate) |
 | 12 | First-join welcome + `/top` | new account sees welcome; `/top money|kills|deaths|playtime|bounty` | ✅ code 2026-08-09 |
 
 "Multiple simulated players" for race conditions is covered by the concurrent

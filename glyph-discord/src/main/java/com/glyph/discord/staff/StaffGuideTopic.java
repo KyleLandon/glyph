@@ -8,7 +8,7 @@ import java.util.Optional;
 public enum StaffGuideTopic {
     OVERVIEW("overview", "Server Overview", "📌", "What Glyph is — anarchy + economy rules"),
     ECONOMY("economy", "Money", "💵", "Balances, pay, baltop"),
-    AUCTION("auction", "Auction House", "📦", "AH, fees, /claim"),
+    AUCTION("auction", "Auction House", "📦", "AH, fees, /ah mail"),
     BOUNTIES("bounties", "Bounties", "☠", "Wanted board and payouts"),
     GLYPHS("glyphs", "Glyph Prestige", "✦", "Account-bound ✦ cosmetics"),
     DISCORD("discord", "Discord Linking", "🔗", "Link Minecraft ↔ Discord"),

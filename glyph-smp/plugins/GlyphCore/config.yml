@@ -1,0 +1,63 @@
+# GlyphCore on the Paper Forever World backend.
+# Same Postgres wallet as Folia anarchy. Bounties stay off.
+# Playtime pay is $5 / 15m here; anarchy is $25 / 15m.
+
+server:
+  # Unique identifier of this backend server. Override: GLYPH_SERVER_ID
+  id: glyph-smp
+  # anarchy | smp — same $ / Glyphs wallet; different rules. Override: GLYPH_SERVER_ROLE
+  role: smp
+
+economy:
+  starting-balance: 100
+  currency-symbol: "$"
+  hud:
+    enabled: true
+    title: "GLYPH"
+
+tab:
+  enabled: true
+  header: "FOREVER WORLD"
+  footer: "smp.glyphmc.net"
+
+auction:
+  enabled: true
+  listing-fee-percent: 1.0
+  sale-fee-percent: 5.0
+  max-listings-per-player: 10
+  duration-hours: 48
+
+bounties:
+  enabled: false
+  minimum: 100
+  same-victim-cooldown-minutes: 60
+
+rewards:
+  playtime:
+    enabled: true
+    interval-minutes: 15
+    amount: 5
+    min-activity: 20
+
+glyphs:
+  enabled: true
+  symbol: "\u2726"
+  first-bounty-reward: 3
+
+discord:
+  invite-url: "https://discord.gg/htkQHR4gdf"
+
+chat:
+  item-placeholders: true
+  local-enabled: true
+  local-radius: 100
+
+starter:
+  enabled: true
+  items:
+    - STONE_SWORD
+    - STONE_PICKAXE
+    - STONE_AXE
+    - STONE_SHOVEL
+    - BREAD:16
+    - TORCH:16

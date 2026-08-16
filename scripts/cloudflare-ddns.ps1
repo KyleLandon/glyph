@@ -9,7 +9,8 @@
 #   CLOUDFLARE_API_TOKEN  API token with Zone:DNS:Edit on the zone
 #   GLYPH_DNS_ZONE        the registered domain, e.g. glyphmc.net
 #   GLYPH_DNS_RECORD      record name(s), comma separated, e.g.
-#                         "play.glyphmc.net,glyphmc.net"
+#                         "play.glyphmc.net,anarchy.glyphmc.net,smp.glyphmc.net"
+#                         Do not include the apex (glyphmc.net) — that is the site.
 
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12

@@ -23,6 +23,19 @@ Glyph is **persistent anarchy + economy**:
 
 Trust carefully. Build smart. Make money.
 
+There is also a **Forever World** (`smp.glyphmc.net`) — a separate world to
+hang out and build. Claims and homes apply there. Your **$ and Glyphs** are
+the same wallet. Inventory, chests, and bases are not. Each world has its
+own `/ah`; items never cross. Bounties stay on anarchy. Active play pays
+on both worlds: **$25 / 15 min** on anarchy, **$5 / 15 min** on Forever World.
+
+| Address / command | Lands on |
+| --- | --- |
+| `anarchy.glyphmc.net` | Folia anarchy (`/ah`, `/bounty`, no claims) |
+| `smp.glyphmc.net` | Forever World (claims, homes, own `/ah`, same `$` / Glyphs) |
+| `play.glyphmc.net` | Anarchy (alias) |
+| `/server anarchy` / `/server smp` | Switch while already online |
+
 ---
 
 ## First join
@@ -56,7 +69,7 @@ re-issues them; starter cash does not.
 **How you earn**
 
 - **$100** on first join (one-time starter)
-- **~$10 per 15 minutes** of *active* play (moving, mining, building — AFK does not pay)
+- **$25 per 15 minutes** of *active* play on anarchy, **$5** on Forever World (moving, mining, building — AFK does not pay)
 - Selling on the auction house
 - Collecting bounties by killing wanted players
 - Getting paid by other players
@@ -65,18 +78,47 @@ Cash also shows on the **right-side HUD** and in the **Tab** player list.
 
 ---
 
+## Forever World — homes and claims
+
+Only on `smp.glyphmc.net` / `/server smp`. Anarchy has neither.
+
+| Command | What it does |
+| --- | --- |
+| `/sethome [name]` | Set a home here (default name `home`). Up to 5 |
+| `/home [name]` | Teleport to that home |
+| `/delhome [name]` | Delete a home |
+| `/homes` | List your homes |
+| `/nickname [name]` | Character name in chat and tab. `/nickname off` clears |
+| `/me <action>` | Nearby emote (`* Name waves`). Same 100-block range as local chat |
+| Golden shovel | Claim land (right-click two corners) |
+| Stick | Inspect whose claim you are standing in |
+| `/trust <player>` | Let them build on your claim |
+| `/containertrust <player>` | Chests only |
+| `/accesstrust <player>` | Doors / buttons only |
+| `/untrust <player>` | Remove trust |
+| `/abandonclaim` | Drop the claim you are standing in |
+
+Everyone starts with **10,000** claim blocks (about 100×100). Active play
+earns **500** more per hour, up to **100,000**. Land claims use the golden
+shovel and `/claim`. Auction mail is `/ah mail`.
+
+---
+
 ## Auction house
+
+Anarchy and the Forever World each have their own house. Same `$`, same fees.
+Items listed on one world can only be bought and collected with `/ah mail` on that world.
 
 | Command | What it does |
 | --- | --- |
 | `/ah` | Open the auction house GUI |
 | `/ah sell <price>` | List the item in your hand |
 | `/ah search <text>` | Search listings |
-| `/claim` or `/mail` | Collect bought items / returned listings |
+| `/ah mail` | Collect bought items / returned listings |
 
 Aliases: `/auction`, `/auctionhouse`
 
-**Fees (sinks):** ~1% listing fee when you post, ~5% sale fee from the seller’s proceeds. Listings expire after **48 hours**; unsold items come back through `/claim`.
+**Fees (sinks):** ~1% listing fee when you post, ~5% sale fee from the seller’s proceeds. Listings expire after **48 hours**; unsold items come back through `/ah mail`.
 
 ---
 
@@ -84,11 +126,15 @@ Aliases: `/auction`, `/auctionhouse`
 
 | Command | What it does |
 | --- | --- |
-| `/bounty` | Most-wanted board |
+| `/bounty` or `/wanted` | Open the WANTED board (player heads, dead-or-alive) |
+| `/bounty list` | Chat most-wanted list |
+| `/bounty poster` | Print a written wanted list (item-frame it at spawn) |
+| `/bounty poster <player>` | Print that player's wanted poster |
 | `/bounty <player>` | Total bounty on a player |
 | `/bounty add <player> <amount>` | Place a bounty (money escrowed) |
 
 Minimum bounty: **$100**. Kill the target to claim the pot (anti-farm cooldowns apply).
+New bounties and claims are announced server-wide.
 
 ---
 
@@ -119,7 +165,7 @@ power or `$` conversion. Not tradable; no `/glyphpay`.
 | `/glyphs title <id\|none>` | Equip an unlocked title (shop or achievement) |
 | `/glyphs death <id\|none>` | Equip a custom death message style |
 | `/glyphs unlocks` | What you own |
-| `/glyphs hud on\|off` | Toggle sidebar HUD ($ + ✦ lines) |
+| `/glyphs hud on\|off` | Show or hide the ✦ line on the cash sidebar |
 
 **How you earn ✦**
 
@@ -130,10 +176,11 @@ power or `$` conversion. Not tradable; no `/glyphpay`.
 - Staff `/glyphadmin` (ops)
 
 **Discord tiers** (Initiate → Legend) follow lifetime Glyphs earned — shown in
-`/glyphs` and synced to Discord roles when linked.
+`/glyphs` and synced to Discord roles when linked. Unlocked titles sync as
+their own Discord roles.
 
 Tab list: `[Title] Name  $12.4K  ✦13  ☠29`. Sidebar HUD is opt-in via
-`/glyphs hud on`.
+`/glyphs hud on` (cash sidebar is always on).
 
 ---
 
@@ -151,10 +198,15 @@ Codes and the `/link …` line are **click-to-copy**.
 
 ## Chat
 
+Normal chat is **local** — players within **100 blocks** (same world). Prefix `[Local]`.
+
 | Feature | What it does |
 | --- | --- |
+| Just type | Nearby only |
+| `/g <message>` or `/global` | Everyone on this world. Prefix `[Global]` |
+| `/l <message>` | Nearby (same as default chat) |
 | Type `[i]` or `[item]` in chat | Shows your held item — **hover** for the full tooltip, **click** to copy a short summary |
-| `/item` | Announce your held item the same way |
+| `/item` | Announce your held item the same way (local) |
 
 Example: `WTS [item] 5k` while holding an elytra.
 
@@ -175,7 +227,7 @@ Tip: move Xaero’s minimap to the **left** (`Y` → Change Position) so it does
 1. Join `play.glyphmc.net` — you start with **$100**, stone tools, and a rules book (`/rules`).
 2. Leave spawn, gather gear, make a hidden base (nothing protects it but distance and secrecy).
 3. `/ah sell <price>` to list loot; `/ah` to browse and buy.
-4. `/claim` when you have mail.
+4. `/ah mail` when you have mail.
 5. `/bounty add <player> <amount>` if you want someone hunted.
 6. Stay active to earn playtime pay; `/bal` / Tab / HUD to watch your cash.
 
@@ -198,6 +250,8 @@ Not for normal players:
 | `/glyphadmin unlinkdiscord <player>` | Force-unlink Discord |
 | `/glyph status` | Infrastructure health |
 | `/glyph version` | Plugin version |
+| `/restart` | 10-second chat countdown, then restart Folia |
+| `/glyph restart` | Same as `/restart` |
 | `/tps` | Region tick health (ops) |
 
 ---
@@ -215,10 +269,10 @@ Money
  Starter $100 · active playtime pays · HUD + Tab show cash
 
 Auction
- /ah  ·  /ah sell <price>  ·  /ah search <text>  ·  /claim
+ /ah  ·  /ah sell <price>  ·  /ah search <text>  ·  /ah mail
 
 Bounties
- /bounty  ·  /bounty <player>  ·  /bounty add <player> <amount>  (min $100)
+ /bounty  ·  /wanted  ·  /bounty poster  ·  /bounty add <player> <amount>  (min $100)
 
 Stats
  /stats  ·  /stats <player>  ·  /playtime  ·  /top <money|kills|deaths|playtime|bounty>

@@ -22,6 +22,7 @@ class SettingsLoaderTest {
     private static final String CONFIG_YML = """
             server:
               id: test-01
+              role: smp
             economy:
               starting-balance: 25
               currency-symbol: "€"
@@ -85,6 +86,7 @@ class SettingsLoaderTest {
                 .load(yaml(CONFIG_YML), yaml(DATABASE_YML), yaml(REDIS_YML));
 
         assertThat(settings.serverId()).isEqualTo("test-01");
+        assertThat(settings.role()).isEqualTo(ServerRole.SMP);
 
         DatabaseSettings db = settings.database();
         assertThat(db.host()).isEqualTo("db.internal");
@@ -137,6 +139,8 @@ class SettingsLoaderTest {
 
         assertThat(settings.discord().inviteUrl()).isEqualTo("https://discord.gg/test");
         assertThat(settings.chat().itemPlaceholders()).isTrue();
+        assertThat(settings.chat().localEnabled()).isTrue();
+        assertThat(settings.chat().localRadius()).isEqualTo(100);
 
         StarterSettings starter = settings.starter();
         assertThat(starter.enabled()).isFalse();
@@ -181,6 +185,7 @@ class SettingsLoaderTest {
                 .load(new YamlConfiguration(), new YamlConfiguration(), new YamlConfiguration());
 
         assertThat(settings.serverId()).isEqualTo("glyph-01");
+        assertThat(settings.role()).isEqualTo(ServerRole.ANARCHY);
         assertThat(settings.database().host()).isEqualTo("localhost");
         assertThat(settings.database().port()).isEqualTo(5432);
         assertThat(settings.redis().port()).isEqualTo(6379);
@@ -209,6 +214,8 @@ class SettingsLoaderTest {
         assertThat(settings.glyphs().firstBountyReward()).isEqualTo(3);
         assertThat(settings.discord().inviteUrl()).isEqualTo("https://discord.gg/htkQHR4gdf");
         assertThat(settings.chat().itemPlaceholders()).isTrue();
+        assertThat(settings.chat().localEnabled()).isTrue();
+        assertThat(settings.chat().localRadius()).isEqualTo(100);
         assertThat(settings.starter().enabled()).isTrue();
         assertThat(settings.starter().items()).isEqualTo(StarterSettings.defaults());
     }

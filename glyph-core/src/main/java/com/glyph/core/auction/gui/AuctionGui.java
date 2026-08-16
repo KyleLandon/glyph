@@ -57,14 +57,23 @@ public final class AuctionGui implements Listener {
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
     private final Logger logger;
+    private final String houseTitle;
 
     public AuctionGui(AuctionService auctions, DeliveryClaimer claimer,
                       SchedulerAdapter scheduler, EconomySettings economy, Logger logger) {
+        this(auctions, claimer, scheduler, economy, logger, "Auction House");
+    }
+
+    public AuctionGui(AuctionService auctions, DeliveryClaimer claimer,
+                      SchedulerAdapter scheduler, EconomySettings economy, Logger logger,
+                      String houseTitle) {
         this.auctions = auctions;
         this.claimer = claimer;
         this.scheduler = scheduler;
         this.economy = economy;
         this.logger = logger;
+        this.houseTitle = houseTitle == null || houseTitle.isBlank()
+                ? "Auction House" : houseTitle;
     }
 
     /** Mutable view state carried between page fetches. */
@@ -148,7 +157,7 @@ public final class AuctionGui implements Listener {
     private void openBrowse(Player player, ViewState state, BrowsePage page) {
         BrowseHolder holder = new BrowseHolder(state);
         holder.pageCount = page.pageCount();
-        String title = state.mineOnly ? "Auction House — My Listings" : "Auction House";
+        String title = state.mineOnly ? houseTitle + " — My Listings" : houseTitle;
         Inventory inventory = Bukkit.createInventory(holder, 54, Component.text(title));
         holder.inventory = inventory;
 
@@ -329,7 +338,7 @@ public final class AuctionGui implements Listener {
                     .whenComplete((status, error) -> scheduler.runForEntity(player, () -> {
                         Component message = switch (status == null ? null : status) {
                             case SUCCESS -> Component.text(
-                                    "Listing cancelled — item returned via /claim.",
+                                    "Listing cancelled — item returned via /ah mail.",
                                     NamedTextColor.GREEN);
                             case NO_LONGER_ACTIVE -> Component.text(
                                     "That listing already sold or expired.", NamedTextColor.RED);

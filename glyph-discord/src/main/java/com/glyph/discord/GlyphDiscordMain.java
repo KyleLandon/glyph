@@ -126,6 +126,13 @@ public final class GlyphDiscordMain {
         logger.info("Registered guild slash commands for {}", guild.getName());
 
         GlyphEventSubscriber subscriber = new GlyphEventSubscriber(config, roleSync, jda, logger);
+        try {
+            for (DiscordIdentityRepository.LinkedAccount link : repository.findAllLinked()) {
+                roleSync.syncForMinecraft(guild, link.minecraftUuid());
+            }
+        } catch (Exception e) {
+            logger.warn("Startup role sync for linked accounts failed", e);
+        }
         logger.info("GlyphDiscord online for guild {}", config.guildId());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

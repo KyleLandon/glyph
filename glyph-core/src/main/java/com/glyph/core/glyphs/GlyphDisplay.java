@@ -19,8 +19,14 @@ public final class GlyphDisplay {
     }
 
     public static void applyDisplayName(Player player, NamedTextColor color, String titleText) {
+        applyDisplayName(player, color, titleText, player.getName());
+    }
+
+    public static void applyDisplayName(
+            Player player, NamedTextColor color, String titleText, String visibleName) {
         NamedTextColor effective = color == null ? NamedTextColor.WHITE : color;
-        Component name = Component.text(player.getName(), effective);
+        String shown = (visibleName == null || visibleName.isBlank()) ? player.getName() : visibleName;
+        Component name = Component.text(shown, effective);
         if (titleText != null && !titleText.isBlank()) {
             player.displayName(Component.text("[", NamedTextColor.GRAY)
                     .append(Component.text(titleText, NamedTextColor.GRAY))

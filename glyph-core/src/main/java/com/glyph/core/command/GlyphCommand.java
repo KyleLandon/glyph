@@ -23,12 +23,14 @@ import org.bukkit.entity.Player;
  */
 public final class GlyphCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> SUBCOMMANDS = List.of("status", "version");
+    private static final List<String> SUBCOMMANDS = List.of("status", "version", "restart");
 
     private final GlyphCorePlugin plugin;
+    private final RestartCommand restart;
 
-    public GlyphCommand(GlyphCorePlugin plugin) {
+    public GlyphCommand(GlyphCorePlugin plugin, RestartCommand restart) {
         this.plugin = plugin;
+        this.restart = restart;
     }
 
     @Override
@@ -37,8 +39,9 @@ public final class GlyphCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "status" -> status(sender);
             case "version" -> version(sender);
-            default -> sender.sendMessage(Component.text("Usage: /" + label + " <status|version>",
-                    NamedTextColor.RED));
+            case "restart" -> restart.startCountdown(sender);
+            default -> sender.sendMessage(Component.text(
+                    "Usage: /" + label + " <status|version|restart>", NamedTextColor.RED));
         }
         return true;
     }

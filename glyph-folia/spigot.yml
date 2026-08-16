@@ -14,7 +14,7 @@ settings:
   debug: false
   timeout-time: 60
   restart-on-crash: true
-  restart-script: ./start.sh
+  restart-script: restart-server.bat
   log-villager-deaths: true
   log-named-deaths: true
   bungeecord: false

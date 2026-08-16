@@ -21,7 +21,12 @@ libraries:
 commands:
   glyph:
     description: Glyph platform administration.
-    usage: /glyph <status|version>
+    usage: /glyph <status|version|restart>
+    permission: glyph.admin
+  restart:
+    description: Restart this backend after a 10-second countdown.
+    usage: /restart
+    aliases: [reboot]
     permission: glyph.admin
   balance:
     description: Show your balance.
@@ -46,17 +51,13 @@ commands:
     permission: glyph.economy.admin
   ah:
     description: The auction house.
-    usage: /ah [sell <price> | search <text>]
+    usage: /ah [sell <price> | search <text> | mail]
     aliases: [auction, auctionhouse]
     permission: glyph.auction
-  claim:
-    description: Claim pending item deliveries.
-    usage: /claim
-    aliases: [mail]
-    permission: glyph.auction
   bounty:
-    description: View or place bounties.
-    usage: /bounty [<player> | add <player> <amount>]
+    description: Wanted board, posters, and bounty placement.
+    usage: /bounty [list | poster [player] | <player> | add <player> <amount>]
+    aliases: [wanted]
     permission: glyph.bounty
   stats:
     description: Show player statistics.
@@ -91,10 +92,45 @@ commands:
     usage: /item
     aliases: [showitem, whatamiholding]
     permission: glyph.chat.item
+  g:
+    description: Shout to everyone on this world.
+    usage: /g <message>
+    aliases: [global, shout]
+    permission: glyph.chat.global
+  l:
+    description: Speak to players nearby.
+    usage: /l <message>
+    aliases: [local]
+    permission: glyph.chat.local
   rules:
     description: Read the Glyph rules book.
     usage: /rules
     permission: glyph.rules
+  home:
+    description: Teleport to a Forever World home.
+    usage: /home [name]
+    permission: glyph.home
+  sethome:
+    description: Set a Forever World home at your location.
+    usage: /sethome [name]
+    permission: glyph.home
+  delhome:
+    description: Delete a Forever World home.
+    usage: /delhome [name]
+    permission: glyph.home
+  homes:
+    description: List your Forever World homes.
+    usage: /homes
+    permission: glyph.home
+  nickname:
+    description: Set your Forever World character name.
+    usage: /nickname [name|off]
+    aliases: [nick]
+    permission: glyph.nickname
+  me:
+    description: Nearby roleplay emote.
+    usage: /me <action>
+    permission: glyph.me
 
 permissions:
   glyph.admin:
@@ -107,7 +143,7 @@ permissions:
     description: Access to /eco and other players' balances.
     default: op
   glyph.auction:
-    description: Access to the auction house and deliveries (/ah, /claim).
+    description: Access to the auction house and deliveries (/ah, /ah mail).
     default: true
   glyph.bounty:
     description: Access to bounties (/bounty).
@@ -127,6 +163,21 @@ permissions:
   glyph.chat.item:
     description: Share held items in chat (/item and [i] placeholders).
     default: true
+  glyph.chat.global:
+    description: Access to /g global chat.
+    default: true
+  glyph.chat.local:
+    description: Access to /l local chat.
+    default: true
   glyph.rules:
     description: Access to /rules.
+    default: true
+  glyph.home:
+    description: Access to Forever World homes (/home, /sethome, /delhome, /homes).
+    default: true
+  glyph.nickname:
+    description: Access to /nickname on the Forever World.
+    default: true
+  glyph.me:
+    description: Access to /me emotes on the Forever World.
     default: true

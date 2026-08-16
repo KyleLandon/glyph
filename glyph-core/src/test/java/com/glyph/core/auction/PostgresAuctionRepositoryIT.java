@@ -376,4 +376,40 @@ class PostgresAuctionRepositoryIT {
         assertThat(deliveries.pendingCount(recipient)).isEqualTo(1);
         assertThat(deliveries.claim(recipient, 5)).hasSize(1);
     }
+
+    @Test
+    void marketsNeverShareListingsOrDeliveries() {
+        PostgresAuctionRepository smpAh = new PostgresAuctionRepository(manager::dataSource, "smp");
+        PostgresDeliveryRepository smpMail = new PostgresDeliveryRepository(manager::dataSource, "smp");
+
+        UUID seller = playerWithBalance(0);
+        UUID buyer = playerWithBalance(100_00);
+        AuctionListing anarchyListing = listing(seller, 10_00);
+        CreateResult smpListed = smpAh.create(seller, ITEM,
+                summary("DIRT", "BLOCKS", "Seller"), 20_00, 0, 48, 100);
+        assertThat(smpListed.status()).isEqualTo(CreateStatus.SUCCESS);
+        AuctionListing smpListing = smpListed.listing().orElseThrow();
+
+        BrowseQuery mine = new BrowseQuery(0, 45, Sort.NEWEST, null, null, seller);
+        assertThat(auctions.browse(mine).listings())
+                .extracting(AuctionListing::id)
+                .contains(anarchyListing.id())
+                .doesNotContain(smpListing.id());
+        assertThat(smpAh.browse(mine).listings())
+                .extracting(AuctionListing::id)
+                .contains(smpListing.id())
+                .doesNotContain(anarchyListing.id());
+
+        assertThat(auctions.purchase(smpListing.id(), buyer, 0).status())
+                .isEqualTo(PurchaseStatus.NOT_FOUND);
+        assertThat(smpAh.purchase(anarchyListing.id(), buyer, 0).status())
+                .isEqualTo(PurchaseStatus.NOT_FOUND);
+
+        assertThat(smpAh.purchase(smpListing.id(), buyer, 0).status())
+                .isEqualTo(PurchaseStatus.SUCCESS);
+        assertThat(deliveries.pendingCount(buyer)).isZero();
+        assertThat(smpMail.pendingCount(buyer)).isEqualTo(1);
+        assertThat(deliveries.claim(buyer, 10)).isEmpty();
+        assertThat(smpMail.claim(buyer, 10)).hasSize(1);
+    }
 }

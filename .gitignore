@@ -50,6 +50,25 @@ glyph-folia/plugins/LuckPerms/libs/
 glyph-folia/plugins/spark/tmp/
 glyph-folia/plugins/.paper-remapped/
 glyph-folia/plugins/Chunky/tasks/
+glyph-smp/world/
+glyph-smp/world_nether/
+glyph-smp/world_the_end/
+glyph-smp/cache/
+glyph-smp/libraries/
+glyph-smp/versions/
+glyph-smp/logs/
+glyph-smp/crash-reports/
+glyph-smp/.console_history
+glyph-smp/usercache.json
+glyph-smp/version_history.json
+glyph-smp/plugins/LuckPerms/libs/
+glyph-smp/plugins/LuckPerms/translations/
+glyph-smp/plugins/.paper-remapped/
+glyph-smp/plugins/bStats/
+glyph-smp/plugins/Vault/
+# Fetched/copied by scripts/setup-smp.ps1 — do not duplicate Folia jars.
+glyph-smp/*.jar
+glyph-smp/plugins/*.jar
 glyph-velocity/logs/
 glyph-velocity/plugins/luckperms/libs/
 
@@ -57,6 +76,7 @@ glyph-velocity/plugins/luckperms/libs/
 # On a new machine: run both servers once, then scripts/sync-forwarding-secret.ps1
 glyph-velocity/forwarding.secret
 glyph-folia/config/paper-global.yml
+glyph-smp/config/paper-global.yml
 
 # Client modpack: its own repo (github.com/KyleLandon/glyph-clientmods),
 # nested here on the desktop for convenience.

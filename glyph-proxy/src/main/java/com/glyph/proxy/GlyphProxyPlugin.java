@@ -3,6 +3,8 @@ package com.glyph.proxy;
 import com.glyph.proxy.access.DiscordWhitelistConfig;
 import com.glyph.proxy.access.DiscordWhitelistListener;
 import com.glyph.proxy.access.PlayerAccessRepository;
+import com.glyph.proxy.route.ForcedHostListener;
+import com.glyph.proxy.route.MotdListener;
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
@@ -56,6 +58,8 @@ public final class GlyphProxyPlugin {
         } else {
             logger.info("Discord whitelist disabled (GLYPH_DISCORD_WHITELIST != true)");
         }
+        proxy.getEventManager().register(this, new ForcedHostListener(proxy, logger));
+        proxy.getEventManager().register(this, new MotdListener());
         logger.info("GlyphProxy initialized — {} backend server(s) registered",
                 proxy.getAllServers().size());
     }

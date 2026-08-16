@@ -5,6 +5,8 @@ import com.glyph.core.auction.AuctionRepository.CreateResult;
 import com.glyph.core.auction.AuctionService;
 import com.glyph.core.auction.gui.AuctionGui;
 import com.glyph.core.config.EconomySettings;
+import com.glyph.core.economy.EconomyService;
+import com.glyph.core.delivery.DeliveryClaimer;
 import com.glyph.core.delivery.DeliveryService;
 import com.glyph.core.item.ItemCodec;
 import com.glyph.core.scheduler.SchedulerAdapter;
@@ -29,6 +31,7 @@ import org.bukkit.inventory.ItemStack;
  *   <li>{@code /ah} — browse GUI</li>
  *   <li>{@code /ah sell <price>} — list the held item</li>
  *   <li>{@code /ah search <text>} — browse filtered by material/name</li>
+ *   <li>{@code /ah mail} — collect bought items / returned listings</li>
  * </ul>
  *
  * <p>Listing follows GDD section 22: the item is snapshotted and removed on
@@ -40,18 +43,23 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
     private final AuctionService auctions;
     private final AuctionGui gui;
     private final DeliveryService deliveries;
+    private final DeliveryClaimer claimer;
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
+    private final EconomyService balances;
 
     private final Set<UUID> listingInFlight = ConcurrentHashMap.newKeySet();
 
     public AhCommand(AuctionService auctions, AuctionGui gui, DeliveryService deliveries,
-                     SchedulerAdapter scheduler, EconomySettings economy) {
+                     DeliveryClaimer claimer, SchedulerAdapter scheduler,
+                     EconomySettings economy, EconomyService balances) {
         this.auctions = auctions;
         this.gui = gui;
         this.deliveries = deliveries;
+        this.claimer = claimer;
         this.scheduler = scheduler;
         this.economy = economy;
+        this.balances = balances;
     }
 
     @Override
@@ -82,8 +90,10 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
                 String text = String.join(" ", List.of(args).subList(1, args.length));
                 gui.open(player, AuctionGui.ViewState.search(text));
             }
+            case "mail" -> claimer.claimAll(player);
             default -> player.sendMessage(Component.text(
-                    "Usage: /" + label + " [sell <price> | search <text>]", NamedTextColor.RED));
+                    "Usage: /" + label + " [sell <price> | search <text> | mail]",
+                    NamedTextColor.RED));
         }
         return true;
     }
@@ -135,7 +145,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
                                     error != null ? null : result),
                             // Player gone before the outcome arrived. If the listing
                             // failed the removed item must not vanish: queue it as a
-                            // delivery for their next /claim.
+                            // delivery for their next /ah mail.
                             () -> {
                                 if (!listed) {
                                     deliveries.createReturn(player.getUniqueId(),
@@ -158,6 +168,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
                         NamedTextColor.GRAY));
             }
             player.sendMessage(message);
+            balances.resyncBalance(player.getUniqueId());
             return;
         }
 
@@ -181,7 +192,7 @@ public final class AhCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command,
                                       String alias, String[] args) {
         if (args.length == 1) {
-            return List.of("sell", "search").stream()
+            return List.of("sell", "search", "mail").stream()
                     .filter(option -> option.startsWith(args[0].toLowerCase(Locale.ROOT)))
                     .toList();
         }

@@ -9,7 +9,8 @@
 
 $rules = @(
     @{ Name = "Glyph Minecraft (Velocity TCP 25565)"; Protocol = "TCP"; Port = 25565 },
-    @{ Name = "Glyph Voice Chat (UDP 24454)";         Protocol = "UDP"; Port = 24454 }
+    @{ Name = "Glyph Voice Chat (UDP 24454)";         Protocol = "UDP"; Port = 24454 },
+    @{ Name = "Glyph SMP Voice Chat (UDP 24455)";     Protocol = "UDP"; Port = 24455 }
 )
 
 foreach ($rule in $rules) {
@@ -20,4 +21,4 @@ foreach ($rule in $rules) {
     Write-Host "OK: $($rule.Name)"
 }
 
-Write-Host "Done. Backend port 25566 intentionally NOT opened."
+Write-Host "Done. Backend ports 25566/25567 intentionally NOT opened."

@@ -9,7 +9,7 @@
 # clean, it fast-forwards. Uncommitted local edits are left alone.
 #
 # This does not rebuild plugins or restart Folia/Velocity. After a pull that
-# touches GlyphCore, run scripts\deploy-local.ps1 and restart the servers.
+# touches GlyphCore, run scripts\build_glyphcore.ps1 and restart the servers.
 
 param(
     [switch]$Register,
@@ -102,8 +102,9 @@ Write-Log "updated $($before.Substring(0, 7)) -> $after"
 
 $pluginTouch = $changed | Where-Object {
     $_ -like "glyph-core/*" -or $_ -like "glyph-proxy/*" -or $_ -like "glyph-api/*" -or
-    $_ -like "glyph-folia/plugins/*" -or $_ -like "glyph-velocity/plugins/*"
+    $_ -like "glyph-folia/plugins/*" -or $_ -like "glyph-smp/plugins/*" -or
+    $_ -like "glyph-velocity/plugins/*"
 }
 if ($pluginTouch) {
-    Write-Log "plugin files changed — run scripts\deploy-local.ps1 and restart Folia/Velocity to apply"
+    Write-Log "plugin files changed - run scripts\build_glyphcore.ps1 and restart Folia/Velocity to apply"
 }

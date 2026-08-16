@@ -1,7 +1,7 @@
 # Glyph website
 
-Landing page for [glyphmc.net](https://glyphmc.net): logo hero, **Join Server**
-(opens join modal with address + steps + client mods), and **Discord**.
+Landing page for [glyphmc.net](https://glyphmc.net): logo hero, Anarchy +
+Forever World cards (rules + copy-address), **How to join**, and **Discord**.
 
 **Live**
 

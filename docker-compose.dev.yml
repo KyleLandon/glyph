@@ -8,6 +8,7 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: glyph-dev-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${GLYPH_DB_DATABASE:-glyph}
       POSTGRES_USER: ${GLYPH_DB_USERNAME:-glyph_app}
@@ -25,6 +26,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: glyph-dev-redis
+    restart: unless-stopped
     command: ["redis-server", "--requirepass", "${GLYPH_REDIS_PASSWORD:-glyph_dev_password}"]
     ports:
       - "127.0.0.1:${GLYPH_REDIS_PORT:-6379}:6379"

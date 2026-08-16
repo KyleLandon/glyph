@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Glyph — Anarchy Economy</title>
+    <title>Glyph — Anarchy &amp; Forever World</title>
     <meta
       name="description"
-      content="Glyph: a persistent Minecraft anarchy world with a player-driven economy. Join play.glyphmc.net."
+      content="Glyph: Anarchy with no claims, and Forever World to hang out and build. Minecraft Java 26.2."
     />
-    <meta property="og:title" content="Glyph — Anarchy Economy" />
+    <meta property="og:title" content="Glyph — Anarchy & Forever World" />
     <meta
       property="og:description"
-      content="No claims. No grief protection. Make money or lose everything."
+      content="Anarchy. Or a world that stays. Claims, auction, voice, and roleplay on Forever World."
     />
     <meta property="og:image" content="assets/glyph-logo.png" />
     <link rel="icon" href="assets/glyph-logo.png" type="image/png" />
@@ -21,7 +21,7 @@
       href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;700;800&family=Source+Sans+3:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=2" />
+    <link rel="stylesheet" href="styles.css?v=3" />
   </head>
   <body>
     <div class="atmosphere" aria-hidden="true">
@@ -40,21 +40,53 @@
       />
 
       <p class="tagline">
-        Persistent anarchy. Player-driven economy.<br />
-        No claims. No handouts. Trust carefully.
+        Anarchy. Or a world that stays.
       </p>
+
+      <div class="worlds">
+        <article class="world">
+          <h2>Anarchy</h2>
+          <p class="world-lead">No claims. Trust carefully.</p>
+          <ul>
+            <li>No land claims or grief protection</li>
+            <li>Bases can burn. Items can be stolen</li>
+            <li>Auction house, bounties</li>
+            <li>5× playtime pay</li>
+            <li>Staff will not replace your stuff</li>
+          </ul>
+          <code class="address" data-copy="anarchy.glyphmc.net">anarchy.glyphmc.net</code>
+          <button type="button" class="btn btn-copy" data-copy="anarchy.glyphmc.net">
+            Copy address
+          </button>
+        </article>
+
+        <article class="world world-forever">
+          <h2>Forever World</h2>
+          <p class="world-lead">Hang out. Build. Stay.</p>
+          <ul>
+            <li>Claim areas</li>
+            <li>Player auction house &amp; economy</li>
+            <li>Proximity voice</li>
+            <li>Roleplay</li>
+            <li>Playtime pay</li>
+          </ul>
+          <code class="address" data-copy="smp.glyphmc.net">smp.glyphmc.net</code>
+          <button type="button" class="btn btn-copy" data-copy="smp.glyphmc.net">
+            Copy address
+          </button>
+        </article>
+      </div>
 
       <div class="actions">
         <button
           type="button"
           class="btn btn-join"
           id="join-btn"
-          data-address="play.glyphmc.net"
           aria-haspopup="dialog"
           aria-controls="join-modal"
         >
-          Join Server
-          <span class="btn-sub">play.glyphmc.net</span>
+          How to join
+          <span class="btn-sub">Minecraft Java 26.2</span>
         </button>
         <a
           class="btn btn-discord"
@@ -83,11 +115,23 @@
         </button>
 
         <h2 id="join-title">Join Glyph</h2>
-        <p class="modal-lead">Minecraft Java — no account whitelist.</p>
+        <p class="modal-lead">Minecraft Java — no account whitelist. Pick a world.</p>
 
-        <div class="address-row">
-          <code class="address" id="server-address">play.glyphmc.net</code>
-          <button type="button" class="btn btn-copy" id="copy-btn">Copy</button>
+        <div class="join-addresses">
+          <div>
+            <span class="join-label">Anarchy</span>
+            <div class="address-row">
+              <code class="address" data-copy="anarchy.glyphmc.net">anarchy.glyphmc.net</code>
+              <button type="button" class="btn btn-copy" data-copy="anarchy.glyphmc.net">Copy</button>
+            </div>
+          </div>
+          <div>
+            <span class="join-label">Forever World</span>
+            <div class="address-row">
+              <code class="address" data-copy="smp.glyphmc.net">smp.glyphmc.net</code>
+              <button type="button" class="btn btn-copy" data-copy="smp.glyphmc.net">Copy</button>
+            </div>
+          </div>
         </div>
 
         <dl class="specs">
@@ -100,8 +144,12 @@
             <dd>Vanilla, Prism, MultiMC, or Modrinth App</dd>
           </div>
           <div>
-            <dt>Mods</dt>
-            <dd>Optional — Fabric pack for voice, maps, QoL</dd>
+            <dt>Switch</dt>
+            <dd><strong>/server anarchy</strong> or <strong>/server smp</strong> once online</dd>
+          </div>
+          <div>
+            <dt>Alias</dt>
+            <dd><strong>play.glyphmc.net</strong> lands on anarchy</dd>
           </div>
         </dl>
 
@@ -109,11 +157,8 @@
         <ol class="steps">
           <li>Install Minecraft Java <strong>26.2</strong>.</li>
           <li>Multiplayer → Add Server.</li>
-          <li>
-            Server Address:
-            <strong>play.glyphmc.net</strong>
-          </li>
-          <li>Join. You start with <strong>$100</strong>.</li>
+          <li>Paste <strong>anarchy.glyphmc.net</strong> or <strong>smp.glyphmc.net</strong>.</li>
+          <li>You start with <strong>$100</strong> (one wallet, both worlds) and stone tools.</li>
         </ol>
 
         <h3>Optional client mods</h3>
@@ -146,6 +191,6 @@
       Address copied — paste in Minecraft
     </div>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
   </body>
 </html>

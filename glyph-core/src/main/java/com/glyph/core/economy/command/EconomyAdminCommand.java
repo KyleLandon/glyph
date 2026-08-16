@@ -4,6 +4,7 @@ import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.economy.EconomyApi.AdminOperation;
 import com.glyph.api.economy.Money;
 import com.glyph.api.player.PlayerApi;
+import com.glyph.core.command.CommandTabs;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import java.util.List;
@@ -144,6 +145,9 @@ public final class EconomyAdminCommand implements CommandExecutor, TabCompleter 
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
             return SUBCOMMANDS.stream().filter(s -> s.startsWith(prefix)).toList();
+        }
+        if (args.length == 2) {
+            return CommandTabs.onlinePlayers(sender, args[1]);
         }
         return List.of();
     }

@@ -6,7 +6,7 @@ a separate process (`glyph-discord`); it is never loaded inside Folia.
 ## What v1 does
 
 1. **Account linking** — `/linkdiscord` in Minecraft → `/link <code>` in Discord
-2. **Role sync** — Verified + lifetime ✦ tiers (Initiate → Legend)
+2. **Role sync** — Verified + lifetime ✦ tiers (Initiate → Legend) + unlocked titles
 3. **Alpha entitlement** — Glyph Alpha Discord role ↔ `player_access.alpha`
 4. **Optional whitelist** — Velocity denies join unless `alpha` when enabled
 5. **Staff guide** — `/staffhelp` ephemeral menu + `/staffguide setup` forum embeds
@@ -22,6 +22,7 @@ a separate process (`glyph-discord`); it is never loaded inside Folia.
 
    - `Verified`
    - `Glyph Initiate` / `Scout` / `Blooded` / `Veteran` / `Legend`
+   - Titles: `Wanderer` / `Outlaw` / `Warlord` / `Blooded` / `Bounty Hunter` / `Broker`
    - `Glyph Alpha`
 
    Put the bot’s role **above** those roles so it can assign them. You can still
@@ -51,10 +52,13 @@ Search order: `GLYPH_DISCORD_ENV_FILE`, `./secrets.env`,
 
 ## Run the bot
 
+Starts with the game servers (`start.bat` ops page / `scripts\start-all.ps1`).
+Idempotent: a second launch is skipped when the process is already up.
+
 ```powershell
-$env:JAVA_HOME = 'C:\Program Files\Java\jdk-25'
-.\gradlew :glyph-discord:run
-# or: java -jar glyph-discord\build\libs\glyph-discord-0.1.0.jar
+scripts\start-discord.ps1
+# or, foreground in this window:
+glyph-discord\start.ps1
 ```
 
 Flyway **V9** must already be applied by GlyphCore before the bot links anyone.
@@ -63,7 +67,7 @@ Flyway **V9** must already be applied by GlyphCore before the bot links anyone.
 
 1. Join Minecraft → `/linkdiscord` → receive `GLYPH-XXXXXX`
 2. In Discord → `/link GLYPH-XXXXXX` (ephemeral confirmation)
-3. Roles update from lifetime Glyphs automatically
+3. Roles update from lifetime Glyphs and unlocked titles automatically
 
 Unlink: `/unlinkdiscord` in-game (ops: `/glyphadmin unlinkdiscord <player>`).
 
@@ -104,6 +108,7 @@ Quick: /staffhelp · /glyph status · /eco get <player> · /stats <player>
 Channel `glyph.events` (JSON):
 
 - `glyph.lifetime` — `{uuid, lifetimeEarned}` → role sync
+- `glyph.title` — `{uuid}` → title role sync
 - `discord.linked` — `{uuid, discordUserId}` → role sync
 
 Postgres remains authoritative. No Discord economy mutations in v1.

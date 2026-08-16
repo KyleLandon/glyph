@@ -32,9 +32,10 @@ with a self-updating install script.
 
 ## Start the network
 
-Double-click **`start.bat`** at the repo root (Windows desktop). It starts
-Docker, PostgreSQL, Redis, Folia, Velocity, and playit. Already-running
-pieces are left alone.
+Double-click **`start.bat`** at the repo root (Windows desktop). It opens
+the local ops page (`http://127.0.0.1:8787`) and starts Docker, PostgreSQL,
+Redis, Folia, SMP, Velocity, and Discord. Already-running pieces are left
+alone.
 
 Connect to `localhost` or `play.glyphmc.net`.
 

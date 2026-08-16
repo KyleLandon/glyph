@@ -2,6 +2,7 @@ package com.glyph.core.economy.command;
 
 import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.player.PlayerApi;
+import com.glyph.core.command.CommandTabs;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import java.util.List;
@@ -10,13 +11,14 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 /**
  * {@code /balance} ({@code /bal}) — own balance; {@code /balance <player>}
  * needs the admin permission.
  */
-public final class BalanceCommand implements CommandExecutor {
+public final class BalanceCommand implements CommandExecutor, TabCompleter {
 
     private final EconomyApi economy;
     private final PlayerApi players;
@@ -74,5 +76,14 @@ public final class BalanceCommand implements CommandExecutor {
                     .orElse(Component.text("No account found.", NamedTextColor.RED));
             CommandFeedback.deliver(scheduler, sender, List.of(message));
         });
+    }
+
+    @Override
+    public List<String> onTabComplete(
+            CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 1 && sender.hasPermission("glyph.economy.admin")) {
+            return CommandTabs.onlinePlayers(sender, args[0]);
+        }
+        return List.of();
     }
 }

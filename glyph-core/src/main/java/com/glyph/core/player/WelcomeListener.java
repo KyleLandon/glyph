@@ -2,6 +2,7 @@ package com.glyph.core.player;
 
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
+import com.glyph.core.config.ServerRole;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import java.time.Duration;
 import java.util.List;
@@ -25,12 +26,17 @@ public final class WelcomeListener {
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
     private final StarterKitService starterKit;
+    private final ServerRole role;
 
     public WelcomeListener(
-            SchedulerAdapter scheduler, EconomySettings economy, StarterKitService starterKit) {
+            SchedulerAdapter scheduler,
+            EconomySettings economy,
+            StarterKitService starterKit,
+            ServerRole role) {
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
         this.economy = Objects.requireNonNull(economy, "economy");
         this.starterKit = Objects.requireNonNull(starterKit, "starterKit");
+        this.role = role == null ? ServerRole.ANARCHY : role;
     }
 
     /** Called on the async join-completion thread after persistence. */
@@ -49,13 +55,29 @@ public final class WelcomeListener {
             }
             scheduler.runForEntity(player, () -> {
                 messages().forEach(player::sendMessage);
-                player.openBook(RulesBook.create());
+                player.openBook(role.isSmp() ? RulesBook.createSmp() : RulesBook.create());
             }, null);
         }, MESSAGE_DELAY);
     }
 
     private List<Component> messages() {
         String starter = Money.of(economy.startingBalance()).format(economy.currencySymbol());
+        if (role.isSmp()) {
+            return List.of(
+                    Component.empty(),
+                    Component.text("Welcome to the Forever World.", NamedTextColor.GOLD, TextDecoration.BOLD),
+                    Component.empty(),
+                    Component.text("This world stays. Hang out. Build.", NamedTextColor.GRAY),
+                    Component.text("Golden shovel claims land. /sethome to stay.", NamedTextColor.AQUA),
+                    Component.text("Your $ and Glyphs are the same as anarchy.", NamedTextColor.GREEN),
+                    Component.text("Inventory is not. /server anarchy to switch.", NamedTextColor.YELLOW),
+                    Component.empty(),
+                    Component.text("Starter cash: ", NamedTextColor.GRAY)
+                            .append(Component.text(starter, NamedTextColor.GREEN))
+                            .append(Component.text(" (one wallet, first join only)", NamedTextColor.GRAY)),
+                    Component.text("Read the rules book, or type /rules anytime.", NamedTextColor.DARK_GRAY),
+                    Component.empty());
+        }
         return List.of(
                 Component.empty(),
                 Component.text("Welcome to GLYPH.", NamedTextColor.GOLD, TextDecoration.BOLD),

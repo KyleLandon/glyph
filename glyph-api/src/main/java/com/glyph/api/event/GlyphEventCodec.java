@@ -24,6 +24,11 @@ public final class GlyphEventCodec {
                 + "\",\"lifetimeEarned\":" + lifetimeEarned + "}";
     }
 
+    public static String title(UUID uuid) {
+        return "{\"type\":\"" + GlyphEventType.GLYPH_TITLE.wireName()
+                + "\",\"uuid\":\"" + uuid + "\"}";
+    }
+
     public static String discordLinked(UUID uuid, long discordUserId) {
         return "{\"type\":\"" + GlyphEventType.DISCORD_LINKED.wireName()
                 + "\",\"uuid\":\"" + uuid
@@ -41,6 +46,14 @@ public final class GlyphEventCodec {
             return Optional.empty();
         }
         return Optional.of(new GlyphLifetimeEvent(uuid.get(), Long.parseLong(lifetime.group(1))));
+    }
+
+    public static Optional<GlyphTitleEvent> parseTitle(String json) {
+        Optional<GlyphEventType> type = typeOf(json);
+        if (type.isEmpty() || type.get() != GlyphEventType.GLYPH_TITLE) {
+            return Optional.empty();
+        }
+        return uuidOf(json).map(GlyphTitleEvent::new);
     }
 
     public static Optional<DiscordLinkedEvent> parseDiscordLinked(String json) {
@@ -83,5 +96,8 @@ public final class GlyphEventCodec {
     }
 
     public record DiscordLinkedEvent(UUID uuid, long discordUserId) {
+    }
+
+    public record GlyphTitleEvent(UUID uuid) {
     }
 }

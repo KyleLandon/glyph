@@ -1,9 +1,10 @@
 package com.glyph.core.chat.command;
 
+import com.glyph.core.chat.ChatChannels;
 import com.glyph.core.chat.ItemChatFormatter;
+import com.glyph.core.config.ChatSettings;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,6 +13,12 @@ import org.bukkit.inventory.ItemStack;
 
 /** {@code /item} — show your held item in chat with hover + click-to-copy. */
 public final class ItemCommand implements CommandExecutor {
+
+    private final ChatSettings settings;
+
+    public ItemCommand(ChatSettings settings) {
+        this.settings = settings;
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -25,12 +32,14 @@ public final class ItemCommand implements CommandExecutor {
             return true;
         }
 
-        Component message = Component.text()
-                .append(player.displayName().colorIfAbsent(NamedTextColor.WHITE))
-                .append(Component.text(" shows ", NamedTextColor.GRAY))
-                .append(ItemChatFormatter.itemComponent(hand))
-                .build();
-        Bukkit.getServer().sendMessage(message);
+        Component name = player.displayName().colorIfAbsent(NamedTextColor.WHITE);
+        Component body = Component.text("shows ", NamedTextColor.GRAY)
+                .append(ItemChatFormatter.itemComponent(hand));
+        if (settings.localChat()) {
+            ChatChannels.sendLocal(player, name, body, settings.localRadius());
+        } else {
+            ChatChannels.sendGlobal(player, name, body);
+        }
         return true;
     }
 }

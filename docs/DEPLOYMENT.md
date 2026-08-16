@@ -92,11 +92,11 @@ server stopped before anything risky (migrations, version bumps).
 
 ## Discord companion bot
 
-`glyph-discord` is a separate JVM process (not a Folia/Velocity plugin). Build
-with `:glyph-discord:jar`, set `GLYPH_DISCORD_*` + DB/Redis env vars, then:
+`glyph-discord` is a separate JVM process (not a Folia/Velocity plugin).
+Locally it starts with Folia / `scripts\start-all.ps1`. Manual:
 
 ```powershell
-java -jar glyph-discord\build\libs\glyph-discord-0.1.0.jar
+scripts\start-discord.ps1
 ```
 
 Closed-alpha whitelist (optional): set `GLYPH_DISCORD_WHITELIST=true` on the

@@ -1,10 +1,10 @@
 # Local Test Network
 
-Two runtime directories make up the local test network. Their configs,
-server jars and plugins are **committed**, so a fresh clone runs with
-minimal setup. Not in git: world data, logs, auto-downloaded caches
-(`libraries/`, `cache/`, `versions/`, LuckPerms `libs/`) and the proxy
-forwarding secret (public repo).
+Three runtime directories make up the local test network. Their configs,
+server jars and plugins are **committed** (Paper's jar is fetched by
+`scripts\setup-smp.ps1`). Not in git: world data, logs, auto-downloaded
+caches (`libraries/`, `cache/`, `versions/`, LuckPerms `libs/`) and the
+proxy forwarding secret (public repo).
 
 ## New machine quick start
 
@@ -12,9 +12,12 @@ forwarding secret (public repo).
 scripts\dev-up.ps1              # PostgreSQL + Redis (Docker)
 glyph-velocity\start.bat        # once — generates forwarding.secret; stop it
 glyph-folia\start.bat           # once — generates config/paper-global.yml + world; stop it
-scripts\sync-forwarding-secret.ps1   # wires the secret into the backend
-scripts\deploy-local.ps1        # build + deploy glyph plugins
-# now start both servers normally
+scripts\setup-smp.ps1           # Paper 26.1.2 + shared plugin jars (LuckPerms/Vault/voice)
+glyph-smp\start.ps1             # once — generates config/paper-global.yml + world; stop it
+scripts\sync-forwarding-secret.ps1   # wires the secret into both backends
+scripts\build_glyphcore.ps1        # build + deploy glyph plugins
+# now start the stack (Discord bot starts with Folia)
+# or double-click start.bat for the local ops page (http://127.0.0.1:8787)
 ```
 
 ```
@@ -22,14 +25,17 @@ Minecraft client
       |
       v  :25565 (public)
 glyph-velocity/   Velocity 4.1 proxy — auth, modern forwarding
-      |
-      v  127.0.0.1:25566 (private)
-glyph-folia/      Folia 26.1.2 backend — online-mode=false, forwarding secret
+      |                           \
+      v  127.0.0.1:25566           v  127.0.0.1:25567
+glyph-folia/  Folia anarchy        glyph-smp/  Paper SMP
+              role: anarchy                    role: smp
+              AH, bounties, faucet             claims/homes later
 ```
 
-Connect to `localhost` (port 25565, through the proxy). The backend only
-listens on localhost and refuses connections without the Velocity secret
-(GDD sections 37-38).
+Same Postgres wallet (`$` + Glyphs). Separate worlds and inventories.
+Connect to `localhost` (port 25565, through the proxy). `/server smp`
+switches. Backends only listen on localhost and refuse connections without
+the Velocity secret (GDD sections 37-38). See ADR-013.
 
 ## Velocity proxy (`glyph-velocity/`)
 
@@ -38,10 +44,11 @@ listens on localhost and refuses connections without the Velocity secret
 2. Run once to generate `velocity.toml` + `forwarding.secret`, stop it.
 3. `velocity.toml` deviations from defaults:
    - `player-info-forwarding-mode = "modern"`
-   - `[servers]`: `anarchy = "127.0.0.1:25566"`, `try = ["anarchy"]`
-     (example servers and forced-hosts removed)
+   - `[servers]`: `anarchy = "127.0.0.1:25566"`, `smp = "127.0.0.1:25567"`,
+     `try = ["anarchy"]`, forced hosts `anarchy`/`play` → anarchy,
+     `smp.glyphmc.net` → smp
    - branded `motd`
-4. Deploy `glyph-proxy` with `scripts/deploy-local.ps1`; start with `start.bat`.
+4. Deploy `glyph-proxy` with `scripts/build_glyphcore.ps1`; start with `start.bat`.
 
 The backend gets the *contents* of `forwarding.secret` in
 `config/paper-global.yml` under `proxies.velocity.secret` (see below).
@@ -56,7 +63,7 @@ The backend gets the *contents* of `forwarding.secret` in
 2. Run it once (`java -jar folia-<version>.jar --nogui`), accept `eula.txt`.
 3. Apply the `server.properties` values below.
 4. Copy `start.ps1` (below) or use the committed one if present.
-5. Deploy plugins: `scripts/deploy-local.ps1` (builds and copies
+5. Deploy plugins: `scripts/build_glyphcore.ps1` (builds and copies
    `glyph-core`). `spark` is also installed for profiling (GDD section 74).
 6. Start, then run the one-time commands below in the console.
 
@@ -120,33 +127,62 @@ op <your-name>
 | VaultUnlocked | ✔ | — | Economy API bridge. GlyphCore registers `GlyphEconomy` as the Vault provider, so third-party plugins read/write Glyph balances (ledgered as SYSTEM_REWARD/SYSTEM_SINK). |
 | ViaVersion + ViaBackwards | — | ✔ | Newer/older clients can join through the proxy. |
 | spark | ✔ | — | Profiling (GDD section 74). |
-| Chunky | ✔ | — | World pregeneration (GDD Phase 9). Folia-safe Bukkit jar. |
+| Chunky | ✔ | — | World pregeneration (GDD Phase 9). Folia-safe Bukkit jar. Anarchy only. |
+| LuckPerms / Vault / voicechat | also on Paper SMP | — | Copied by `scripts\setup-smp.ps1`. Same Postgres; LuckPerms `server: smp`. |
 
-RCON is enabled on the Folia backend for local automation only
-(`enable-rcon=true`, password `glyph-dev-rcon`, port `25575`, bound via
-`server-ip=127.0.0.1`). Use `scripts\rcon.ps1 "<command>"`. Never expose
-RCON on a public host — leave it off in production (`docs/DEPLOYMENT.md`).
+# Paper SMP backend (`glyph-smp/`)
+
+Independent Paper 26.1.2 process. GlyphCore `server.role: smp` turns off
+`/bounty` combat, playtime pay, and the anarchy starter kit. `/ah` is on
+(its own market — items never cross). `/bal`, `/pay`, `/glyphs`, `/stats`,
+`/top` still hit the shared database.
+
+```powershell
+scripts\setup-smp.ps1            # download Paper + copy LuckPerms/Vault/voicechat
+scripts\build_glyphcore.ps1      # deploy glyph-core into glyph-smp/plugins
+```
+
+`server.properties`: port `25567`, RCON `25576`, `online-mode=false`,
+`server-ip=127.0.0.1`, `difficulty=normal`, small spawn protection.
+Paper anti-xray (`engine-mode: 2`) is on in `config/paper-world-defaults.yml`
+(overworld + nether; End off). Same on Folia. Restart required after changes.
+Do not copy Folia-only jars (Chunky, JustEnoughRecipes, spark) unless you
+need them; claim/home plugins go here later, not on Folia. Voice chat uses
+UDP **24455** so it does not collide with Folia's 24454.
+
+RCON is enabled on both backends for local automation only
+(`enable-rcon=true`, password `glyph-dev-rcon`, Folia `25575`, SMP `25576`,
+bound via `server-ip=127.0.0.1`). Use `scripts\rcon.ps1 "<command>"` or
+`scripts\rcon.ps1 -Target smp "<command>"`. Never expose RCON on a public
+host — leave it off in production (`docs/DEPLOYMENT.md`).
 
 Both LuckPerms instances are configured for **shared storage on the dev
 PostgreSQL** (`storage-method: postgresql`, database `glyph`, tables
 `luckperms_*`) with **Redis messaging** (`messaging-service: redis`), so
 permission changes propagate proxy⇄backend instantly. On a fresh machine,
 apply the same edits to `plugins/LuckPerms/config.yml` (Folia, also
-`server: anarchy`) and `plugins/luckperms/config.yml` (Velocity,
-`server: proxy`): point `data:` at `127.0.0.1:5432`/`glyph`/`glyph_app` and
+`server: anarchy`), `glyph-smp/plugins/LuckPerms/config.yml` (`server: smp`),
+and `plugins/luckperms/config.yml` (Velocity, `server: proxy`): point `data:`
+at `127.0.0.1:5432`/`glyph`/`glyph_app` and
 `redis:` at `127.0.0.1:6379` with the dev passwords from `.env`.
 The Docker stack (`scripts/dev-up.ps1`) must be running or LuckPerms falls
 back with errors at startup.
 
 ## Daily use
 
-Double-click **`start.bat`** in the repo root — Docker, PostgreSQL, Redis,
-Folia, Velocity, and playit. Already-running pieces are skipped.
+Double-click **`start.bat`** in the repo root — opens the local ops page at
+`http://127.0.0.1:8787` (status, logs, RCON) and starts Docker, PostgreSQL,
+Redis, Folia, Paper SMP, Velocity, and Discord if they are down.
 
 ```powershell
-.\start.ps1                 # same thing from a shell
-scripts\deploy-local.ps1    # after code changes: build + copy plugin jars
+.\start.ps1                      # same thing from a shell
+scripts\build_glyphcore.ps1      # after code changes: build + stage jars
+scripts\build_glyphcore.ps1 -Restart   # build, then in-game /restart
+scripts\watch-glyphcore.ps1      # auto-build on save; you still /restart
 ```
+
+While Folia is up, builds go to `plugins/update/` (never overwrite the live
+jar). `/restart` loads the staged jar after a 10-second countdown.
 
 Connect to `localhost` in Minecraft (or `play.glyphmc.net` from outside).
 (`.bat` wrappers exist because double-clicked `.ps1` files open in an editor

@@ -1,19 +1,22 @@
 package com.glyph.discord.roles;
 
 import com.glyph.api.discord.DiscordTier;
+import com.glyph.api.glyphs.GlyphTitle;
 import com.glyph.discord.DiscordBotConfig;
 import com.glyph.discord.db.DiscordIdentityRepository;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import org.slf4j.Logger;
 
-/** Assigns Verified + lifetime prestige roles for a linked Discord member. */
+/** Assigns Verified, lifetime prestige, and unlocked title roles. */
 public final class RoleSyncService {
 
     private final DiscordBotConfig config;
@@ -54,6 +57,7 @@ public final class RoleSyncService {
         try {
             long lifetime = repository.lifetimeGlyphsEarned(minecraftUuid);
             Optional<DiscordTier> earned = DiscordTier.forLifetimeEarned(lifetime);
+            Set<String> titleUnlocks = new HashSet<>(repository.titleUnlocks(minecraftUuid));
 
             List<Role> toAdd = new ArrayList<>();
             List<Role> toRemove = new ArrayList<>();
@@ -81,6 +85,24 @@ public final class RoleSyncService {
                 }
             }
 
+            for (GlyphTitle title : GlyphTitle.values()) {
+                Long roleId = config.titleRoleIds().get(title);
+                if (roleId == null || roleId == 0L) {
+                    continue;
+                }
+                Role role = guild.getRoleById(roleId);
+                if (role == null) {
+                    continue;
+                }
+                boolean shouldHave = titleUnlocks.contains(title.id());
+                boolean has = member.getRoles().contains(role);
+                if (shouldHave && !has) {
+                    toAdd.add(role);
+                } else if (!shouldHave && has) {
+                    toRemove.add(role);
+                }
+            }
+
             if (toAdd.isEmpty() && toRemove.isEmpty()) {
                 return;
             }
@@ -88,10 +110,11 @@ public final class RoleSyncService {
                     .reason("Glyph prestige sync")
                     .queue(
                             success -> logger.info(
-                                    "Synced Discord roles for {} (lifetime ✦{}, tier {})",
+                                    "Synced Discord roles for {} (lifetime ✦{}, tier {}, titles {})",
                                     minecraftUuid,
                                     lifetime,
-                                    earned.map(DiscordTier::displayName).orElse("none")),
+                                    earned.map(DiscordTier::displayName).orElse("none"),
+                                    titleUnlocks),
                             error -> logger.warn(
                                     "Failed to modify roles for {}: {}",
                                     minecraftUuid, error.toString()));

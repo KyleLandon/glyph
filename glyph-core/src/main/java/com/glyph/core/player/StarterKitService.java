@@ -1,5 +1,6 @@
 package com.glyph.core.player;
 
+import com.glyph.core.config.ServerRole;
 import com.glyph.core.config.StarterSettings;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +24,12 @@ import org.bukkit.plugin.Plugin;
 public final class StarterKitService {
 
     private final StarterSettings settings;
+    private final ServerRole role;
     private final NamespacedKey grantedKey;
 
-    public StarterKitService(Plugin plugin, StarterSettings settings) {
+    public StarterKitService(Plugin plugin, StarterSettings settings, ServerRole role) {
         this.settings = Objects.requireNonNull(settings, "settings");
+        this.role = role == null ? ServerRole.ANARCHY : role;
         this.grantedKey = new NamespacedKey(
                 Objects.requireNonNull(plugin, "plugin"), "starter_kit");
     }
@@ -47,7 +50,7 @@ public final class StarterKitService {
         for (StarterSettings.StarterItem item : settings.items()) {
             stacks.add(item.stack());
         }
-        stacks.add(RulesBook.create());
+        stacks.add(role.isSmp() ? RulesBook.createSmp() : RulesBook.create());
 
         Map<Integer, ItemStack> leftover = player.getInventory()
                 .addItem(stacks.toArray(ItemStack[]::new));

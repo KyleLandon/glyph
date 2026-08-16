@@ -6,7 +6,7 @@ bind = "0.0.0.0:25565"
 
 # What should be the MOTD? This gets displayed when the player adds your server to
 # their server list. Only MiniMessage format is accepted.
-motd = "<gold>Glyph</gold> <gray>- Anarchy Economy</gray> <dark_gray>[<red>DEV</red>]</dark_gray>"
+motd = "<gold><bold>GLYPH</bold></gold> <gray>Anarchy</gray><newline><dark_gray>No claims. Trust carefully.</dark_gray>"
 
 # What should we display for the maximum number of players? (Velocity does not support a cap
 # on the number of players online.)
@@ -92,6 +92,8 @@ decompressed-bytes-per-second = 5242880
 # represents the IP address of the server to connect to.
 # The anarchy backend (Folia) listens on the private port 25566 (localhost only).
 anarchy = "127.0.0.1:25566"
+# Forever World (Paper): hang out / build. Same $ / Glyphs. /server smp
+smp = "127.0.0.1:25567"
 
 # In what order we should try servers when a player logs in or is kicked from a server.
 try = [
@@ -99,7 +101,16 @@ try = [
 ]
 
 [forced-hosts]
-# Configure your forced hosts here.
+# Hostname the client typed picks the backend. Same Velocity, same wallet.
+"anarchy.glyphmc.net" = [
+    "anarchy"
+]
+"play.glyphmc.net" = [
+    "anarchy"
+]
+"smp.glyphmc.net" = [
+    "smp"
+]
 
 [advanced]
 # How large a Minecraft packet has to be before we compress it. Setting this to zero will

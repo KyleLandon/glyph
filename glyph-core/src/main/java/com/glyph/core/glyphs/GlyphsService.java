@@ -2,6 +2,7 @@ package com.glyph.core.glyphs;
 
 import com.glyph.api.discord.DiscordTier;
 import com.glyph.api.economy.EconomyApi.AdminOperation;
+import com.glyph.api.glyphs.GlyphTitle;
 import com.glyph.core.config.GlyphCurrencySettings;
 import com.glyph.core.event.GlyphEventPublisher;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -46,6 +48,7 @@ public final class GlyphsService {
     private final Map<UUID, Optional<String>> equippedTitleCache = new ConcurrentHashMap<>();
     private final Map<UUID, Optional<String>> deathStyleCache = new ConcurrentHashMap<>();
     private final Map<UUID, Boolean> hudEnabledCache = new ConcurrentHashMap<>();
+    private volatile Function<UUID, String> visibleNameLookup = uuid -> null;
 
     public GlyphsService(
             GlyphsRepository repository,
@@ -134,6 +137,11 @@ public final class GlyphsService {
         return equippedTitleId(playerUuid).flatMap(GlyphTitles::displayText);
     }
 
+    /** Equipped title, or {@link GlyphTitles#DEFAULT_DISPLAY} when none. */
+    public String visibleTitleText(UUID playerUuid) {
+        return equippedTitleText(playerUuid).orElse(GlyphTitles.DEFAULT_DISPLAY);
+    }
+
     public Optional<String> deathStyleProductId(UUID playerUuid) {
         return deathStyleCache.getOrDefault(playerUuid, Optional.empty());
     }
@@ -150,10 +158,19 @@ public final class GlyphsService {
         return DiscordTier.forLifetimeEarned(lifetimeEarned).map(DiscordTier::displayName);
     }
 
+    public void setVisibleNameLookup(Function<UUID, String> lookup) {
+        this.visibleNameLookup = lookup == null ? uuid -> null : lookup;
+    }
+
     public void applyDisplayName(Player player) {
         Optional<NamedTextColor> color = nameColor(player.getUniqueId());
-        Optional<String> title = equippedTitleText(player.getUniqueId());
-        GlyphDisplay.applyDisplayName(player, color.orElse(NamedTextColor.WHITE), title.orElse(null));
+        String lookup = visibleNameLookup.apply(player.getUniqueId());
+        String shown = (lookup == null || lookup.isBlank()) ? player.getName() : lookup;
+        GlyphDisplay.applyDisplayName(
+                player,
+                color.orElse(NamedTextColor.WHITE),
+                visibleTitleText(player.getUniqueId()),
+                shown);
     }
 
     public CompletableFuture<Long> balance(UUID playerUuid) {
@@ -254,8 +271,12 @@ public final class GlyphsService {
     }
 
     public CompletableFuture<Void> recordUnlock(UUID playerUuid, String productId) {
-        return CompletableFuture.runAsync(
-                () -> repository.addUnlock(playerUuid, productId), ioExecutor);
+        return CompletableFuture.runAsync(() -> {
+            repository.addUnlock(playerUuid, productId);
+            if (GlyphTitle.fromId(productId).isPresent()) {
+                eventPublisher.publishTitle(playerUuid);
+            }
+        }, ioExecutor);
     }
 
     public CompletableFuture<EquipResult> equipColor(UUID playerUuid, String productIdOrNone) {

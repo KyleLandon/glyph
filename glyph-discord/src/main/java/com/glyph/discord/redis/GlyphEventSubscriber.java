@@ -63,6 +63,8 @@ public final class GlyphEventSubscriber implements AutoCloseable {
             switch (type) {
                 case GLYPH_LIFETIME -> GlyphEventCodec.parseLifetime(message).ifPresent(event ->
                         roleSync.syncForMinecraft(guild, event.uuid()));
+                case GLYPH_TITLE -> GlyphEventCodec.parseTitle(message).ifPresent(event ->
+                        roleSync.syncForMinecraft(guild, event.uuid()));
                 case DISCORD_LINKED -> GlyphEventCodec.parseDiscordLinked(message).ifPresent(event ->
                         roleSync.syncForMinecraft(guild, event.uuid()));
             }

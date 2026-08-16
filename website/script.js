@@ -1,15 +1,8 @@
 (() => {
   const joinBtn = document.getElementById("join-btn");
   const modal = document.getElementById("join-modal");
-  const copyBtn = document.getElementById("copy-btn");
   const toast = document.getElementById("toast");
-  const addressEl = document.getElementById("server-address");
-  if (!joinBtn || !modal || !copyBtn || !toast) return;
-
-  const address =
-    joinBtn.dataset.address ||
-    (addressEl && addressEl.textContent.trim()) ||
-    "play.glyphmc.net";
+  if (!joinBtn || !modal || !toast) return;
 
   let hideTimer;
   let lastFocus = null;
@@ -27,7 +20,7 @@
     }, 2200);
   }
 
-  async function copyAddress() {
+  async function copyAddress(address, button) {
     try {
       await navigator.clipboard.writeText(address);
     } catch {
@@ -41,23 +34,37 @@
       document.execCommand("copy");
       field.remove();
     }
-    copyBtn.textContent = "Copied";
-    copyBtn.classList.add("is-copied");
-    showToast("Address copied — paste in Minecraft");
-    setTimeout(() => {
-      copyBtn.textContent = "Copy";
-      copyBtn.classList.remove("is-copied");
-    }, 1800);
+    if (button) {
+      const previous = button.textContent;
+      button.textContent = "Copied";
+      button.classList.add("is-copied");
+      setTimeout(() => {
+        button.textContent = previous;
+        button.classList.remove("is-copied");
+      }, 1800);
+    }
+    showToast(address + " copied — paste in Minecraft");
   }
+
+  document.querySelectorAll("[data-copy]").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      event.preventDefault();
+      const address = el.getAttribute("data-copy");
+      if (!address) return;
+      const button = el.tagName === "BUTTON" ? el : null;
+      copyAddress(address, button);
+    });
+    if (el.tagName !== "BUTTON") {
+      el.title = "Click to copy";
+    }
+  });
 
   function openModal() {
     lastFocus = document.activeElement;
-    // Class-based open (more reliable than the HTML hidden attribute alone).
     modal.hidden = false;
     modal.removeAttribute("hidden");
     modal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
-    // Force layout, then animate in.
     void modal.offsetWidth;
     modal.classList.add("is-open");
     const closeBtn = modal.querySelector(".modal-close");
@@ -75,20 +82,10 @@
     }, 220);
   }
 
-  // Join opens the how-to dialog — it does NOT copy the address.
   joinBtn.addEventListener("click", (event) => {
     event.preventDefault();
     openModal();
   });
-  copyBtn.addEventListener("click", (event) => {
-    event.preventDefault();
-    copyAddress();
-  });
-
-  if (addressEl) {
-    addressEl.addEventListener("click", () => copyAddress());
-    addressEl.title = "Click to copy";
-  }
 
   modal.querySelectorAll("[data-close]").forEach((el) => {
     el.addEventListener("click", closeModal);

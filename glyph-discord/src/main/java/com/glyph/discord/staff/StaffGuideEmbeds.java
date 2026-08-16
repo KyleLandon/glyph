@@ -104,11 +104,11 @@ public final class StaffGuideEmbeds {
                         `/ah` — GUI
                         `/ah sell <price>` — list held item
                         `/ah search <text>` — search
-                        `/claim` `/mail` — deliveries / returns
+                        `/ah mail` — deliveries / returns
                         """, false)
                 .addField("Fees & expiry", """
                         ~**1%** listing fee · ~**5%** sale fee (sinks)
-                        Listings last **48h**; unsold returns via `/claim`
+                        Listings last **48h**; unsold returns via `/ah mail`
                         """, false)
                 .build();
     }
@@ -146,8 +146,9 @@ public final class StaffGuideEmbeds {
                         • $1M lifetime AH sales → Broker title
                         • Staff `/glyphadmin`
                         """, false)
-                .addField("Discord tiers", """
+                .addField("Discord sync", """
                         Lifetime ✦ earned → Initiate / Scout / Blooded / Veteran / Legend
+                        Unlocked titles → Bounty Hunter / Broker / Blooded / shop titles
                         Synced when Discord is linked. Spending ✦ never demotes.
                         """, false)
                 .build();

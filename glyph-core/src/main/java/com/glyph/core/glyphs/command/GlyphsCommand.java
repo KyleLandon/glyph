@@ -146,7 +146,8 @@ public final class GlyphsCommand implements CommandExecutor, TabCompleter {
     }
 
     private String formatEquippedTitle(UUID uuid) {
-        return glyphs.equippedTitleText(uuid).orElse("none");
+        return glyphs.equippedTitleText(uuid)
+                .orElse(GlyphTitles.DEFAULT_DISPLAY + " (default)");
     }
 
     private String formatEquippedDeath(UUID uuid) {
@@ -272,8 +273,8 @@ public final class GlyphsCommand implements CommandExecutor, TabCompleter {
                 return;
             }
             Component message = enabled
-                    ? Component.text("Glyph HUD enabled.", NamedTextColor.GREEN)
-                    : Component.text("Glyph HUD disabled.", NamedTextColor.GREEN);
+                    ? Component.text("Glyphs line shown on the sidebar.", NamedTextColor.GREEN)
+                    : Component.text("Glyphs line hidden. Cash HUD stays.", NamedTextColor.GREEN);
             CommandFeedback.deliver(scheduler, player, message);
         });
     }

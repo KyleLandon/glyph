@@ -1,6 +1,7 @@
 package com.glyph.discord;
 
 import com.glyph.api.discord.DiscordTier;
+import com.glyph.api.glyphs.GlyphTitle;
 import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.List;
@@ -14,6 +15,7 @@ public final class DiscordBotConfig {
     private final long verifiedRoleId;
     private final long alphaRoleId;
     private final Map<DiscordTier, Long> tierRoleIds;
+    private final Map<GlyphTitle, Long> titleRoleIds;
     private final String dbHost;
     private final int dbPort;
     private final String dbName;
@@ -29,6 +31,7 @@ public final class DiscordBotConfig {
             long verifiedRoleId,
             long alphaRoleId,
             Map<DiscordTier, Long> tierRoleIds,
+            Map<GlyphTitle, Long> titleRoleIds,
             String dbHost,
             int dbPort,
             String dbName,
@@ -42,6 +45,7 @@ public final class DiscordBotConfig {
         this.verifiedRoleId = verifiedRoleId;
         this.alphaRoleId = alphaRoleId;
         this.tierRoleIds = Map.copyOf(tierRoleIds);
+        this.titleRoleIds = Map.copyOf(titleRoleIds);
         this.dbHost = dbHost;
         this.dbPort = dbPort;
         this.dbName = dbName;
@@ -68,12 +72,22 @@ public final class DiscordBotConfig {
             }
         }
 
+        Map<GlyphTitle, Long> titles = new EnumMap<>(GlyphTitle.class);
+        for (GlyphTitle title : GlyphTitle.values()) {
+            String key = "GLYPH_DISCORD_ROLE_" + title.id().toUpperCase();
+            long roleId = longOrZero(env, key);
+            if (roleId != 0L) {
+                titles.put(title, roleId);
+            }
+        }
+
         return new DiscordBotConfig(
                 token,
                 guildId,
                 verified,
                 alpha,
                 tiers,
+                titles,
                 env.getOrDefault("GLYPH_DB_HOST", "localhost"),
                 intOr(env, "GLYPH_DB_PORT", 5432),
                 env.getOrDefault("GLYPH_DB_DATABASE", "glyph"),
@@ -108,13 +122,17 @@ public final class DiscordBotConfig {
     }
 
     public DiscordBotConfig withRoles(
-            long verifiedRoleId, long alphaRoleId, Map<DiscordTier, Long> tierRoleIds) {
+            long verifiedRoleId,
+            long alphaRoleId,
+            Map<DiscordTier, Long> tierRoleIds,
+            Map<GlyphTitle, Long> titleRoleIds) {
         return new DiscordBotConfig(
                 token,
                 guildId,
                 verifiedRoleId,
                 alphaRoleId,
                 tierRoleIds,
+                titleRoleIds,
                 dbHost,
                 dbPort,
                 dbName,
@@ -169,6 +187,10 @@ public final class DiscordBotConfig {
 
     public Map<DiscordTier, Long> tierRoleIds() {
         return tierRoleIds;
+    }
+
+    public Map<GlyphTitle, Long> titleRoleIds() {
+        return titleRoleIds;
     }
 
     public String jdbcUrl() {

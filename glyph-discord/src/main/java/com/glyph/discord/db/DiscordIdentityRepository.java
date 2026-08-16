@@ -6,6 +6,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -166,6 +168,45 @@ public final class DiscordIdentityRepository {
                     return Optional.empty();
                 }
                 return Optional.ofNullable(rs.getString(1));
+            }
+        }
+    }
+
+    public List<LinkedAccount> findAllLinked() throws SQLException {
+        String sql = """
+                SELECT minecraft_uuid, discord_user_id, verified
+                FROM discord_links
+                """;
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            List<LinkedAccount> links = new ArrayList<>();
+            while (rs.next()) {
+                links.add(new LinkedAccount(
+                        rs.getObject("minecraft_uuid", UUID.class),
+                        rs.getLong("discord_user_id"),
+                        rs.getBoolean("verified")));
+            }
+            return links;
+        }
+    }
+
+    public List<String> titleUnlocks(UUID minecraftUuid) throws SQLException {
+        String sql = """
+                SELECT product_id
+                FROM glyph_unlocks
+                WHERE player_uuid = ?
+                  AND product_id LIKE 'title_%'
+                """;
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setObject(1, minecraftUuid);
+            try (ResultSet rs = statement.executeQuery()) {
+                List<String> unlocks = new ArrayList<>();
+                while (rs.next()) {
+                    unlocks.add(rs.getString(1));
+                }
+                return unlocks;
             }
         }
     }

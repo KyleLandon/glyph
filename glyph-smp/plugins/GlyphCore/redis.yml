@@ -1,0 +1,7 @@
+# Redis connection settings.
+# Same Redis as Folia — Discord events and cache stay shared.
+
+redis:
+  host: localhost   # GLYPH_REDIS_HOST
+  port: 6379        # GLYPH_REDIS_PORT
+  password: "glyph_dev_password"      # GLYPH_REDIS_PASSWORD  (never commit real passwords)

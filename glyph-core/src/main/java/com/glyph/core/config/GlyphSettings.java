@@ -10,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public record GlyphSettings(
         String serverId,
+        ServerRole role,
         DatabaseSettings database,
         RedisSettings redis,
         EconomySettings economy,
@@ -52,6 +53,7 @@ public record GlyphSettings(
     public Map<String, String> describe() {
         return Map.of(
                 "server.id", serverId,
+                "server.role", role.name().toLowerCase(),
                 "database", database.host() + ":" + database.port() + "/" + database.database(),
                 "redis", redis.host() + ":" + redis.port());
     }

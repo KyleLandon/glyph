@@ -19,6 +19,10 @@ public final class GlyphEventPublisher {
         redis.publish(GlyphEventChannels.EVENTS, GlyphEventCodec.lifetime(playerUuid, lifetimeEarned));
     }
 
+    public void publishTitle(UUID playerUuid) {
+        redis.publish(GlyphEventChannels.EVENTS, GlyphEventCodec.title(playerUuid));
+    }
+
     public void publishDiscordLinked(UUID playerUuid, long discordUserId) {
         redis.publish(
                 GlyphEventChannels.EVENTS,

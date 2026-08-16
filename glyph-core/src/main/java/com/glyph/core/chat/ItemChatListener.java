@@ -50,10 +50,12 @@ public final class ItemChatListener implements Listener {
         scheduler.runForEntity(player, () -> {
             ItemStack hand = player.getInventory().getItemInMainHand().clone();
             Component body = ItemChatFormatter.replacePlaceholders(messagePlain, hand);
-            Component chat = Component.translatable(
-                    "chat.type.text",
-                    player.displayName().colorIfAbsent(NamedTextColor.WHITE),
-                    body);
+            Component name = player.displayName().colorIfAbsent(NamedTextColor.WHITE);
+            if (settings.localChat()) {
+                ChatChannels.sendLocal(player, name, body, settings.localRadius());
+                return;
+            }
+            Component chat = Component.translatable("chat.type.text", name, body);
             for (Audience audience : viewers) {
                 audience.sendMessage(chat);
             }

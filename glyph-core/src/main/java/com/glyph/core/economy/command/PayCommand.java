@@ -4,8 +4,10 @@ import com.glyph.api.economy.EconomyApi;
 import com.glyph.api.economy.Money;
 import com.glyph.api.economy.TransferResult;
 import com.glyph.api.player.PlayerApi;
+import com.glyph.core.command.CommandTabs;
 import com.glyph.core.config.EconomySettings;
 import com.glyph.core.scheduler.SchedulerAdapter;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 /**
@@ -25,7 +28,7 @@ import org.bukkit.entity.Player;
  * packet-duplicated commands while a payment is pending; the repository's
  * idempotency and row locking handle everything below.</p>
  */
-public final class PayCommand implements CommandExecutor {
+public final class PayCommand implements CommandExecutor, TabCompleter {
 
     private final EconomyApi economy;
     private final PlayerApi players;
@@ -128,5 +131,14 @@ public final class PayCommand implements CommandExecutor {
                         NamedTextColor.GREEN));
             }
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(
+            CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 1) {
+            return CommandTabs.onlinePlayers(sender, args[0]);
+        }
+        return List.of();
     }
 }

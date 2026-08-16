@@ -18,6 +18,14 @@ class GlyphEventCodecTest {
     }
 
     @Test
+    void roundTripsTitleEvent() {
+        UUID uuid = UUID.fromString("33333333-3333-3333-3333-333333333333");
+        String json = GlyphEventCodec.title(uuid);
+        assertThat(GlyphEventCodec.parseTitle(json)).hasValueSatisfying(event ->
+                assertThat(event.uuid()).isEqualTo(uuid));
+    }
+
+    @Test
     void roundTripsDiscordLinkedEvent() {
         UUID uuid = UUID.fromString("22222222-2222-2222-2222-222222222222");
         String json = GlyphEventCodec.discordLinked(uuid, 123456789012345678L);

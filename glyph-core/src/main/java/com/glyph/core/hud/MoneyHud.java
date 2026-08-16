@@ -23,8 +23,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
- * Right-side scoreboard sidebar: server title, green money line, light-purple Glyphs line.
- * Shown only when {@code economy.hud.enabled} and the player's {@code glyph_hud_enabled} flag.
+ * Right-side scoreboard sidebar: server title, green money line, and
+ * light-purple Glyphs line whenever {@code economy.hud.enabled}.
  */
 public final class MoneyHud implements Listener {
 
@@ -85,12 +85,9 @@ public final class MoneyHud implements Listener {
         refresh(uuid);
     }
 
-    /** Called when the player's HUD preference changes — any thread. */
+    /** Called when the player's Glyphs-line preference changes — any thread. */
     public void onHudPreferenceChanged(UUID uuid) {
         if (!economy.hudEnabled()) {
-            return;
-        }
-        if (!glyphs.hudEnabled(uuid)) {
             hide(uuid);
             return;
         }
@@ -114,7 +111,11 @@ public final class MoneyHud implements Listener {
     }
 
     private boolean shouldShow(UUID uuid) {
-        return economy.hudEnabled() && glyphSettings.enabled() && glyphs.hudEnabled(uuid);
+        return economy.hudEnabled();
+    }
+
+    private boolean showGlyphsLine() {
+        return glyphSettings.enabled();
     }
 
     private void refresh(UUID uuid) {
@@ -146,12 +147,17 @@ public final class MoneyHud implements Listener {
 
         List<Component> lines = new ArrayList<>();
         lines.add(Component.text(cashLine, NamedTextColor.GREEN));
-        Long glyphBalance = glyphBalances.get(uuid);
-        String glyphLine = glyphBalance == null
-                ? glyphSettings.symbol() + " —"
-                : formatGlyphs(glyphBalance, glyphSettings.symbol());
-        lines.add(Component.text(glyphLine, NamedTextColor.LIGHT_PURPLE));
-        board.updateLines(lines, List.of(Component.empty()));
+        if (showGlyphsLine()) {
+            Long glyphBalance = glyphBalances.get(uuid);
+            String glyphLine = glyphBalance == null
+                    ? glyphSettings.symbol() + " —"
+                    : formatGlyphs(glyphBalance, glyphSettings.symbol());
+            lines.add(Component.text(glyphLine, NamedTextColor.LIGHT_PURPLE));
+        }
+        // Null scores = FastBoard's blank number format. A single empty
+        // Component used to be passed for every board size and threw
+        // (title-only sidebar).
+        board.updateLines(lines);
     }
 
     /**

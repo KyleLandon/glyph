@@ -27,6 +27,7 @@ public final class SettingsLoader {
             ConfigurationSection redis) {
 
         String serverId = str(config, "server.id", "GLYPH_SERVER_ID", "glyph-01");
+        ServerRole role = ServerRole.from(str(config, "server.role", "GLYPH_SERVER_ROLE", "anarchy"));
 
         DatabaseSettings databaseSettings = new DatabaseSettings(
                 str(database, "database.host", "GLYPH_DB_HOST", "localhost"),
@@ -86,14 +87,16 @@ public final class SettingsLoader {
                         "https://discord.gg/htkQHR4gdf"));
 
         ChatSettings chatSettings = new ChatSettings(
-                boolVal(config, "chat.item-placeholders", true));
+                boolVal(config, "chat.item-placeholders", true),
+                boolVal(config, "chat.local-enabled", true),
+                intVal(config, "chat.local-radius", null, 100));
 
         StarterSettings starterSettings = new StarterSettings(
                 boolVal(config, "starter.enabled", true),
                 starterItems(config));
 
         return new GlyphSettings(
-                serverId, databaseSettings, redisSettings, economySettings, tabSettings,
+                serverId, role, databaseSettings, redisSettings, economySettings, tabSettings,
                 auctionSettings, bountySettings, rewardSettings, glyphSettings, discordSettings,
                 chatSettings, starterSettings);
     }

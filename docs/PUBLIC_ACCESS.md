@@ -6,51 +6,63 @@ it sits on Starlink, which is CGNAT and cannot accept inbound connections;
 do not try to host from it.
 
 Domain: **glyphmc.net**, registered at Cloudflare (nameservers
-kyrie/daisy.ns.cloudflare.com). Players connect to `play.glyphmc.net`.
-Marketing site: **https://glyphmc.net** (Cloudflare Pages project `glyph`).
+kyrie/daisy.ns.cloudflare.com). Players connect to `anarchy.glyphmc.net` or
+`smp.glyphmc.net` (`play.glyphmc.net` still lands on anarchy). Marketing
+site: **https://glyphmc.net** (Cloudflare Pages project `glyph`).
 
-## Current path: playit.gg tunnel (temporary)
+## Current path: public IP (no tunnel)
 
-Fiber ISP puts the desktop behind CGNAT (WAN `100.64.x.x`), so inbound port
-forwards cannot work until they issue a public/static IP. Until then we
-tunnel through [playit.gg](https://playit.gg):
+The ISP handed over a public WAN address. playit.gg is **stopped**.
+`GLYPH_USE_PLAYIT=0`. Cloudflare A records (unproxied, 60s TTL) are kept
+in sync by `scripts\cloudflare-ddns.ps1`.
 
 ```
-player  -->  play.glyphmc.net
-               SRV _minecraft._tcp.play  -->  atoms-simmering.tun.ply.gg:60307
+player  -->  anarchy.glyphmc.net / smp.glyphmc.net / play.glyphmc.net
+               A  -->  desktop public IP :25565
                |
-               v  playit relay
-playitd agent on desktop  -->  127.0.0.1:25565 (Velocity)
-                                    |
-                                    v  127.0.0.1:25566
-                                 Folia backend
-Voice: UDP tunnel --> 127.0.0.1:24454  (voice_host set to playit UDP endpoint)
+               v
+Velocity 0.0.0.0:25565  (forced-hosts pick the backend)
+               |
+               v  127.0.0.1:25566          v  127.0.0.1:25567
+            Folia anarchy                 Paper SMP
+Voice: UDP 24454 (anarchy) / 24455 (SMP) on the desktop NIC
 ```
 
 | What | Address |
 |------|---------|
-| Player connect | **`play.glyphmc.net`** (SRV → tunnel; also works as CNAME) |
-| Tunnel hostname | `atoms-simmering.tun.ply.gg` (port 60307 if needed) |
-| Voice (UDP) | `atoms-composers.tun.ply.gg:60308` → local `24454` |
-| Agent | Windows service `playitd` (`winget install DevelopedMethods.playit`) |
-| Proxy Protocol | **off** — keeps local `localhost:25565` joins working |
+| Anarchy | **`anarchy.glyphmc.net`** |
+| SMP | **`smp.glyphmc.net`** |
+| Default / alias | **`play.glyphmc.net`** (anarchy) |
+| Voice | UDP 24454 anarchy, UDP 24455 SMP |
 
-Do **not** give players the raw IP — playit's free tunnels reject bare-IP
-Minecraft handshakes (`hostname_verify_level = NoRawIp`).
+No Minecraft SRV records. Default port 25565. Forced hosts see the name
+the player typed, so `smp.glyphmc.net` lands on Paper.
 
-`GLYPH_USE_PLAYIT=1` (User env) makes `scripts\cloudflare-ddns.ps1` a no-op so
-it does not stomp the CNAME/SRV with the CGNAT egress IP.
+Do **not** give players the raw IP — use the hostnames so Velocity can
+route, and so DDNS can move the address later.
 
-### When the ISP gives a public IP
+### Router port forwards (required)
 
-1. Set router port forwards (TCP 25565, UDP 24454) to the desktop.
-2. Clear `voice_host` in `glyph-folia/plugins/voicechat/voicechat-server.properties`
-   (and `bind_address` back to blank / `*`).
-3. Delete the Cloudflare CNAME + SRV for `play`; restore A records via DDNS.
-4. Set `GLYPH_USE_PLAYIT=0` (or remove the variable) and run
-   `scripts\cloudflare-ddns.ps1`.
-5. Stop playit: `playit stop` (optional uninstall).
-6. Outside-LAN test to `play.glyphmc.net` on the normal port.
+Desktop LAN IP is **192.168.4.24** (reserve it in DHCP).
+
+| External port | Protocol | Internal                 | For        |
+|---------------|----------|--------------------------|------------|
+| 25565         | TCP      | 192.168.4.24:25565       | Minecraft  |
+| 24454         | UDP      | 192.168.4.24:24454       | Anarchy voice |
+| 24455         | UDP      | 192.168.4.24:24455       | SMP voice  |
+
+Never forward 25566 or 25567.
+
+Sanity check: the router's WAN address should match
+`https://api.ipify.org`. If it is `100.64.x.x` again, set
+`GLYPH_USE_PLAYIT=1` and bring playit back.
+
+### If you must go back to a tunnel
+
+1. Set `GLYPH_USE_PLAYIT=1` (User env).
+2. Start playit: `playit start`.
+3. Restore CNAME + `_minecraft._tcp` SRV to the tunnel host (see git
+   history). DDNS will no-op while the flag is 1.
 
 ## Desktop setup checklist
 
@@ -67,43 +79,31 @@ template **"Edit zone DNS"** → scope: zone `glyphmc.net`.
 
 ### 3. DNS / DDNS
 
-With the tunnel active, DNS is managed as CNAME + SRV (above). After the
-public IP arrives, restore DDNS:
-
 ```powershell
 [Environment]::SetEnvironmentVariable("CLOUDFLARE_API_TOKEN", "<token>", "User")
 [Environment]::SetEnvironmentVariable("GLYPH_DNS_ZONE", "glyphmc.net", "User")
-[Environment]::SetEnvironmentVariable("GLYPH_DNS_RECORD", "play.glyphmc.net,glyphmc.net", "User")
+[Environment]::SetEnvironmentVariable("GLYPH_DNS_RECORD", "play.glyphmc.net,anarchy.glyphmc.net,smp.glyphmc.net", "User")
 [Environment]::SetEnvironmentVariable("GLYPH_USE_PLAYIT", "0", "User")
 scripts\cloudflare-ddns.ps1
 ```
 
-Scheduled task "Glyph DDNS" every 5 minutes — safe while `GLYPH_USE_PLAYIT=1`
-(it exits immediately).
+Do not put `glyphmc.net` (apex) in `GLYPH_DNS_RECORD` — that CNAME is the
+Pages site.
+
+Scheduled task "Glyph DDNS" every 5 minutes.
 
 ### 4. Windows Firewall
 
 Run `scripts\setup-firewall.ps1` **as Administrator** on the desktop.
-Opens TCP 25565 (Velocity) and UDP 24454 (voice). Backend port 25566 stays
-closed on purpose (localhost bind only, GDD section 38).
+Opens TCP 25565 and UDP 24454/24455. Backend ports 25566/25567 stay closed
+(localhost bind only, GDD section 38).
 
-### 5. Router port forwarding (blocked until public IP)
-
-| External port | Protocol | Internal              | For        |
-|---------------|----------|-----------------------|------------|
-| 25565         | TCP      | <desktop LAN IP>:25565 | Minecraft  |
-| 24454         | UDP      | <desktop LAN IP>:24454 | Voice chat |
-
-Sanity check: the router's WAN address should match
-`https://api.ipify.org`. If it does not (or is `100.64.x.x`), stay on the
-tunnel.
-
-### 6. Verify
+### 5. Verify
 
 1. On the desktop: `Test-NetConnection localhost -Port 25565`
-2. From outside the LAN (phone hotspot): connect to `play.glyphmc.net`
-3. https://mcsrvstat.us/server/play.glyphmc.net shows the MOTD when live
-4. Or `atoms-simmering.tun.ply.gg:60307` (hostname required — not the raw IP)
+2. From outside the LAN (phone hotspot): `anarchy.glyphmc.net` and
+   `smp.glyphmc.net`
+3. https://mcsrvstat.us/server/anarchy.glyphmc.net shows the MOTD when live
 
 ## Security posture (already in place)
 
@@ -111,33 +111,26 @@ tunnel.
   command + tab-complete rate limits, query protocol disabled.
 - Folia backend: binds `127.0.0.1:25566`, refuses connections without the
   Velocity forwarding secret. Never port-forward 25566.
+- Paper SMP: binds `127.0.0.1:25567`. Same rule — never port-forward it.
 - Dev PostgreSQL/Redis bind `127.0.0.1` only (docker-compose).
 - Keep the Windows account password-protected.
 - Auto-start: the "Glyph Servers" scheduled task runs `scripts/start-all.ps1`
-  at logon — Docker engine, PostgreSQL + Redis, playitd, backend, proxy.
+  at logon — Docker engine, PostgreSQL + Redis, backends, proxy, Discord
+  bot (java hidden; open `start.bat` for the local ops page).
+  playit is not started unless `GLYPH_USE_PLAYIT=1`.
   Server start scripts prefer `JAVA_HOME` (User env, JDK 25 on the desktop).
 - Auto-pull: `scripts\auto-pull.ps1 -Register` creates "Glyph Auto Pull"
-  (every 2 minutes). The desktop cannot receive GitHub webhooks (CGNAT), so
-  it polls `origin/main` instead. Pulls do not restart the game servers.
-- playit agent secret lives in `C:\ProgramData\playit_gg\playit.toml` — never
-  commit it.
+  (every 2 minutes). Pulls do not restart the game servers.
 
 ## Status
 
 - [x] Domain purchased: glyphmc.net (Cloudflare, 2026-08-09)
-- [x] DDNS updater script (multi-record: play + bare domain)
+- [x] DDNS updater script (play + anarchy + smp A records)
 - [x] Firewall script ready (`scripts/setup-firewall.ps1`)
 - [x] Desktop: repo cloned + servers running (2026-08-09)
-- [x] Desktop: API token + DDNS env vars + first run + scheduled task (2026-08-09)
-- [x] Desktop: firewall script run as admin (2026-08-09)
-- [x] **CGNAT workaround: playit.gg tunnel** (2026-08-09)
-  - Agent claimed, service `playitd` running
-  - TCP tunnel → Velocity `:25565` (`atoms-simmering.tun.ply.gg:60307`)
-  - UDP tunnel → voice `:24454` (`147.185.221.230:60308`)
-  - `play.glyphmc.net` CNAME + Minecraft SRV → tunnel
-  - `GLYPH_USE_PLAYIT=1` pauses A-record DDNS
-- [ ] ISP public/static IP (then tear down tunnel — steps above)
-- [ ] Router: DHCP reservation + port forwards — desktop LAN IP 192.168.4.24
-- [x] Outside path verified via tunnel Server List Ping to
-      `atoms-simmering.tun.ply.gg:60307` / SRV `play.glyphmc.net` (2026-08-09)
-- [ ] Outside-LAN connection verified on native public IP (post-CGNAT)
+- [x] Desktop: API token + DDNS env vars + scheduled task
+- [x] Public WAN (not CGNAT) — playit stopped 2026-08-15
+- [ ] Router: confirm DHCP reservation + TCP 25565 / UDP 24454 / UDP 24455
+      to 192.168.4.24
+- [ ] Outside-LAN connection verified on native public IP
+- [ ] Re-run `setup-firewall.ps1` as Admin after adding UDP 24455

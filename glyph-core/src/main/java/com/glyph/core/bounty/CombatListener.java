@@ -2,6 +2,7 @@ package com.glyph.core.bounty;
 
 import com.glyph.api.economy.Money;
 import com.glyph.core.config.EconomySettings;
+import com.glyph.core.economy.EconomyService;
 import com.glyph.core.glyphs.GlyphsService;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import com.glyph.core.stats.StatType;
@@ -28,15 +29,18 @@ public final class CombatListener implements Listener {
     private final GlyphsService glyphs;
     private final SchedulerAdapter scheduler;
     private final EconomySettings economy;
+    private final EconomyService balances;
     private final Logger logger;
 
     public CombatListener(BountyService bounties, StatsService stats, GlyphsService glyphs,
-                          SchedulerAdapter scheduler, EconomySettings economy, Logger logger) {
+                          SchedulerAdapter scheduler, EconomySettings economy,
+                          EconomyService balances, Logger logger) {
         this.bounties = bounties;
         this.stats = stats;
         this.glyphs = glyphs;
         this.scheduler = scheduler;
         this.economy = economy;
+        this.balances = balances;
         this.logger = logger;
     }
 
@@ -72,6 +76,7 @@ public final class CombatListener implements Listener {
                     glyphs.noteBountyClaim(killer.getUniqueId());
                     stats.increment(killer.getUniqueId(), StatType.BOUNTIES_CLAIMED,
                             outcome.bountiesClaimed());
+                    balances.resyncBalance(killer.getUniqueId());
                     String amount = Money.of(outcome.bountyPaid())
                             .format(economy.currencySymbol());
                     // GDD section 33's special bounty message, network-wide.

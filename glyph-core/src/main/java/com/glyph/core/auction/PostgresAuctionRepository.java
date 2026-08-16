@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,15 +38,15 @@ public final class PostgresAuctionRepository implements AuctionRepository {
     private static final String INSERT_LISTING = """
             INSERT INTO auction_listings
                 (id, seller_uuid, seller_account, item_data, item_summary, price,
-                 listing_fee, status, expires_at)
-            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?, 'ACTIVE', ?)
+                 listing_fee, status, expires_at, market)
+            VALUES (?, ?, ?, ?, ?::jsonb, ?, ?, 'ACTIVE', ?, ?)
             """;
 
     private static final String LOCK_LISTING = """
             SELECT id, seller_uuid, seller_account, item_data, item_summary, price,
                    listing_fee, status, buyer_uuid, created_at, expires_at, sold_at
             FROM auction_listings
-            WHERE id = ?
+            WHERE id = ? AND market = ?
             FOR UPDATE
             """;
 
@@ -97,22 +98,40 @@ public final class PostgresAuctionRepository implements AuctionRepository {
     private static final String EXPIRE_DUE = """
             UPDATE auction_listings
             SET status = 'EXPIRED'
-            WHERE status = 'ACTIVE' AND expires_at <= now()
+            WHERE status = 'ACTIVE' AND expires_at <= now() AND market = ?
             RETURNING id, seller_uuid, item_data, item_summary, price
             """;
 
     private static final String INSERT_DELIVERY = """
-            INSERT INTO deliveries (id, recipient_uuid, type, payload, metadata, status)
-            VALUES (?, ?, ?, ?, ?::jsonb, 'PENDING')
+            INSERT INTO deliveries (id, recipient_uuid, type, payload, metadata, status, market)
+            VALUES (?, ?, ?, ?, ?::jsonb, 'PENDING', ?)
             """;
 
     private static final String COUNT_ACTIVE_BY_SELLER =
-            "SELECT count(*) FROM auction_listings WHERE seller_uuid = ? AND status = 'ACTIVE'";
+            "SELECT count(*) FROM auction_listings"
+                    + " WHERE seller_uuid = ? AND status = 'ACTIVE' AND market = ?";
 
     private final Supplier<DataSource> dataSource;
+    private final String market;
 
     public PostgresAuctionRepository(Supplier<DataSource> dataSource) {
+        this(dataSource, "anarchy");
+    }
+
+    public PostgresAuctionRepository(Supplier<DataSource> dataSource, String market) {
         this.dataSource = dataSource;
+        this.market = requireMarket(market);
+    }
+
+    static String requireMarket(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "anarchy";
+        }
+        String normalized = raw.trim().toLowerCase(Locale.ROOT);
+        if (!normalized.equals("anarchy") && !normalized.equals("smp")) {
+            throw new IllegalArgumentException("unknown auction market: " + raw);
+        }
+        return normalized;
     }
 
     private record LockedAccount(UUID accountId, long balance) { }
@@ -151,6 +170,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
                     statement.setLong(6, price);
                     statement.setLong(7, listingFee);
                     statement.setTimestamp(8, Timestamp.from(expiresAt));
+                    statement.setString(9, market);
                     statement.executeUpdate();
                 }
 
@@ -321,14 +341,16 @@ public final class PostgresAuctionRepository implements AuctionRepository {
             try {
                 record Expired(UUID id, UUID seller, byte[] itemData, long price) { }
                 List<Expired> expired = new ArrayList<>();
-                try (PreparedStatement statement = connection.prepareStatement(EXPIRE_DUE);
-                     ResultSet row = statement.executeQuery()) {
-                    while (row.next()) {
-                        expired.add(new Expired(
-                                row.getObject("id", UUID.class),
-                                row.getObject("seller_uuid", UUID.class),
-                                row.getBytes("item_data"),
-                                row.getLong("price")));
+                try (PreparedStatement statement = connection.prepareStatement(EXPIRE_DUE)) {
+                    statement.setString(1, market);
+                    try (ResultSet row = statement.executeQuery()) {
+                        while (row.next()) {
+                            expired.add(new Expired(
+                                    row.getObject("id", UUID.class),
+                                    row.getObject("seller_uuid", UUID.class),
+                                    row.getBytes("item_data"),
+                                    row.getLong("price")));
+                        }
                     }
                 }
                 for (Expired entry : expired) {
@@ -351,8 +373,9 @@ public final class PostgresAuctionRepository implements AuctionRepository {
     @Override
     public BrowsePage browse(BrowseQuery query) {
         StringBuilder where = new StringBuilder(
-                "WHERE status = 'ACTIVE' AND expires_at > now()");
+                "WHERE status = 'ACTIVE' AND expires_at > now() AND market = ?");
         List<Object> parameters = new ArrayList<>();
+        parameters.add(market);
         if (query.sellerFilter() != null) {
             where.append(" AND seller_uuid = ?");
             parameters.add(query.sellerFilter());
@@ -409,10 +432,11 @@ public final class PostgresAuctionRepository implements AuctionRepository {
     public Optional<AuctionListing> find(UUID listingId) {
         String sql = "SELECT id, seller_uuid, seller_account, item_data, item_summary, price,"
                 + " listing_fee, status, buyer_uuid, created_at, expires_at, sold_at"
-                + " FROM auction_listings WHERE id = ?";
+                + " FROM auction_listings WHERE id = ? AND market = ?";
         try (Connection connection = dataSource.get().getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setObject(1, listingId);
+            statement.setString(2, market);
             try (ResultSet row = statement.executeQuery()) {
                 return row.next() ? Optional.of(readListing(row)) : Optional.empty();
             }
@@ -448,6 +472,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
             throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(LOCK_LISTING)) {
             statement.setObject(1, listingId);
+            statement.setString(2, market);
             try (ResultSet row = statement.executeQuery()) {
                 return row.next() ? readListing(row) : null;
             }
@@ -469,6 +494,7 @@ public final class PostgresAuctionRepository implements AuctionRepository {
         try (PreparedStatement statement =
                      connection.prepareStatement(COUNT_ACTIVE_BY_SELLER)) {
             statement.setObject(1, sellerUuid);
+            statement.setString(2, market);
             try (ResultSet row = statement.executeQuery()) {
                 row.next();
                 return row.getInt(1);
@@ -502,14 +528,15 @@ public final class PostgresAuctionRepository implements AuctionRepository {
         }
     }
 
-    private static void insertDelivery(Connection connection, UUID recipient, String type,
-                                       byte[] payload, String metadata) throws SQLException {
+    private void insertDelivery(Connection connection, UUID recipient, String type,
+                                byte[] payload, String metadata) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(INSERT_DELIVERY)) {
             statement.setObject(1, UUID.randomUUID());
             statement.setObject(2, recipient);
             statement.setString(3, type);
             statement.setBytes(4, payload);
             statement.setString(5, metadata);
+            statement.setString(6, market);
             statement.executeUpdate();
         }
     }

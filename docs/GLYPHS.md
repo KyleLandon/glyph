@@ -13,7 +13,7 @@ buy it. Soft `$` remains the sole player economy.
 - **Earn** through achievements and milestones — not kill farming or AFK loops.
 - **Spend** on flair: name colors, titles, custom death messages.
 - **Display** prestige in tab list; opt-in sidebar HUD via `/glyphs hud on`.
-- **Discord tiers** reflect lifetime Glyphs earned (bot sync later).
+- **Discord tiers** reflect lifetime Glyphs earned; unlocked titles sync as Discord roles.
 
 ## Earn
 
@@ -43,7 +43,8 @@ Repeat kills of the same victim do **not** count toward unique-kill milestones.
 
 Shown in `/glyphs` balance output, e.g. `Discord tier: Scout (lifetime 67 ✦)`.
 When linked (`/linkdiscord` → Discord `/link`), GlyphDiscord syncs these as
-guild roles. See `docs/DISCORD.md`.
+guild roles. Unlocked titles (shop or achievement) sync as their own roles
+(`Bounty Hunter`, `Broker`, …). See `docs/DISCORD.md`.
 
 ## Shop catalog
 
@@ -95,7 +96,7 @@ Custom broadcast when you are killed by another player.
 /glyphs title <id|none>         equip unlocked title (shop or achievement)
 /glyphs death <id|none>         equip death message style
 /glyphs unlocks                 what you own
-/glyphs hud on|off              per-player sidebar HUD preference
+/glyphs hud on|off              show or hide the ✦ line on the cash sidebar
 
 /glyphadmin get <player>
 /glyphadmin set <player> <amount>
@@ -105,12 +106,12 @@ Custom broadcast when you are killed by another player.
 
 ## Display
 
-- **Tab list:** `[Title] Name  $12.4K  ✦13  ☠29` — title in gray brackets,
+- **Tab list:** `[Title] Name $12.4K ✦13 ☠29` — title in gray brackets,
   name in equipped color, compact cash, Glyphs in light purple, deaths in red
-  with ☠ before the count.
-- **Sidebar HUD:** opt-in via `/glyphs hud on`. Shows green `$` line and
-  light-purple `✦` line when enabled. `economy.hud.enabled` in config remains
-  the global kill-switch.
+  with ☠ before the count. Untitled players show **Peasant** (display only —
+  not an unlock, not a Discord role). `/glyphs title none` returns to it.
+- **Sidebar HUD:** green `$` line whenever `economy.hud.enabled`. Light-purple
+  `✦` line is opt-in via `/glyphs hud on`.
 
 ## Config (`config.yml`)
 

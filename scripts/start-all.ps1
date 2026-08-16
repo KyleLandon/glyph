@@ -1,5 +1,5 @@
 # Brings up the full Glyph stack on the host desktop: Docker engine,
-# PostgreSQL + Redis (dev-up.ps1), Folia backend and Velocity proxy.
+# PostgreSQL + Redis (dev-up.ps1), Folia anarchy, Paper SMP, Velocity, Discord.
 # Registered as the "Glyph Servers" logon scheduled task so the network
 # survives a reboot unattended (docs/PUBLIC_ACCESS.md). Idempotent: anything
 # already running is left alone.
@@ -33,23 +33,31 @@ function Start-ServerIfDown([int]$port, [string]$dir) {
         Write-Output "Port $port already listening - skipping $dir"
         return
     }
-    Start-Process powershell `
-        -ArgumentList "-ExecutionPolicy", "Bypass", "-File", "$dir\start.ps1" `
-        -WorkingDirectory $dir -WindowStyle Minimized
+    & (Join-Path $dir "start.ps1") -Hidden
     Write-Output "Started $dir"
 }
 
-# playit.gg agent (CGNAT tunnel until the ISP hands over a public IP).
-$playit = "C:\Program Files\playit_gg\bin\playit.exe"
-if (Test-Path $playit) {
-    $status = & $playit status 2>$null
-    if ("$status" -notmatch "Phase: running") {
-        & $playit start 2>$null | Out-Null
-        Write-Output "Started playitd"
-    } else {
-        Write-Output "playitd already running"
+# playit.gg only while CGNAT forces a tunnel (GLYPH_USE_PLAYIT=1).
+if ($env:GLYPH_USE_PLAYIT -eq "1") {
+    $playit = "C:\Program Files\playit_gg\bin\playit.exe"
+    if (Test-Path $playit) {
+        $status = & $playit status 2>$null
+        if ("$status" -notmatch "Phase: running") {
+            & $playit start 2>$null | Out-Null
+            Write-Output "Started playitd"
+        } else {
+            Write-Output "playitd already running"
+        }
     }
 }
 
 Start-ServerIfDown 25566 (Join-Path $root "glyph-folia")
+$smpDir = Join-Path $root "glyph-smp"
+$smpJar = Get-ChildItem -Path $smpDir -Filter "paper-*.jar" -File -ErrorAction SilentlyContinue
+if ($smpJar) {
+    Start-ServerIfDown 25567 $smpDir
+} else {
+    Write-Output "No paper-*.jar in glyph-smp - run scripts\setup-smp.ps1"
+}
 Start-ServerIfDown 25565 (Join-Path $root "glyph-velocity")
+& "$PSScriptRoot\start-discord.ps1"

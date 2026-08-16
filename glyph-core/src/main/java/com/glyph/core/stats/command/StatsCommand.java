@@ -2,6 +2,7 @@ package com.glyph.core.stats.command;
 
 import com.glyph.api.player.PlayerApi;
 import com.glyph.api.player.PlayerProfile;
+import com.glyph.core.command.CommandTabs;
 import com.glyph.core.economy.command.PlayerNameResolver;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import com.glyph.core.stats.PlayerStats;
@@ -16,6 +17,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 /**
@@ -23,7 +25,7 @@ import org.bukkit.entity.Player;
  * 66). Pending buffered deltas are flushed before the read, so numbers are
  * always current.
  */
-public final class StatsCommand implements CommandExecutor {
+public final class StatsCommand implements CommandExecutor, TabCompleter {
 
     private final StatsService stats;
     private final PlayerApi players;
@@ -118,5 +120,14 @@ public final class StatsCommand implements CommandExecutor {
         } else {
             messages.forEach(sender::sendMessage);
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(
+            CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 1) {
+            return CommandTabs.onlinePlayers(sender, args[0]);
+        }
+        return List.of();
     }
 }

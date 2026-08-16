@@ -4,6 +4,9 @@
 server:
   # Unique identifier of this backend server. Override: GLYPH_SERVER_ID
   id: glyph-01
+  # anarchy | smp — same $ / Glyphs wallet; SMP turns off bounties and
+  # playtime faucet. Homes and claims are Forever World only. Override: GLYPH_SERVER_ROLE
+  role: anarchy
 
 economy:
   # All amounts are WHOLE DOLLARS — the economy has no cents.
@@ -36,7 +39,7 @@ auction:
   sale-fee-percent: 5.0
   # Concurrent ACTIVE listings per player.
   max-listings-per-player: 10
-  # Listing lifetime; expired items return via /claim.
+  # Listing lifetime; expired items return via /ah mail.
   duration-hours: 48
 
 bounties:
@@ -54,9 +57,9 @@ rewards:
     enabled: true
     # Payout window length.
     interval-minutes: 15
-    # Payment per active window, in whole dollars ($10 -> ~$40/hour of
-    # genuinely active play).
-    amount: 10
+    # Payment per active window, in whole dollars ($25 -> ~$100/hour of
+    # genuinely active play on anarchy). Forever World uses $5.
+    amount: 25
     # Activity required in the window before it pays: 1 unit = one block
     # broken/placed or one meter moved. AFK players earn nothing.
     min-activity: 20
@@ -78,6 +81,9 @@ chat:
   # Type [i] or [item] in chat while holding something to show a hoverable
   # preview. Click the item name to copy a short summary. Also: /item
   item-placeholders: true
+  # Default chat is nearby. /g shouts to everyone on this backend.
+  local-enabled: true
+  local-radius: 100
 
 # First-join starter pack (GDD section 7). Granted once per playerdata —
 # a world wipe re-issues tools, but starter cash is still one-time.

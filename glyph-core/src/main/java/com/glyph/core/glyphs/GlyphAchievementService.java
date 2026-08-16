@@ -1,6 +1,7 @@
 package com.glyph.core.glyphs;
 
 import com.glyph.core.config.GlyphCurrencySettings;
+import com.glyph.core.event.GlyphEventPublisher;
 import com.glyph.core.scheduler.SchedulerAdapter;
 import java.util.Objects;
 import java.util.UUID;
@@ -27,16 +28,19 @@ public final class GlyphAchievementService {
     private final GlyphsRepository repository;
     private final GlyphCurrencySettings settings;
     private final SchedulerAdapter scheduler;
+    private final GlyphEventPublisher eventPublisher;
     private final Logger logger;
 
     public GlyphAchievementService(
             GlyphsRepository repository,
             GlyphCurrencySettings settings,
             SchedulerAdapter scheduler,
+            GlyphEventPublisher eventPublisher,
             Logger logger) {
         this.repository = Objects.requireNonNull(repository, "repository");
         this.settings = Objects.requireNonNull(settings, "settings");
         this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
+        this.eventPublisher = Objects.requireNonNull(eventPublisher, "eventPublisher");
         this.logger = Objects.requireNonNull(logger, "logger");
     }
 
@@ -78,6 +82,7 @@ public final class GlyphAchievementService {
         if (previousTotal < AH_BROKER_THRESHOLD && totalSold >= AH_BROKER_THRESHOLD) {
             if (repository.tryClaimMilestone(sellerUuid, TITLE_BROKER)) {
                 repository.addUnlock(sellerUuid, TITLE_BROKER);
+                eventPublisher.publishTitle(sellerUuid);
                 notify(sellerUuid, "Auction broker title unlocked: Broker.");
                 logger.info("AH broker title unlocked for {} at {} sold", sellerUuid, totalSold);
             }
@@ -90,6 +95,7 @@ public final class GlyphAchievementService {
         }
         if (GlyphTitles.isTitleUnlock(milestoneId)) {
             repository.addUnlock(playerUuid, milestoneId);
+            eventPublisher.publishTitle(playerUuid);
         }
         notify(playerUuid, message + " — earned " + settings.symbol() + amount + ".");
         return amount;
@@ -100,6 +106,9 @@ public final class GlyphAchievementService {
             return 0L;
         }
         repository.addUnlock(playerUuid, unlockId);
+        if (GlyphTitles.isTitleUnlock(unlockId)) {
+            eventPublisher.publishTitle(playerUuid);
+        }
         notify(playerUuid, message + ".");
         return 0L;
     }

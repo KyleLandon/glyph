@@ -6,15 +6,22 @@ import com.glyph.core.api.GlyphApiImpl;
 import com.glyph.core.auction.AuctionService;
 import com.glyph.core.auction.PostgresAuctionRepository;
 import com.glyph.core.auction.command.AhCommand;
-import com.glyph.core.auction.command.ClaimCommand;
 import com.glyph.core.auction.gui.AuctionGui;
 import com.glyph.core.bounty.BountyService;
 import com.glyph.core.bounty.CombatListener;
 import com.glyph.core.bounty.PostgresBountyRepository;
 import com.glyph.core.bounty.command.BountyCommand;
+import com.glyph.core.bounty.gui.WantedBoardGui;
 import com.glyph.core.chat.ItemChatListener;
+import com.glyph.core.chat.LocalChatListener;
+import com.glyph.core.chat.command.GlobalChatCommand;
 import com.glyph.core.chat.command.ItemCommand;
+import com.glyph.core.chat.command.LocalChatCommand;
+import com.glyph.core.command.AnarchyOnlyCommand;
+import com.glyph.core.command.SmpOnlyCommand;
 import com.glyph.core.command.GlyphCommand;
+import com.glyph.core.command.CommandTabs;
+import com.glyph.core.command.RestartCommand;
 import com.glyph.core.config.GlyphSettings;
 import com.glyph.core.database.DatabaseManager;
 import com.glyph.core.discord.DiscordLinkService;
@@ -33,6 +40,13 @@ import com.glyph.core.delivery.DeliveryClaimer;
 import com.glyph.core.delivery.DeliveryJoinNotifier;
 import com.glyph.core.delivery.DeliveryService;
 import com.glyph.core.delivery.PostgresDeliveryRepository;
+import com.glyph.core.home.HomeService;
+import com.glyph.core.home.PostgresHomeRepository;
+import com.glyph.core.home.command.HomeCommand;
+import com.glyph.core.nick.NicknameService;
+import com.glyph.core.nick.PostgresNicknameRepository;
+import com.glyph.core.nick.command.MeCommand;
+import com.glyph.core.nick.command.NicknameCommand;
 import com.glyph.core.health.HealthService;
 import com.glyph.core.glyphs.DeathMessageListener;
 import com.glyph.core.glyphs.GlyphAchievementService;
@@ -54,8 +68,8 @@ import com.glyph.core.player.command.RulesCommand;
 import com.glyph.core.redis.RedisManager;
 import com.glyph.core.rewards.ActivityTracker;
 import com.glyph.core.rewards.PlaytimeRewardService;
-import com.glyph.core.scheduler.FoliaSchedulerAdapter;
 import com.glyph.core.scheduler.SchedulerAdapter;
+import com.glyph.core.scheduler.Schedulers;
 import com.glyph.core.stats.PostgresStatsRepository;
 import com.glyph.core.stats.StatType;
 import com.glyph.core.stats.StatsListener;
@@ -63,6 +77,7 @@ import com.glyph.core.stats.StatsService;
 import com.glyph.core.stats.command.PlaytimeCommand;
 import com.glyph.core.stats.command.StatsCommand;
 import com.glyph.core.stats.command.TopCommand;
+import com.glyph.core.world.CreeperGriefListener;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -112,7 +127,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
 
         // Virtual threads: cheap, safe for blocking I/O, never Minecraft tick threads.
         this.ioExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        this.schedulerAdapter = new FoliaSchedulerAdapter(this);
+        this.schedulerAdapter = Schedulers.create(this);
         this.databaseManager = new DatabaseManager(settings.database(), getSLF4JLogger(), ioExecutor);
         this.redisManager = new RedisManager(settings.redis(), getSLF4JLogger(), ioExecutor);
         this.healthService = new HealthService(List.of(databaseManager, redisManager));
@@ -152,6 +167,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 glyphsRepository,
                 settings.glyphs(),
                 schedulerAdapter,
+                eventPublisher,
                 getSLF4JLogger());
         this.glyphsService = new GlyphsService(
                 glyphsRepository,
@@ -173,8 +189,14 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 discordLinkService, schedulerAdapter), null);
 
         getServer().getPluginManager().registerEvents(
+                new LocalChatListener(settings.chat()), this);
+        getServer().getPluginManager().registerEvents(
                 new ItemChatListener(settings.chat(), schedulerAdapter), this);
-        registerCommand("item", new ItemCommand(), null);
+        registerCommand("item", new ItemCommand(settings.chat()), null);
+        GlobalChatCommand globalChat = new GlobalChatCommand();
+        LocalChatCommand localChat = new LocalChatCommand(settings.chat());
+        registerCommand("g", globalChat, globalChat);
+        registerCommand("l", localChat, localChat);
 
         MoneyHud moneyHud = new MoneyHud(
                 schedulerAdapter, settings.economy(), settings.glyphs(), glyphsService);
@@ -197,16 +219,20 @@ public final class GlyphCorePlugin extends JavaPlugin {
         GlyphApiProvider.register(new GlyphApiImpl(
                 settings.serverId(), healthService, playerService, economyService));
 
+        RestartCommand restartCommand = new RestartCommand(schedulerAdapter, getSLF4JLogger());
+        registerCommand("restart", restartCommand, restartCommand);
         PluginCommand glyphCommand = getCommand("glyph");
         if (glyphCommand != null) {
-            GlyphCommand executor = new GlyphCommand(this);
+            GlyphCommand executor = new GlyphCommand(this, restartCommand);
             glyphCommand.setExecutor(executor);
             glyphCommand.setTabCompleter(executor);
         }
-        registerCommand("balance", new BalanceCommand(
-                economyService, playerService, schedulerAdapter, settings.economy()), null);
-        registerCommand("pay", new PayCommand(
-                economyService, playerService, schedulerAdapter, settings.economy()), null);
+        BalanceCommand balanceCommand = new BalanceCommand(
+                economyService, playerService, schedulerAdapter, settings.economy());
+        registerCommand("balance", balanceCommand, balanceCommand);
+        PayCommand payCommand = new PayCommand(
+                economyService, playerService, schedulerAdapter, settings.economy());
+        registerCommand("pay", payCommand, payCommand);
         registerCommand("baltop", new BalanceTopCommand(
                 economyService, schedulerAdapter, settings.economy()), null);
         MoneyCommand moneyCommand = new MoneyCommand(
@@ -217,30 +243,37 @@ public final class GlyphCorePlugin extends JavaPlugin {
         registerCommand("eco", ecoCommand, ecoCommand);
 
         // Auction house + delivery queue (GDD Phase 4, sections 21-23).
-        this.auctionService = new AuctionService(
-                new PostgresAuctionRepository(databaseManager::dataSource),
-                settings.auction(),
-                databaseManager::isReady,
-                ioExecutor,
-                getSLF4JLogger());
-        this.deliveryService = new DeliveryService(
-                new PostgresDeliveryRepository(databaseManager::dataSource),
-                databaseManager::isReady,
-                ioExecutor,
-                getSLF4JLogger());
-        DeliveryClaimer deliveryClaimer = new DeliveryClaimer(
-                deliveryService, schedulerAdapter, getSLF4JLogger());
-        AuctionGui auctionGui = new AuctionGui(
-                auctionService, deliveryClaimer, schedulerAdapter,
-                settings.economy(), getSLF4JLogger());
-        getServer().getPluginManager().registerEvents(auctionGui, this);
-        getServer().getPluginManager().registerEvents(
-                new DeliveryJoinNotifier(deliveryService, schedulerAdapter), this);
-        AhCommand ahCommand = new AhCommand(
-                auctionService, auctionGui, deliveryService, schedulerAdapter, settings.economy());
-        registerCommand("ah", ahCommand, ahCommand);
-        registerCommand("claim", new ClaimCommand(deliveryClaimer), null);
-        startExpirySweeper();
+        // Each backend has its own market; items never cross (ADR-013).
+        if (settings.auction().enabled()) {
+            String market = settings.role().marketId();
+            this.auctionService = new AuctionService(
+                    new PostgresAuctionRepository(databaseManager::dataSource, market),
+                    settings.auction(),
+                    databaseManager::isReady,
+                    ioExecutor,
+                    getSLF4JLogger());
+            this.deliveryService = new DeliveryService(
+                    new PostgresDeliveryRepository(databaseManager::dataSource, market),
+                    databaseManager::isReady,
+                    ioExecutor,
+                    getSLF4JLogger());
+            DeliveryClaimer deliveryClaimer = new DeliveryClaimer(
+                    deliveryService, schedulerAdapter, getSLF4JLogger());
+            AuctionGui auctionGui = new AuctionGui(
+                    auctionService, deliveryClaimer, schedulerAdapter,
+                    settings.economy(), getSLF4JLogger(),
+                    settings.role().isSmp() ? "Forever Auction" : "Auction House");
+            getServer().getPluginManager().registerEvents(auctionGui, this);
+            getServer().getPluginManager().registerEvents(
+                    new DeliveryJoinNotifier(deliveryService, schedulerAdapter), this);
+            AhCommand ahCommand = new AhCommand(
+                    auctionService, auctionGui, deliveryService, deliveryClaimer,
+                    schedulerAdapter, settings.economy(), economyService);
+            registerCommand("ah", ahCommand, ahCommand);
+            startExpirySweeper();
+        } else {
+            registerCommand("ah", new AnarchyOnlyCommand("The auction house"), null);
+        }
 
         // Buffered statistics (GDD Phase 6, sections 30, 104) + the activity
         // tracker feeding playtime rewards.
@@ -252,13 +285,18 @@ public final class GlyphCorePlugin extends JavaPlugin {
         ActivityTracker activityTracker = new ActivityTracker();
         getServer().getPluginManager().registerEvents(
                 new StatsListener(statsService, activityTracker), this);
-        auctionService.addPurchaseListener(sale -> {
-            statsService.increment(sale.buyerUuid(), StatType.AUCTION_PURCHASES);
-            statsService.increment(sale.sellerUuid(), StatType.AUCTION_SALES);
-            glyphsService.noteAuctionSale(sale.sellerUuid(), sale.priceDollars());
-        });
-        registerCommand("stats", new StatsCommand(
-                statsService, playerService, schedulerAdapter), null);
+        if (auctionService != null) {
+            auctionService.addPurchaseListener(sale -> {
+                statsService.increment(sale.buyerUuid(), StatType.AUCTION_PURCHASES);
+                statsService.increment(sale.sellerUuid(), StatType.AUCTION_SALES);
+                glyphsService.noteAuctionSale(sale.sellerUuid(), sale.priceDollars());
+                economyService.resyncBalance(sale.buyerUuid());
+                economyService.resyncBalance(sale.sellerUuid());
+            });
+        }
+        StatsCommand statsCommand = new StatsCommand(
+                statsService, playerService, schedulerAdapter);
+        registerCommand("stats", statsCommand, statsCommand);
         registerCommand("playtime", new PlaytimeCommand(playerService, schedulerAdapter), null);
         startStatsFlusher();
 
@@ -277,13 +315,64 @@ public final class GlyphCorePlugin extends JavaPlugin {
         glyphsService.addTitleListener(tabList::onTitleChanged);
         getServer().getPluginManager().registerEvents(tabList, this);
 
-        StarterKitService starterKit = new StarterKitService(this, settings.starter());
+        final NicknameService nicknameService;
+        if (settings.role().isSmp()) {
+            HomeCommand homeCommand = new HomeCommand(
+                    new HomeService(
+                            new PostgresHomeRepository(
+                                    databaseManager::dataSource, settings.role().marketId()),
+                            databaseManager::isReady,
+                            getSLF4JLogger()),
+                    schedulerAdapter);
+            registerCommand("home", homeCommand, homeCommand);
+            registerCommand("sethome", homeCommand, homeCommand);
+            registerCommand("delhome", homeCommand, homeCommand);
+            registerCommand("homes", homeCommand, homeCommand);
+
+            nicknameService = new NicknameService(
+                    new PostgresNicknameRepository(
+                            databaseManager::dataSource, settings.role().marketId()),
+                    databaseManager::isReady,
+                    name -> {
+                        for (org.bukkit.entity.Player online : getServer().getOnlinePlayers()) {
+                            if (online.getName().equalsIgnoreCase(name)) {
+                                return java.util.Optional.of(online.getUniqueId());
+                            }
+                        }
+                        return java.util.Optional.empty();
+                    },
+                    getSLF4JLogger());
+            glyphsService.setVisibleNameLookup(
+                    uuid -> nicknameService.visibleName(uuid, ""));
+            tabList.setVisibleNameLookup(
+                    uuid -> nicknameService.visibleName(uuid, ""));
+            NicknameCommand nicknameCommand = new NicknameCommand(
+                    nicknameService, glyphsService, tabList, schedulerAdapter);
+            registerCommand("nickname", nicknameCommand, nicknameCommand);
+            registerCommand("me", new MeCommand(nicknameService, settings.chat()), null);
+            getServer().getPluginManager().registerEvents(new CreeperGriefListener(), this);
+        } else {
+            nicknameService = null;
+            CommandExecutor noHomes = new SmpOnlyCommand("Homes");
+            registerCommand("home", noHomes, null);
+            registerCommand("sethome", noHomes, null);
+            registerCommand("delhome", noHomes, null);
+            registerCommand("homes", noHomes, null);
+            CommandExecutor noNicks = new SmpOnlyCommand("Nicknames");
+            registerCommand("nickname", noNicks, null);
+            registerCommand("me", new SmpOnlyCommand("Emotes"), null);
+        }
+
+        StarterKitService starterKit = new StarterKitService(this, settings.starter(), settings.role());
         WelcomeListener welcomeListener = new WelcomeListener(
-                schedulerAdapter, settings.economy(), starterKit);
-        registerCommand("rules", new RulesCommand(), null);
+                schedulerAdapter, settings.economy(), starterKit, settings.role());
+        registerCommand("rules", new RulesCommand(settings.role()), null);
         // After account + starting-balance mint: HUD/tab money, death baseline, welcome.
         getServer().getPluginManager().registerEvents(
                 new PlayerJoinListener(playerService, (uuid, firstJoin) -> {
+                    if (nicknameService != null) {
+                        nicknameService.load(uuid);
+                    }
                     economyService.resyncBalance(uuid);
                     glyphsService.resyncOnJoin(uuid);
                     tabList.onJoinPersisted(uuid);
@@ -302,23 +391,34 @@ public final class GlyphCorePlugin extends JavaPlugin {
                 getSLF4JLogger());
         startPlaytimeRewards();
 
-        // Bounties + kill log (GDD Phase 5, sections 25, 33).
+        // Bounties + kill log (GDD Phase 5). Service stays up so /top bounty
+        // works on SMP; combat and /bounty are anarchy-only.
         this.bountyService = new BountyService(
                 new PostgresBountyRepository(databaseManager::dataSource),
                 settings.bounties(),
                 databaseManager::isReady,
                 ioExecutor,
                 getSLF4JLogger());
-        getServer().getPluginManager().registerEvents(
-                new CombatListener(bountyService, statsService, glyphsService, schedulerAdapter,
-                        settings.economy(), getSLF4JLogger()), this);
-        BountyCommand bountyCommand = new BountyCommand(
-                bountyService, playerService, schedulerAdapter, settings.economy());
-        registerCommand("bounty", bountyCommand, bountyCommand);
+        if (settings.bounties().enabled()) {
+            getServer().getPluginManager().registerEvents(
+                    new CombatListener(bountyService, statsService, glyphsService, schedulerAdapter,
+                            settings.economy(), economyService, getSLF4JLogger()), this);
+            WantedBoardGui wantedBoard = new WantedBoardGui(
+                    bountyService, schedulerAdapter, settings.economy(), getSLF4JLogger());
+            getServer().getPluginManager().registerEvents(wantedBoard, this);
+            BountyCommand bountyCommand = new BountyCommand(
+                    bountyService, playerService, schedulerAdapter, settings.economy(),
+                    wantedBoard, economyService);
+            registerCommand("bounty", bountyCommand, bountyCommand);
+        } else {
+            registerCommand("bounty", new AnarchyOnlyCommand("Bounties"), null);
+        }
         TopCommand topCommand = new TopCommand(
                 economyService, statsService, playerService, bountyService,
                 schedulerAdapter, settings.economy());
         registerCommand("top", topCommand, topCommand);
+
+        sweeperRunning.set(true);
 
         // Infrastructure connects asynchronously; the enable thread is never blocked.
         databaseManager.initAsync().whenComplete((ignored, error) -> {
@@ -336,8 +436,9 @@ public final class GlyphCorePlugin extends JavaPlugin {
             }
         });
 
-        getSLF4JLogger().info("GlyphCore {} enabled (server id: {})",
-                getPluginMeta().getVersion(), settings.serverId());
+        getSLF4JLogger().info("GlyphCore {} enabled (server id: {}, role: {})",
+                getPluginMeta().getVersion(), settings.serverId(),
+                settings.role().name().toLowerCase());
     }
 
     /**
@@ -346,6 +447,9 @@ public final class GlyphCorePlugin extends JavaPlugin {
      */
     private void startExpirySweeper() {
         sweeperRunning.set(true);
+        if (auctionService == null) {
+            return;
+        }
         schedulerAdapter.runAsyncLater(this::sweepAndReschedule, Duration.ofMinutes(1));
     }
 
@@ -477,9 +581,7 @@ public final class GlyphCorePlugin extends JavaPlugin {
             return;
         }
         command.setExecutor(executor);
-        if (completer != null) {
-            command.setTabCompleter(completer);
-        }
+        command.setTabCompleter(completer != null ? completer : CommandTabs.NONE);
     }
 
     public PlayerSessionService playerSessionService() {
