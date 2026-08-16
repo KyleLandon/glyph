@@ -65,6 +65,7 @@ import com.glyph.core.player.PostgresPlayerRepository;
 import com.glyph.core.player.StarterKitService;
 import com.glyph.core.player.WelcomeListener;
 import com.glyph.core.player.command.RulesCommand;
+import com.glyph.core.player.command.StarterCommand;
 import com.glyph.core.redis.RedisManager;
 import com.glyph.core.rewards.ActivityTracker;
 import com.glyph.core.rewards.PlaytimeRewardService;
@@ -367,6 +368,8 @@ public final class GlyphCorePlugin extends JavaPlugin {
         WelcomeListener welcomeListener = new WelcomeListener(
                 schedulerAdapter, settings.economy(), starterKit, settings.role());
         registerCommand("rules", new RulesCommand(settings.role()), null);
+        StarterCommand starterCommand = new StarterCommand(starterKit, schedulerAdapter);
+        registerCommand("starter", starterCommand, starterCommand);
         // After account + starting-balance mint: HUD/tab money, death baseline, welcome.
         getServer().getPluginManager().registerEvents(
                 new PlayerJoinListener(playerService, (uuid, firstJoin) -> {

@@ -53,6 +53,7 @@ re-issues them; starter cash does not.
 | Command | What it does |
 | --- | --- |
 | `/rules` | Open the Glyph rules book |
+| `/starter` | Claim the stone tools + book if you missed first join |
 
 ---
 
@@ -248,6 +249,7 @@ Not for normal players:
 | `/glyphadmin add <player> <amount>` | Add Glyphs |
 | `/glyphadmin remove <player> <amount>` | Remove Glyphs |
 | `/glyphadmin unlinkdiscord <player>` | Force-unlink Discord |
+| `/starter <player>` | Force-give the starter pack (player must be online) |
 | `/glyph status` | Infrastructure health |
 | `/glyph version` | Plugin version |
 | `/restart` | 10-second chat countdown, then restart Folia |
@@ -276,7 +278,7 @@ Bounties
 
 Stats
  /stats  ·  /stats <player>  ·  /playtime  ·  /top <money|kills|deaths|playtime|bounty>
- /rules
+ /rules  ·  /starter
 
 Discord link
  /linkdiscord  ·  then /link <code> in Discord

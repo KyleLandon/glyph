@@ -106,6 +106,10 @@ commands:
     description: Read the Glyph rules book.
     usage: /rules
     permission: glyph.rules
+  starter:
+    description: Claim the first-join starter pack (stone tools and rules book).
+    usage: /starter [player]
+    permission: glyph.starter
   home:
     description: Teleport to a Forever World home.
     usage: /home [name]
@@ -172,6 +176,12 @@ permissions:
   glyph.rules:
     description: Access to /rules.
     default: true
+  glyph.starter:
+    description: Claim the starter pack with /starter.
+    default: true
+  glyph.starter.admin:
+    description: Give the starter pack to another online player (/starter <player>).
+    default: op
   glyph.home:
     description: Access to Forever World homes (/home, /sethome, /delhome, /homes).
     default: true

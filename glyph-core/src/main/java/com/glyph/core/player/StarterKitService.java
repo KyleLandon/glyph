@@ -34,18 +34,46 @@ public final class StarterKitService {
                 Objects.requireNonNull(plugin, "plugin"), "starter_kit");
     }
 
+    public boolean enabled() {
+        return settings.enabled();
+    }
+
+    public boolean alreadyGranted(Player player) {
+        return Boolean.TRUE.equals(player.getPersistentDataContainer()
+                .get(grantedKey, PersistentDataType.BOOLEAN));
+    }
+
     /**
+     * One-time grant. {@code firstJoin} skips the chat line (welcome copy
+     * covers it). Must run on the player's entity thread.
+     *
      * @return {@code true} if items were added this call
      */
     public boolean grantIfNeeded(Player player, boolean firstJoin) {
-        if (!settings.enabled()) {
+        if (!settings.enabled() || alreadyGranted(player)) {
             return false;
         }
-        if (Boolean.TRUE.equals(player.getPersistentDataContainer()
-                .get(grantedKey, PersistentDataType.BOOLEAN))) {
-            return false;
+        give(player);
+        if (!firstJoin) {
+            player.sendMessage(Component.text(
+                    "Starter tools and a rules book are in your inventory. /rules to read.",
+                    NamedTextColor.GOLD));
         }
+        return true;
+    }
 
+    /**
+     * Always gives the pack and marks it granted. Used by {@code /starter}
+     * (self, if not yet granted) and staff {@code /starter <player>}.
+     */
+    public void grant(Player player) {
+        give(player);
+        player.sendMessage(Component.text(
+                "Starter tools and a rules book are in your inventory. /rules to read.",
+                NamedTextColor.GOLD));
+    }
+
+    private void give(Player player) {
         List<ItemStack> stacks = new ArrayList<>();
         for (StarterSettings.StarterItem item : settings.items()) {
             stacks.add(item.stack());
@@ -58,12 +86,5 @@ public final class StarterKitService {
                 player.getWorld().dropItemNaturally(player.getLocation(), dropped));
 
         player.getPersistentDataContainer().set(grantedKey, PersistentDataType.BOOLEAN, true);
-
-        if (!firstJoin) {
-            player.sendMessage(Component.text(
-                    "Starter tools and a rules book are in your inventory. /rules to read.",
-                    NamedTextColor.GOLD));
-        }
-        return true;
     }
 }
