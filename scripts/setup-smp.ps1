@@ -45,6 +45,7 @@ function Copy-SharedJar([string]$pattern, [string]$label) {
 Copy-SharedJar "LuckPerms-Bukkit-*.jar" "LuckPerms"
 Copy-SharedJar "VaultUnlocked-*.jar" "VaultUnlocked"
 Copy-SharedJar "voicechat-bukkit-*.jar" "voicechat"
+Copy-SharedJar "Chunky-Bukkit-*.jar" "Chunky"
 
 function Get-PluginJar([string]$pattern, [string]$url, [string]$destName, [string]$label) {
     $existing = Get-ChildItem -Path $smpPlugins -Filter $pattern -File -ErrorAction SilentlyContinue |

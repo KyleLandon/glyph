@@ -127,7 +127,7 @@ op <your-name>
 | VaultUnlocked | ✔ | — | Economy API bridge. GlyphCore registers `GlyphEconomy` as the Vault provider, so third-party plugins read/write Glyph balances (ledgered as SYSTEM_REWARD/SYSTEM_SINK). |
 | ViaVersion + ViaBackwards | — | ✔ | Newer/older clients can join through the proxy. |
 | spark | ✔ | — | Profiling (GDD section 74). |
-| Chunky | ✔ | — | World pregeneration (GDD Phase 9). Folia-safe Bukkit jar. Anarchy only. |
+| Chunky | ✔ | also on Paper SMP | World pregeneration. Folia-safe Bukkit jar. SMP uses it to fill BlueMap around spawn. |
 | LuckPerms / Vault / voicechat | also on Paper SMP | — | Copied by `scripts\setup-smp.ps1`. Same Postgres; LuckPerms `server: smp`. |
 | GriefPrevention | Paper SMP | — | Land claims. |
 | CoreProtect | Paper SMP | — | Staff inspect/rollback. Downloaded by `setup-smp.ps1`. |
