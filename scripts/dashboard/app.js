@@ -95,6 +95,56 @@ function card(title, sub, up, body, actions) {
   </article>`;
 }
 
+function tpsClass(n) {
+  if (n == null || Number.isNaN(n)) return "";
+  if (n >= 19.5) return "ok";
+  if (n >= 15) return "warn";
+  return "err";
+}
+
+function fmt(n, digits) {
+  if (n == null || Number.isNaN(Number(n))) return "—";
+  return Number(n).toFixed(digits);
+}
+
+function tickRow(ticks, kind) {
+  if (!ticks) {
+    return `<p class="muted">Waiting for tick sample…</p>`;
+  }
+  const tpsLabel = kind === "folia" ? "Region TPS" : "TPS";
+  const extra =
+    kind === "folia"
+      ? `<div class="stat">
+          <span class="stat-label">Low / high</span>
+          <span class="stat-val">${fmt(ticks.tps5, 1)} / ${fmt(ticks.tps15, 1)}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Regions</span>
+          <span class="stat-val">${ticks.regions == null ? "—" : ticks.regions}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Util</span>
+          <span class="stat-val">${fmt(ticks.util, 1)}%</span>
+        </div>`
+      : `<div class="stat">
+          <span class="stat-label">5m / 15m</span>
+          <span class="stat-val">${fmt(ticks.tps5, 1)} / ${fmt(ticks.tps15, 1)}</span>
+        </div>`;
+  return `<div class="stats">
+    <div class="stat">
+      <span class="stat-label">${tpsLabel}</span>
+      <span class="stat-val ${tpsClass(ticks.tps)}">${fmt(ticks.tps, 1)}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">MSPT</span>
+      <span class="stat-val">${fmt(ticks.mspt, 1)}${
+        ticks.msptMax != null ? `<span class="stat-sub"> max ${fmt(ticks.msptMax, 1)}</span>` : ""
+      }</span>
+    </div>
+    ${extra}
+  </div>`;
+}
+
 function renderStatus(s) {
   const a = s.anarchy;
   const f = s.smp;
@@ -108,18 +158,18 @@ function renderStatus(s) {
       "Anarchy",
       "anarchy.glyphmc.net · Folia",
       a.up,
-      `<div class="players">${
-        a.up ? playerChips(a.players) : `<span class="muted">Not listening on :25566</span>`
-      }</div>`,
+      a.up
+        ? `${tickRow(a.ticks, "folia")}<div class="players">${playerChips(a.players)}</div>`
+        : `<span class="muted">Not listening on :25566</span>`,
       `<button class="btn" data-action="restart-anarchy" ${a.up ? "" : "disabled"}>Restart</button>`
     ),
     card(
       "Forever World",
       "smp.glyphmc.net · Paper",
       f.up,
-      `<div class="players">${
-        f.up ? playerChips(f.players) : `<span class="muted">Not listening on :25567</span>`
-      }</div>`,
+      f.up
+        ? `${tickRow(f.ticks, "paper")}<div class="players">${playerChips(f.players)}</div>`
+        : `<span class="muted">Not listening on :25567</span>`,
       `<button class="btn" data-action="restart-smp" ${f.up ? "" : "disabled"}>Restart</button>`
     ),
     card(

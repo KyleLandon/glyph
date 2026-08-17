@@ -19,6 +19,11 @@ $playerCache = @{
     anarchy  = @()
     smp      = @()
 }
+$tickCache = @{
+    at      = [datetime]::MinValue
+    anarchy = $null
+    smp     = $null
+}
 $discordCache = @{ at = [datetime]::MinValue; up = $false }
 
 function Test-LocalPort([int]$port) {
@@ -130,16 +135,118 @@ function Refresh-Players {
     $playerCache.at = Get-Date
 }
 
+function Strip-McText([string]$text) {
+    if (-not $text) { return "" }
+    $sb = New-Object System.Text.StringBuilder
+    for ($i = 0; $i -lt $text.Length; $i++) {
+        $ch = [int][char]$text[$i]
+        if ($ch -eq 0x15 -or $ch -eq 0xA7) {
+            $i++
+            continue
+        }
+        if ($ch -lt 32 -and $ch -ne 10 -and $ch -ne 13 -and $ch -ne 9) {
+            continue
+        }
+        [void]$sb.Append($text[$i])
+    }
+    return $sb.ToString()
+}
+
+function New-TickStats {
+    return [pscustomobject]@{
+        tps     = $null
+        tps5    = $null
+        tps15   = $null
+        mspt    = $null
+        msptMax = $null
+        regions = $null
+        util    = $null
+    }
+}
+
+function Read-PaperTicks([string]$raw) {
+    $stats = New-TickStats
+    $text = Strip-McText $raw
+    $tps = [regex]::Match($text, "TPS from last 1m, 5m, 15m:\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)")
+    if ($tps.Success) {
+        $stats.tps = [double]$tps.Groups[1].Value
+        $stats.tps5 = [double]$tps.Groups[2].Value
+        $stats.tps15 = [double]$tps.Groups[3].Value
+    }
+    $ms = [regex]::Matches($text, "([\d.]+)/([\d.]+)/([\d.]+)")
+    if ($ms.Count -ge 3) {
+        $oneMin = $ms[2]
+        $stats.mspt = [double]$oneMin.Groups[1].Value
+        $stats.msptMax = [double]$oneMin.Groups[3].Value
+    } elseif ($ms.Count -ge 1) {
+        $stats.mspt = [double]$ms[0].Groups[1].Value
+        $stats.msptMax = [double]$ms[0].Groups[3].Value
+    }
+    return $stats
+}
+
+function Read-FoliaTicks([string]$raw) {
+    $stats = New-TickStats
+    $text = Strip-McText $raw
+    $med = [regex]::Match($text, "Median Region TPS:\s*([\d.]+)")
+    $low = [regex]::Match($text, "Lowest Region TPS:\s*([\d.]+)")
+    $high = [regex]::Match($text, "Highest Region TPS:\s*([\d.]+)")
+    $regions = [regex]::Match($text, "Total regions:\s*(\d+)")
+    $util = [regex]::Match($text, "Utilisation:\s*([\d.]+)\s*%")
+    if ($med.Success) { $stats.tps = [double]$med.Groups[1].Value }
+    if ($low.Success) { $stats.tps5 = [double]$low.Groups[1].Value }
+    if ($high.Success) { $stats.tps15 = [double]$high.Groups[1].Value }
+    if ($regions.Success) { $stats.regions = [int]$regions.Groups[1].Value }
+    if ($util.Success) { $stats.util = [double]$util.Groups[1].Value }
+    $ms = [regex]::Matches($text, "([\d.]+)/([\d.]+)/([\d.]+)")
+    if ($ms.Count -ge 3) {
+        $oneMin = $ms[2]
+        $stats.mspt = [double]$oneMin.Groups[1].Value
+        $stats.msptMax = [double]$oneMin.Groups[3].Value
+    }
+    return $stats
+}
+
+function Refresh-Ticks {
+    if ((Get-Date) - $tickCache.at -lt [TimeSpan]::FromSeconds(8)) { return }
+    if (Test-LocalPort 25566) {
+        try {
+            $tps = Invoke-Rcon "anarchy" "tps"
+            $mspt = Invoke-Rcon "anarchy" "mspt"
+            $tickCache.anarchy = Read-FoliaTicks ($tps + "`n" + $mspt)
+        } catch {
+            # keep last sample
+        }
+    } else {
+        $tickCache.anarchy = $null
+    }
+    if (Test-LocalPort 25567) {
+        try {
+            $tps = Invoke-Rcon "smp" "tps"
+            $mspt = Invoke-Rcon "smp" "mspt"
+            $tickCache.smp = Read-PaperTicks ($tps + "`n" + $mspt)
+        } catch {
+            # keep last sample
+        }
+    } else {
+        $tickCache.smp = $null
+    }
+    $tickCache.at = Get-Date
+}
+
 function Get-StatusObject {
     Refresh-Players
+    Refresh-Ticks
     return [pscustomobject]@{
         anarchy  = [pscustomobject]@{
             up      = [bool](Test-LocalPort 25566)
             players = [string[]]@($playerCache.anarchy | Where-Object { $_ })
+            ticks   = $tickCache.anarchy
         }
         smp      = [pscustomobject]@{
             up      = [bool](Test-LocalPort 25567)
             players = [string[]]@($playerCache.smp | Where-Object { $_ })
+            ticks   = $tickCache.smp
         }
         velocity = [pscustomobject]@{ up = [bool](Test-LocalPort 25565) }
         discord  = [pscustomobject]@{ up = [bool](Test-DiscordRunning) }
@@ -207,7 +314,7 @@ function Send-Text($res, [int]$status, [string]$contentType, [string]$text) {
 }
 
 function Send-Json($res, [int]$status, $obj) {
-    Send-Text $res $status "application/json; charset=utf-8" ($obj | ConvertTo-Json -Depth 6 -Compress)
+    Send-Text $res $status "application/json; charset=utf-8" ($obj | ConvertTo-Json -Depth 8 -Compress)
 }
 
 function Test-LocalHostHeader([string]$header) {

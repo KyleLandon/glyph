@@ -3,7 +3,7 @@
 # -Hidden: spawn java with no console (dashboard / start-all / /restart).
 param([switch]$Hidden)
 
-$mem = "2G"
+$mem = "4G"
 
 $jar = Get-ChildItem -Path $PSScriptRoot -Filter "paper-*.jar" -File -ErrorAction SilentlyContinue |
     Sort-Object LastWriteTime -Descending |
