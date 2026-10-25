@@ -5,7 +5,7 @@
 # docker/backup.sh instead.
 #
 # Usage:
-#   .\backup.ps1                          # back up now to K:\glyph-backups
+#   .\backup.ps1                          # back up now to glyph-backups next to the repo
 #   .\backup.ps1 -Destination D:\backups  # elsewhere
 #   .\backup.ps1 -Register                # + create a daily 04:30 scheduled task
 #
@@ -16,7 +16,7 @@
 # - Retention: files older than -RetentionDays are deleted from Destination.
 
 param(
-    [string]$Destination = "K:\glyph-backups",
+    [string]$Destination = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "glyph-backups"),
     [int]$RetentionDays = 14,
     [switch]$Register
 )
@@ -60,12 +60,14 @@ Write-Output ("Database: {0} ({1:N1} MB)" -f $dbFile, ((Get-Item $dbFile).Length
 
 # --- 2. World archive (live copy via robocopy, then zip) -------------------
 $staging = Join-Path $env:TEMP "glyph-world-backup-$stamp"
-$worlds = Get-ChildItem (Join-Path $root "glyph-folia") -Directory -Filter "world*"
-foreach ($world in $worlds) {
-    # session.lock is held exclusively by the running server and is useless
-    # in a backup. Robocopy exit codes 0-7 mean success; 8+ are real failures.
-    robocopy $world.FullName (Join-Path $staging $world.Name) /E /R:1 /W:1 /XF session.lock /NFL /NDL /NJH /NJS | Out-Null
-    if ($LASTEXITCODE -ge 8) { Write-Error "robocopy failed for $($world.Name) (exit $LASTEXITCODE)" }
+foreach ($server in @("glyph-folia", "glyph-smp")) {
+    $worlds = Get-ChildItem (Join-Path $root $server) -Directory -Filter "world*" -ErrorAction SilentlyContinue
+    foreach ($world in $worlds) {
+        # session.lock is held exclusively by the running server and is useless
+        # in a backup. Robocopy exit codes 0-7 mean success; 8+ are real failures.
+        robocopy $world.FullName (Join-Path $staging "$server\$($world.Name)") /E /R:1 /W:1 /XF session.lock /NFL /NDL /NJH /NJS | Out-Null
+        if ($LASTEXITCODE -ge 8) { Write-Error "robocopy failed for $server\$($world.Name) (exit $LASTEXITCODE)" }
+    }
 }
 
 $worldFile = Join-Path $Destination "glyph-worlds-$stamp.zip"

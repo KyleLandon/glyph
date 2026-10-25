@@ -39,6 +39,10 @@ alone.
 
 Connect to `localhost` or `play.glyphmc.net`.
 
+Moving the network to another Windows host (the mini PC): follow
+[`docs/MINI_PC.md`](docs/MINI_PC.md) (`scripts\migrate-export.ps1` →
+`scripts\migrate-import.ps1`).
+
 On the desktop, one-time: `scripts\auto-pull.ps1 -Register` so that machine
 fast-forwards `main` a couple of minutes after you push from the laptop.
 
