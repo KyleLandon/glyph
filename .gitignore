@@ -47,6 +47,7 @@ glyph-folia/.console_history
 glyph-folia/usercache.json
 glyph-folia/version_history.json
 glyph-folia/plugins/LuckPerms/libs/
+glyph-folia/plugins/LuckPerms/translations/
 glyph-folia/plugins/spark/tmp/
 glyph-folia/plugins/.paper-remapped/
 glyph-folia/plugins/Chunky/tasks/
@@ -74,6 +75,7 @@ glyph-smp/*.jar
 glyph-smp/plugins/*.jar
 glyph-velocity/logs/
 glyph-velocity/plugins/luckperms/libs/
+glyph-velocity/plugins/luckperms/translations/
 
 # Proxy forwarding secret and the backend config embedding it (public repo).
 # On a new machine: run both servers once, then scripts/sync-forwarding-secret.ps1
